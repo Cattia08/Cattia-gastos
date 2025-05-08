@@ -9,12 +9,14 @@ interface MonthSelectorProps {
   currentMonth: Date;
   onChange: (date: Date) => void;
   className?: string;
+  showMonthName?: boolean;
 }
 
 const MonthSelector = ({
   currentMonth,
   onChange,
-  className
+  className,
+  showMonthName = true
 }: MonthSelectorProps) => {
   const handlePrevMonth = () => {
     onChange(subMonths(currentMonth, 1));
@@ -38,9 +40,11 @@ const MonthSelector = ({
         <span className="sr-only">Mes anterior</span>
       </Button>
       
-      <div className="text-sm font-medium">
-        {formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1)}
-      </div>
+      {showMonthName && (
+        <div className="text-sm font-medium">
+          {formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1)}
+        </div>
+      )}
       
       <Button
         variant="ghost"

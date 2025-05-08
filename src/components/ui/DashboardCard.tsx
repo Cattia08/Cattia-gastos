@@ -18,7 +18,7 @@ const DashboardCard = ({
   iconColor = "bg-pastel-pink",
 }: DashboardCardProps) => {
   return (
-    <div className={cn("card-pastel p-4 md:p-6", className)}>
+    <div className={cn("card-pastel p-4 md:p-6 dark:bg-gray-800 dark:border-pastel-pink/20", className)}>
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>

@@ -99,7 +99,7 @@
 
 @layer components {
   .card-pastel {
-    @apply bg-white/70 backdrop-blur-sm border border-white/20 shadow-md rounded-2xl transition-all hover:shadow-lg;
+    @apply bg-white/70 backdrop-blur-sm border border-white/20 shadow-md rounded-2xl transition-all hover:shadow-lg dark:bg-gray-800/70 dark:border-gray-700/30 dark:text-gray-100;
   }
   
   .btn-pastel {
@@ -109,4 +109,58 @@
   .icon-container {
     @apply flex items-center justify-center w-10 h-10 rounded-full;
   }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Pastel Colors for charts and UI */
+:root {
+  --pastel-pink: #FFB7B2;
+  --pastel-green: #A8E6CF;
+  --pastel-yellow: #FDFFAB;
+  --pastel-blue: #B5D8EB;
+  --pastel-purple: #E5C5F1;
+}
+
+/* Additional dark mode adjustments */
+.dark .recharts-cartesian-grid-bg {
+  fill: #2D3748;
+}
+
+.dark .recharts-cartesian-axis-line {
+  stroke: #4A5568;
+}
+
+.dark .recharts-cartesian-axis-tick-line {
+  stroke: #4A5568;
+}
+
+.dark .recharts-cartesian-axis-tick-value {
+  fill: #CBD5E0;
+}
+
+.dark .recharts-legend-item-text {
+  color: #E2E8F0 !important;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: rgba(45, 55, 72, 0.9) !important;
+  border-color: #4A5568 !important;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item {
+  color: #E2E8F0 !important;
 }

@@ -35,7 +35,7 @@ const CustomDatePicker = ({ date, setDate, className }: DatePickerProps) => {
           selected={date}
           onSelect={setDate}
           initialFocus
-          className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl"
+          className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
         />
       </PopoverContent>
     </Popover>

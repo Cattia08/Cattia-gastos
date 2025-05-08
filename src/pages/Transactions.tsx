@@ -1,7 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Star, Search, ChevronUp, ChevronDown, Heart, CircleAlert } from "lucide-react";
+import { 
+  Plus, Star, Search, ChevronUp, ChevronDown, Heart, 
+  CircleAlert, RefreshCcw, Calendar 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputWithIcon } from "@/components/ui/InputWithIcon";
@@ -17,6 +20,8 @@ import {
 import { Label } from "@/components/ui/label";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CategoryBadge from "@/components/ui/CategoryBadge";
+import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
+import { format, isSameDay, isWithinInterval } from "date-fns";
 
 // Mock transaction data
 const mockTransactions = [
@@ -74,7 +79,8 @@ const mockCategories = [
 const Transactions = () => {
   const { toast } = useToast();
   const [transactions, setTransactions] = useState(mockTransactions);
-  const [filterDate, setFilterDate] = useState<Date>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{
@@ -90,6 +96,23 @@ const Transactions = () => {
     category: "",
     date: new Date(),
   });
+
+  // Effect to apply filters automatically when changed
+  useEffect(() => {
+    // No need for extra logic here as getSortedTransactions already applies all filters
+  }, [searchQuery, categoryFilter, selectedDate, endDate]);
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setCategoryFilter("");
+    setSelectedDate(undefined);
+    setEndDate(undefined);
+    
+    toast({
+      title: "Filtros restablecidos",
+      description: "Se han eliminado todos los filtros aplicados",
+    });
+  };
 
   const handleSort = (key: string) => {
     let direction: 'ascending' | 'descending' = 'ascending';
@@ -112,20 +135,30 @@ const Transactions = () => {
     }
     
     // Apply category filter
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== "all") {
       sortableTransactions = sortableTransactions.filter(
         transaction => transaction.category === categoryFilter
       );
     }
     
     // Apply date filter
-    if (filterDate) {
-      sortableTransactions = sortableTransactions.filter(
-        transaction => 
-          transaction.date.getDate() === filterDate.getDate() &&
-          transaction.date.getMonth() === filterDate.getMonth() &&
-          transaction.date.getFullYear() === filterDate.getFullYear()
-      );
+    if (selectedDate) {
+      if (endDate) {
+        // Range selection
+        sortableTransactions = sortableTransactions.filter(
+          transaction => 
+            isWithinInterval(transaction.date, {
+              start: selectedDate,
+              end: endDate
+            })
+        );
+      } else {
+        // Single date selection
+        sortableTransactions = sortableTransactions.filter(
+          transaction => 
+            isSameDay(transaction.date, selectedDate)
+        );
+      }
     }
     
     // Sort transactions
@@ -201,6 +234,16 @@ const Transactions = () => {
     });
   };
 
+  // Calculate if there are selected dates to show
+  const hasDateFilter = selectedDate !== undefined;
+  const displayDateFilter = () => {
+    if (!selectedDate) return "";
+    if (endDate) {
+      return `${format(selectedDate, "dd 'de' MMMM, yyyy")} al ${format(endDate, "dd 'de' MMMM, yyyy")}`;
+    }
+    return format(selectedDate, "dd 'de' MMMM, yyyy");
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -208,84 +251,93 @@ const Transactions = () => {
           <span className="text-primary">Transacciones</span>
           <Heart className="inline ml-2 w-5 h-5 text-primary" />
         </h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 rounded-full px-4">
-              <Plus className="w-4 h-4 mr-2" /> Añadir Transacción
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-primary" />
-                Nueva Transacción
-              </DialogTitle>
-              <DialogDescription>
-                Completa los detalles de tu nueva transacción aquí.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  value={newTransaction.name}
-                  onChange={(e) => setNewTransaction({...newTransaction, name: e.target.value})}
-                  className="border-pastel-pink/30"
-                  placeholder="Ej. Compras supermercado"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="amount">Monto</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  value={newTransaction.amount}
-                  onChange={(e) => setNewTransaction({...newTransaction, amount: e.target.value})}
-                  className="border-pastel-pink/30"
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="category">Categoría</Label>
-                <Select 
-                  value={newTransaction.category}
-                  onValueChange={(value) => setNewTransaction({...newTransaction, category: value})}
-                >
-                  <SelectTrigger className="border-pastel-pink/30">
-                    <SelectValue placeholder="Selecciona una categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockCategories.map((category) => (
-                      <SelectItem key={category.name} value={category.name}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="date">Fecha</Label>
-                <CustomDatePicker
-                  date={newTransaction.date}
-                  setDate={(date) => setNewTransaction({...newTransaction, date: date || new Date()})}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="border-pastel-pink/30">
-                Cancelar
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={handleResetFilters} 
+            className="rounded-full px-3 text-sm border-pastel-pink/30"
+          >
+            <RefreshCcw className="w-3 h-3 mr-1" /> Restablecer
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90 rounded-full px-4">
+                <Plus className="w-4 h-4 mr-2" /> Añadir Transacción
               </Button>
-              <Button onClick={handleAddTransaction} className="bg-primary hover:bg-primary/90">
-                Guardar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30 dark:bg-gray-800 dark:border-pastel-pink/20">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-primary" />
+                  Nueva Transacción
+                </DialogTitle>
+                <DialogDescription>
+                  Completa los detalles de tu nueva transacción aquí.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Nombre</Label>
+                  <Input
+                    id="name"
+                    value={newTransaction.name}
+                    onChange={(e) => setNewTransaction({...newTransaction, name: e.target.value})}
+                    className="border-pastel-pink/30"
+                    placeholder="Ej. Compras supermercado"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="amount">Monto</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={newTransaction.amount}
+                    onChange={(e) => setNewTransaction({...newTransaction, amount: e.target.value})}
+                    className="border-pastel-pink/30"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="category">Categoría</Label>
+                  <Select 
+                    value={newTransaction.category}
+                    onValueChange={(value) => setNewTransaction({...newTransaction, category: value})}
+                  >
+                    <SelectTrigger className="border-pastel-pink/30">
+                      <SelectValue placeholder="Selecciona una categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mockCategories.map((category) => (
+                        <SelectItem key={category.name} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="date">Fecha</Label>
+                  <CustomDatePicker
+                    date={newTransaction.date}
+                    setDate={(date) => setNewTransaction({...newTransaction, date: date || new Date()})}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="border-pastel-pink/30">
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddTransaction} className="bg-primary hover:bg-primary/90">
+                  Guardar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filter section */}
-      <Card className="p-4 border-pastel-pink/30">
+      <Card className="p-4 border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <InputWithIcon
@@ -312,17 +364,37 @@ const Transactions = () => {
             </Select>
           </div>
           <div>
-            <CustomDatePicker 
-              date={filterDate} 
-              setDate={setFilterDate} 
+            <InteractiveCalendar
+              selectedDate={selectedDate}
+              onDateSelect={setSelectedDate}
+              rangeDate={endDate}
+              onRangeSelect={setEndDate}
+              onReset={() => {
+                setSelectedDate(undefined);
+                setEndDate(undefined);
+              }}
               className="w-full"
+              expenses={transactions.map(transaction => ({
+                date: transaction.date,
+                amount: transaction.amount
+              }))}
             />
           </div>
         </div>
       </Card>
 
+      {/* Date filter display */}
+      {hasDateFilter && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Calendar className="w-4 h-4 mr-1" />
+            Mostrando transacciones del: {displayDateFilter()}
+          </div>
+        </div>
+      )}
+
       {/* Transactions Table */}
-      <Card className="border-pastel-pink/30">
+      <Card className="border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
         <Table>
           <TableHeader>
             <TableRow>
@@ -355,7 +427,10 @@ const Transactions = () => {
           <TableBody>
             {getSortedTransactions().length > 0 ? (
               getSortedTransactions().map((transaction) => (
-                <TableRow key={transaction.id}>
+                <TableRow 
+                  key={transaction.id} 
+                  className={!transaction.category ? "bg-amber-50/50 dark:bg-amber-950/20" : ""}
+                >
                   <TableCell className="font-medium">{transaction.name}</TableCell>
                   <TableCell>${transaction.amount.toFixed(2)}</TableCell>
                   <TableCell>
@@ -368,9 +443,9 @@ const Transactions = () => {
                       <Select 
                         onValueChange={(value) => handleCategoryUpdate(transaction.id, value)}
                       >
-                        <SelectTrigger className="h-8 border-pastel-pink/30 pr-2 mr-2 max-w-[160px] bg-muted/30">
+                        <SelectTrigger className="h-8 border-pastel-pink/30 pr-2 mr-2 max-w-[160px] bg-amber-50/80 dark:bg-amber-950/40">
                           <div className="flex items-center">
-                            <CircleAlert className="w-4 h-4 text-pastel-yellow mr-1" />
+                            <CircleAlert className="w-4 h-4 text-amber-500 mr-1" />
                             <span>Sin categoría</span>
                           </div>
                         </SelectTrigger>

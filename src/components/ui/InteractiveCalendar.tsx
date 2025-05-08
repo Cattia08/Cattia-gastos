@@ -123,36 +123,46 @@ const InteractiveCalendar = ({
             </Button>
           </div>
         </div>
-        <Calendar
-          mode={calendarMode}
-          selected={calendarMode === "single" ? selectedDate : {
-            from: selectedDate,
-            to: rangeDate
-          }}
-          onSelect={calendarMode === "single" 
-            ? onDateSelect 
-            : (range) => {
-                if (!range) {
-                  onDateSelect(undefined);
-                  if (onRangeSelect) onRangeSelect(undefined);
-                  return;
-                }
-                
-                if ('from' in range && range.from) {
-                  onDateSelect(range.from);
-                }
-                
-                if ('to' in range && range.to && onRangeSelect) {
-                  onRangeSelect(range.to);
-                }
+        {calendarMode === "single" ? (
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={onDateSelect}
+            initialFocus
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            components={{
+              DayContent: ({ date }) => renderDateContent(date)
+            }}
+          />
+        ) : (
+          <Calendar
+            mode="range"
+            selected={{
+              from: selectedDate,
+              to: rangeDate
+            }}
+            onSelect={(range) => {
+              if (!range) {
+                onDateSelect(undefined);
+                if (onRangeSelect) onRangeSelect(undefined);
+                return;
               }
-          }
-          initialFocus
-          className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl"
-          components={{
-            DayContent: ({ date }) => renderDateContent(date)
-          }}
-        />
+              
+              if ('from' in range && range.from) {
+                onDateSelect(range.from);
+              }
+              
+              if ('to' in range && range.to && onRangeSelect) {
+                onRangeSelect(range.to);
+              }
+            }}
+            initialFocus
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            components={{
+              DayContent: ({ date }) => renderDateContent(date)
+            }}
+          />
+        )}
       </PopoverContent>
     </Popover>
   );
