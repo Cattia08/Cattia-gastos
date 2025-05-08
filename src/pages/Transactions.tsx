@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, Star, Search, ChevronUp, ChevronDown, Heart, 
-  CircleAlert, RefreshCcw, Calendar 
+  CircleAlert, RefreshCcw, Calendar, Edit, FileSpreadsheet, FilePdf 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,10 @@ import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
 import { format, isSameDay, isWithinInterval } from "date-fns";
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 // Mock transaction data
 const mockTransactions = [
@@ -88,9 +92,11 @@ const Transactions = () => {
     direction: 'ascending' | 'descending';
   } | null>(null);
   
-  // New transaction form state
+  // Transaction form state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newTransaction, setNewTransaction] = useState({
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState({
+    id: 0,
     name: "",
     amount: "",
     category: "",
@@ -178,7 +184,7 @@ const Transactions = () => {
   };
 
   const handleAddTransaction = () => {
-    if (!newTransaction.name || !newTransaction.amount) {
+    if (!currentTransaction.name || !currentTransaction.amount) {
       toast({
         title: "Error",
         description: "Por favor completa los campos requeridos",
@@ -187,29 +193,69 @@ const Transactions = () => {
       return;
     }
 
-    const selectedCategory = mockCategories.find(cat => cat.name === newTransaction.category);
+    const selectedCategory = mockCategories.find(cat => cat.name === currentTransaction.category);
     
-    const newEntry = {
-      id: transactions.length + 1,
-      name: newTransaction.name,
-      amount: parseFloat(newTransaction.amount),
-      category: newTransaction.category,
-      categoryColor: selectedCategory ? selectedCategory.color : "",
-      date: newTransaction.date,
-    };
+    if (isEditDialogOpen) {
+      // Update existing transaction
+      setTransactions(transactions.map(transaction => 
+        transaction.id === currentTransaction.id
+          ? {
+              ...transaction,
+              name: currentTransaction.name,
+              amount: parseFloat(currentTransaction.amount),
+              category: currentTransaction.category,
+              categoryColor: selectedCategory ? selectedCategory.color : "",
+              date: currentTransaction.date,
+            }
+          : transaction
+      ));
+      
+      toast({
+        title: "Transacción actualizada",
+        description: "La transacción ha sido actualizada con éxito",
+      });
+      setIsEditDialogOpen(false);
+    } else {
+      // Add new transaction
+      const newEntry = {
+        id: transactions.length + 1,
+        name: currentTransaction.name,
+        amount: parseFloat(currentTransaction.amount),
+        category: currentTransaction.category,
+        categoryColor: selectedCategory ? selectedCategory.color : "",
+        date: currentTransaction.date,
+      };
+      
+      setTransactions([...transactions, newEntry]);
+      setIsAddDialogOpen(false);
+      
+      toast({
+        title: "Transacción añadida",
+        description: "La transacción ha sido añadida con éxito",
+      });
+    }
     
-    setTransactions([...transactions, newEntry]);
-    setIsAddDialogOpen(false);
-    setNewTransaction({
+    resetTransactionForm();
+  };
+
+  const handleEdit = (transaction: any) => {
+    setCurrentTransaction({
+      id: transaction.id,
+      name: transaction.name,
+      amount: transaction.amount.toString(),
+      category: transaction.category,
+      date: transaction.date,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const resetTransactionForm = () => {
+    setCurrentTransaction({
+      id: 0,
       name: "",
       amount: "",
       category: "",
       date: new Date(),
-    });
-    
-    toast({
-      title: "Transacción añadida",
-      description: "La transacción ha sido añadida con éxito",
     });
   };
 
@@ -234,6 +280,18 @@ const Transactions = () => {
     });
   };
 
+  const handleExport = (format: 'excel' | 'pdf') => {
+    const filteredTransactions = getSortedTransactions();
+    const formatName = format === 'excel' ? 'Excel' : 'PDF';
+    
+    // In a real application, this would generate and download the file
+    // For now, we'll just show a toast message
+    toast({
+      title: `Exportado a ${formatName}`,
+      description: `Se han exportado ${filteredTransactions.length} transacciones en formato ${formatName}`,
+    });
+  };
+
   // Calculate if there are selected dates to show
   const hasDateFilter = selectedDate !== undefined;
   const displayDateFilter = () => {
@@ -244,6 +302,57 @@ const Transactions = () => {
     return format(selectedDate, "dd 'de' MMMM, yyyy");
   };
 
+  const TransactionForm = () => (
+    <div className="grid gap-4 py-4">
+      <div className="grid gap-2">
+        <Label htmlFor="name">Nombre</Label>
+        <Input
+          id="name"
+          value={currentTransaction.name}
+          onChange={(e) => setCurrentTransaction({...currentTransaction, name: e.target.value})}
+          className="border-pastel-pink/30"
+          placeholder="Ej. Compras supermercado"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="amount">Monto (S/)</Label>
+        <Input
+          id="amount"
+          type="number"
+          value={currentTransaction.amount}
+          onChange={(e) => setCurrentTransaction({...currentTransaction, amount: e.target.value})}
+          className="border-pastel-pink/30"
+          placeholder="0.00"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="category">Categoría</Label>
+        <Select 
+          value={currentTransaction.category}
+          onValueChange={(value) => setCurrentTransaction({...currentTransaction, category: value})}
+        >
+          <SelectTrigger className="border-pastel-pink/30">
+            <SelectValue placeholder="Selecciona una categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            {mockCategories.map((category) => (
+              <SelectItem key={category.name} value={category.name}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="date">Fecha</Label>
+        <CustomDatePicker
+          date={currentTransaction.date}
+          setDate={(date) => setCurrentTransaction({...currentTransaction, date: date || new Date()})}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -252,6 +361,22 @@ const Transactions = () => {
           <Heart className="inline ml-2 w-5 h-5 text-primary" />
         </h1>
         <div className="flex space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="rounded-full px-3 text-sm border-pastel-pink/30">
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <FileSpreadsheet className="w-4 h-4 mr-2" /> Exportar a Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <FilePdf className="w-4 h-4 mr-2" /> Exportar a PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Button 
             variant="outline" 
             onClick={handleResetFilters} 
@@ -275,56 +400,12 @@ const Transactions = () => {
                   Completa los detalles de tu nueva transacción aquí.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input
-                    id="name"
-                    value={newTransaction.name}
-                    onChange={(e) => setNewTransaction({...newTransaction, name: e.target.value})}
-                    className="border-pastel-pink/30"
-                    placeholder="Ej. Compras supermercado"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="amount">Monto</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={newTransaction.amount}
-                    onChange={(e) => setNewTransaction({...newTransaction, amount: e.target.value})}
-                    className="border-pastel-pink/30"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Categoría</Label>
-                  <Select 
-                    value={newTransaction.category}
-                    onValueChange={(value) => setNewTransaction({...newTransaction, category: value})}
-                  >
-                    <SelectTrigger className="border-pastel-pink/30">
-                      <SelectValue placeholder="Selecciona una categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockCategories.map((category) => (
-                        <SelectItem key={category.name} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="date">Fecha</Label>
-                  <CustomDatePicker
-                    date={newTransaction.date}
-                    setDate={(date) => setNewTransaction({...newTransaction, date: date || new Date()})}
-                  />
-                </div>
-              </div>
+              <TransactionForm />
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="border-pastel-pink/30">
+                <Button variant="outline" onClick={() => {
+                  setIsAddDialogOpen(false);
+                  resetTransactionForm();
+                }} className="border-pastel-pink/30">
                   Cancelar
                 </Button>
                 <Button onClick={handleAddTransaction} className="bg-primary hover:bg-primary/90">
@@ -335,6 +416,33 @@ const Transactions = () => {
           </Dialog>
         </div>
       </div>
+
+      {/* Edit Transaction Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30 dark:bg-gray-800 dark:border-pastel-pink/20">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5 text-primary" />
+              Editar Transacción
+            </DialogTitle>
+            <DialogDescription>
+              Modifica los detalles de esta transacción.
+            </DialogDescription>
+          </DialogHeader>
+          <TransactionForm />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsEditDialogOpen(false);
+              resetTransactionForm();
+            }} className="border-pastel-pink/30">
+              Cancelar
+            </Button>
+            <Button onClick={handleAddTransaction} className="bg-primary hover:bg-primary/90">
+              Actualizar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filter section */}
       <Card className="p-4 border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
@@ -405,7 +513,7 @@ const Transactions = () => {
                 ) : null}
               </TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('amount')}>
-                Monto
+                Monto (S/)
                 {sortConfig?.key === 'amount' ? (
                   sortConfig.direction === 'ascending' ? <ChevronUp className="inline w-4 h-4 ml-1" /> : <ChevronDown className="inline w-4 h-4 ml-1" />
                 ) : null}
@@ -422,6 +530,7 @@ const Transactions = () => {
                   sortConfig.direction === 'ascending' ? <ChevronUp className="inline w-4 h-4 ml-1" /> : <ChevronDown className="inline w-4 h-4 ml-1" />
                 ) : null}
               </TableHead>
+              <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -432,7 +541,7 @@ const Transactions = () => {
                   className={!transaction.category ? "bg-amber-50/50 dark:bg-amber-950/20" : ""}
                 >
                   <TableCell className="font-medium">{transaction.name}</TableCell>
-                  <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                  <TableCell>S/ {transaction.amount.toFixed(2)}</TableCell>
                   <TableCell>
                     {transaction.category ? (
                       <CategoryBadge
@@ -462,11 +571,21 @@ const Transactions = () => {
                   <TableCell>
                     {transaction.date.toLocaleDateString()}
                   </TableCell>
+                  <TableCell>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleEdit(transaction)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
+                <TableCell colSpan={5} className="text-center py-10">
                   <div className="flex flex-col items-center justify-center">
                     <Star className="w-10 h-10 text-pastel-yellow mb-2 animate-pulse" />
                     <p className="text-muted-foreground">No hay transacciones que mostrar</p>

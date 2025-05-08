@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Heart, Star, PieChart, ArrowUp, ArrowDown, Calendar, Search, 
-  ChevronDown, CircleDollarSign, CreditCard, RefreshCcw
+  ChevronDown, CircleDollarSign, CreditCard, RefreshCcw, FileSpreadsheet, FilePdf,
+  Wallet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DashboardCard from "@/components/ui/DashboardCard";
@@ -15,6 +15,10 @@ import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
 import MonthSelector from "@/components/ui/MonthSelector";
 import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 // Mock data
 const mockCategoryData = [
@@ -55,8 +59,12 @@ const mockPreviousMonthExpenseDetails = [
   { id: 9, name: "Cafetería", amount: 25, category: "Comida", date: new Date(2025, 3, 28) },
 ];
 
+// Create income data
+const mockIncomeTarget = 1500;
+const mockCurrentIncome = 1600;
+
 // Create daily expense data for chart
-const generateExpenseData = (month: Date) => {
+const generateExpenseData = (month: Date, filteredExpenses = mockExpenseDetails) => {
   const startDate = startOfMonth(month);
   const endDate = endOfMonth(month);
   const daysInMonth = endDate.getDate();
@@ -65,7 +73,7 @@ const generateExpenseData = (month: Date) => {
   
   for (let i = 1; i <= daysInMonth; i++) {
     const currentDate = new Date(month.getFullYear(), month.getMonth(), i);
-    const dayExpenses = mockExpenseDetails.filter(expense => 
+    const dayExpenses = filteredExpenses.filter(expense => 
       isSameDay(expense.date, currentDate)
     );
     
@@ -89,8 +97,8 @@ const Dashboard = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [expenseData, setExpenseData] = useState(generateExpenseData(currentMonth));
   const [filteredExpenses, setFilteredExpenses] = useState(mockExpenseDetails);
+  const [expenseData, setExpenseData] = useState(generateExpenseData(currentMonth));
   
   // Previous month data for comparison
   const previousMonth = subMonths(currentMonth, 1);
@@ -134,6 +142,9 @@ const Dashboard = () => {
     
     setFilteredExpenses(filtered);
     
+    // Update charts with filtered data
+    setExpenseData(generateExpenseData(currentMonth, filtered));
+    
     // Show toast when filters are applied
     if (searchQuery || categoryFilter || selectedDate) {
       toast({
@@ -141,12 +152,7 @@ const Dashboard = () => {
         description: "Los datos han sido filtrados según tus preferencias",
       });
     }
-  }, [searchQuery, categoryFilter, selectedDate, endDate, toast]);
-
-  // Update expense data when month changes
-  useEffect(() => {
-    setExpenseData(generateExpenseData(currentMonth));
-  }, [currentMonth]);
+  }, [searchQuery, categoryFilter, selectedDate, endDate, currentMonth, toast]);
 
   // Calculate filtered stats
   const totalMonth = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -188,6 +194,11 @@ const Dashboard = () => {
   const totalDiffPercentage = totalPreviousMonth ? (totalDiff / totalPreviousMonth) * 100 : 0;
   const isIncreasing = totalDiff > 0;
 
+  // Income target comparison
+  const incomeTargetDiff = mockCurrentIncome - mockIncomeTarget;
+  const incomeTargetPercentage = mockIncomeTarget ? (incomeTargetDiff / mockIncomeTarget) * 100 : 0;
+  const isIncomeTargetExceeded = incomeTargetDiff > 0;
+
   // Reset all filters
   const handleResetFilters = () => {
     setSearchQuery("");
@@ -201,6 +212,17 @@ const Dashboard = () => {
     });
     
     setFilteredExpenses(mockExpenseDetails);
+  };
+
+  const handleExport = (format: 'excel' | 'pdf') => {
+    const formatName = format === 'excel' ? 'Excel' : 'PDF';
+    
+    // In a real application, this would generate and download the file
+    // For now, we'll just show a toast message
+    toast({
+      title: `Exportado a ${formatName}`,
+      description: `Se han exportado ${filteredExpenses.length} gastos en formato ${formatName}`,
+    });
   };
 
   // Create monthly expense comparison chart data
@@ -226,6 +248,22 @@ const Dashboard = () => {
           <h2 className="text-xl text-primary mt-1">Dashboard</h2>
         </div>
         <div className="flex space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="rounded-full px-3 text-sm border-pastel-pink/30">
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <FileSpreadsheet className="w-4 h-4 mr-2" /> Exportar a Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <FilePdf className="w-4 h-4 mr-2" /> Exportar a PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Button 
             variant="outline"
             onClick={handleResetFilters}
@@ -297,7 +335,7 @@ const Dashboard = () => {
                 <tr className="border-b">
                   <th className="text-left py-2 px-3 font-medium">Concepto</th>
                   <th className="text-left py-2 px-3 font-medium">Categoría</th>
-                  <th className="text-right py-2 px-3 font-medium">Monto</th>
+                  <th className="text-right py-2 px-3 font-medium">Monto (S/)</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -306,7 +344,7 @@ const Dashboard = () => {
                     <tr key={expense.id} className="hover:bg-muted/50">
                       <td className="py-2 px-3">{expense.name}</td>
                       <td className="py-2 px-3">{expense.category}</td>
-                      <td className="py-2 px-3 text-right font-medium">${expense.amount}</td>
+                      <td className="py-2 px-3 text-right font-medium">S/ {expense.amount.toFixed(2)}</td>
                     </tr>
                   ))
                 ) : (
@@ -323,11 +361,11 @@ const Dashboard = () => {
       )}
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="relative">
           <DashboardCard 
             title="Total del Mes" 
-            value={`$${totalMonth}`} 
+            value={totalMonth} 
             icon={<CircleDollarSign className="w-5 h-5 text-white" />}
             iconColor="bg-pastel-pink"
           />
@@ -346,24 +384,46 @@ const Dashboard = () => {
         
         <DashboardCard 
           title="Promedio Diario" 
-          value={`$${dailyAvg.toFixed(2)}`} 
+          value={dailyAvg.toFixed(2)} 
           icon={<CreditCard className="w-5 h-5 text-white" />}
           iconColor="bg-pastel-green"
         />
         
         <DashboardCard 
           title="Día con Mayor Gasto" 
-          value={`${maxExpenseDay} ($${filteredExpenses.length > 0 ? maxExpense.amount : 0})`} 
+          value={maxExpenseDay}
+          isCurrency={false}
           icon={<Calendar className="w-5 h-5 text-white" />}
           iconColor="bg-pastel-blue"
         />
         
         <DashboardCard 
           title="Categoría Más Usada" 
-          value={topCategory} 
+          value={topCategory}
+          isCurrency={false}
           icon={<PieChart className="w-5 h-5 text-white" />}
           iconColor="bg-pastel-purple"
         />
+        
+        {/* New Income Card */}
+        <div className="relative">
+          <DashboardCard 
+            title="Ingresos del Mes" 
+            value={mockCurrentIncome} 
+            icon={<Wallet className="w-5 h-5 text-white" />}
+            iconColor="bg-pastel-green"
+          />
+          {/* Income Target Indicator */}
+          {isIncomeTargetExceeded && (
+            <div className="absolute -top-2 -right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm">
+              ¡Meta alcanzada!
+            </div>
+          )}
+          {/* Comparison indicator */}
+          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 flex items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full shadow-sm border border-pastel-pink/20">
+            <span className="text-xs">Meta: S/ {mockIncomeTarget.toFixed(2)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Charts */}
@@ -389,7 +449,7 @@ const Dashboard = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(value) => [`S/ ${Number(value).toFixed(2)}`, 'Monto']} />
               </PieChartComponent>
             </ResponsiveContainer>
           </div>
@@ -397,7 +457,7 @@ const Dashboard = () => {
             {(categoryDataForChart.length > 0 ? categoryDataForChart : mockCategoryData).map((cat, index) => (
               <div key={cat.name} className="flex items-center text-sm">
                 <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                <span>{cat.name}: ${cat.value}</span>
+                <span>{cat.name}: S/ {cat.value.toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -421,7 +481,7 @@ const Dashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="day" />
                 <YAxis />
-                <LineTooltip />
+                <LineTooltip formatter={(value) => [`S/ ${Number(value).toFixed(2)}`, 'Monto']} />
                 <Legend />
                 <Line 
                   type="monotone" 
@@ -441,7 +501,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* New Chart: Monthly Expense Comparison */}
+      {/* Monthly Expense Comparison */}
       <div className="card-pastel p-4 md:p-6 dark:bg-gray-800 dark:border-pastel-pink/20">
         <h3 className="text-lg font-medium mb-4 flex items-center">
           <ArrowUp className="w-5 h-5 mr-2 text-pastel-blue" /> 
@@ -453,7 +513,7 @@ const Dashboard = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="name" />
               <YAxis />
-              <LineTooltip />
+              <LineTooltip formatter={(value) => [`S/ ${Number(value).toFixed(2)}`, 'Total']} />
               <Legend />
               <Line 
                 type="monotone" 
