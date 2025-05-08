@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import DashboardCard from "@/components/ui/DashboardCard";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
-import { Input } from "@/components/ui/input";
+import { InputWithIcon } from "@/components/ui/InputWithIcon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart as PieChartComponent, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip } from "recharts";
@@ -70,7 +70,7 @@ const Dashboard = () => {
       {/* Filter section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2">
-          <Input
+          <InputWithIcon
             placeholder="Buscar gastos"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

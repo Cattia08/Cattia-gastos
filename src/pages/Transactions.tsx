@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Star, Search, ChevronUp, ChevronDown, Heart, CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputWithIcon } from "@/components/ui/InputWithIcon";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { 
@@ -287,7 +287,7 @@ const Transactions = () => {
       <Card className="p-4 border-pastel-pink/30">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Input
+            <InputWithIcon
               placeholder="Buscar transacciones"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
