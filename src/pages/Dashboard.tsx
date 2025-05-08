@@ -84,7 +84,7 @@ const Dashboard = () => {
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               {mockCategoryData.map((cat) => (
                 <SelectItem key={cat.name} value={cat.name}>
                   {cat.name}

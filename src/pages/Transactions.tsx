@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Star, Search, ChevronUp, ChevronDown, Heart, CircleAlert } from "lucide-react";
@@ -301,7 +302,7 @@ const Transactions = () => {
                 <SelectValue placeholder="Filtrar por categoría" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 {mockCategories.map((category) => (
                   <SelectItem key={category.name} value={category.name}>
                     {category.name}
