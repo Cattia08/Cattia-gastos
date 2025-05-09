@@ -22,10 +22,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { supabase } from "@/lib/supabase";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const Admin = () => {
   const { toast } = useToast();
-  const { categories, income, loading, error, refreshData } = useSupabaseData();
+  const { categories, income, loading, error, refreshData, transactions } = useSupabaseData();
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [isAddIncomeDialogOpen, setIsAddIncomeDialogOpen] = useState(false);
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
@@ -40,6 +42,14 @@ const Admin = () => {
   const fileInputRef = useRef(null);
   const [selectedProfilePic, setSelectedProfilePic] = useState(null);
   const [profilePicMessage, setProfilePicMessage] = useState("");
+
+  // Estado para el nombre de usuario
+  const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
+  const [nameInput, setNameInput] = useState(sidebarName);
+
+  // 1. Estado para edición de ingresos
+  const [isEditIncomeDialogOpen, setIsEditIncomeDialogOpen] = useState(false);
+  const [editingIncome, setEditingIncome] = useState({ id: 0, source: '', amount: '', date: new Date() });
 
   const handleAddCategory = async () => {
     if (!newCategory.name || !newCategory.color) {
@@ -214,6 +224,53 @@ const Admin = () => {
   const handleSaveProfilePic = () => {
     // No se puede subir a /public desde el frontend, así que instruimos al usuario
     setProfilePicMessage("Por seguridad, debes reemplazar manualmente el archivo 'Foto-Catt.jpg' en la carpeta /public de tu proyecto con la nueva imagen seleccionada.");
+  };
+
+  const handleUpdateSidebarName = () => {
+    setSidebarName(nameInput);
+    localStorage.setItem('sidebarName', nameInput);
+    toast({ title: 'Nombre actualizado', description: 'El nombre del sidebar/navbar ha sido actualizado.' });
+  };
+
+  // Obtener la última fecha de gasto correctamente de transactions
+  const lastTransactionDate = transactions.length > 0
+    ? format(new Date(Math.max(...transactions.map(t => new Date(t.date).getTime()))), "dd 'de' MMMM yyyy", { locale: es })
+    : "Sin datos";
+
+  const handleStartEditIncome = (inc) => {
+    setEditingIncome({ ...inc, amount: inc.amount.toString(), date: new Date(inc.date) });
+    setIsEditIncomeDialogOpen(true);
+  };
+
+  const handleEditIncome = async () => {
+    if (!editingIncome.source || !editingIncome.amount) {
+      toast({ title: 'Error', description: 'Por favor completa los campos requeridos', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('income').update({
+        source: editingIncome.source,
+        amount: parseFloat(editingIncome.amount),
+        date: editingIncome.date.toISOString()
+      }).eq('id', editingIncome.id);
+      if (error) throw error;
+      setIsEditIncomeDialogOpen(false);
+      toast({ title: 'Ingreso actualizado', description: 'El ingreso ha sido actualizado con éxito' });
+      await refreshData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo actualizar el ingreso', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteIncome = async (id) => {
+    try {
+      const { error } = await supabase.from('income').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Ingreso eliminado', description: 'El ingreso ha sido eliminado con éxito' });
+      await refreshData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo eliminar el ingreso', variant: 'destructive' });
+    }
   };
 
   if (loading) {
@@ -479,6 +536,7 @@ const Admin = () => {
                         <th className="text-left p-2">Fuente</th>
                         <th className="text-left p-2">Fecha</th>
                         <th className="text-right p-2">Monto</th>
+                        <th className="text-center p-2">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -487,15 +545,15 @@ const Admin = () => {
                           <td className="p-2">{inc.source}</td>
                           <td className="p-2">{new Date(inc.date).toLocaleDateString()}</td>
                           <td className="p-2 text-right font-medium">${inc.amount.toFixed(2)}</td>
+                          <td className="p-2 text-center">
+                            <Button size="icon" variant="ghost" className="text-pastel-blue hover:bg-pastel-blue/10 mr-1" onClick={() => handleStartEditIncome(inc)}><Edit className="w-4 h-4" /></Button>
+                            <Button size="icon" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteIncome(inc.id)}><Trash className="w-4 h-4" /></Button>
+                          </td>
                         </tr>
                       ))}
                       <tr className="bg-pastel-green/10">
-                        <td className="p-2 font-bold" colSpan={2}>
-                          Total
-                        </td>
-                        <td className="p-2 text-right font-bold">
-                          ${income.reduce((sum, inc) => sum + inc.amount, 0).toFixed(2)}
-                        </td>
+                        <td className="p-2 font-bold" colSpan={3}>Total</td>
+                        <td className="p-2 text-right font-bold">${income.reduce((sum, inc) => sum + inc.amount, 0).toFixed(2)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -520,25 +578,6 @@ const Admin = () => {
                   <p className="text-sm text-muted-foreground">Cambia la apariencia de la aplicación</p>
                 </div>
                 <Switch checked={isDarkMode} onCheckedChange={handleToggleDarkMode} />
-              </div>
-
-              <Separator className="my-4" />
-
-              <div className="flex flex-col space-y-2">
-                <h3 className="font-medium">Moneda</h3>
-                <p className="text-sm text-muted-foreground mb-2">Selecciona tu moneda preferida</p>
-                <Select value={currency} onValueChange={handleCurrencyChange}>
-                  <SelectTrigger className="w-full md:w-[180px] border-pastel-yellow/30">
-                    <SelectValue placeholder="Moneda" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">Dólar (USD)</SelectItem>
-                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                    <SelectItem value="MXN">Peso Mexicano (MXN)</SelectItem>
-                    <SelectItem value="COP">Peso Colombiano (COP)</SelectItem>
-                    <SelectItem value="ARS">Peso Argentino (ARS)</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <Separator className="my-4" />
@@ -577,32 +616,73 @@ const Admin = () => {
                 )}
               </div>
 
-              <div>
-                <h3 className="font-medium mb-2">Respaldo de Datos</h3>
-                <p className="text-sm text-muted-foreground mb-4">Exporta tu información para respaldo</p>
-                <div className="flex space-x-4">
-                  <Button
-                    variant="outline"
-                    className="border-pastel-yellow/30 hover:bg-pastel-yellow/10"
-                    onClick={handleExportData}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Exportar CSV
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-pastel-yellow/30 hover:bg-pastel-yellow/10"
-                    onClick={handleExportData}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Exportar JSON
-                  </Button>
-                </div>
+              <Separator className="my-4" />
+
+              <div className="flex flex-col items-center gap-2 mb-8 w-full max-w-md mx-auto">
+                <h3 className="font-medium mb-2 text-lg text-pastel-blue">Nombre en el menú lateral</h3>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  className="border border-pastel-blue/60 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-pastel-blue/40 font-semibold text-lg text-pastel-blue bg-white shadow"
+                  maxLength={20}
+                />
+                <Button
+                  className="bg-pastel-green hover:bg-pastel-green/50 text-foreground rounded-full"
+                  onClick={handleUpdateSidebarName}
+                  disabled={nameInput.trim() === sidebarName.trim() || nameInput.trim() === ''}
+                >
+                  Actualizar nombre
+                </Button>
+              </div>
+
+              <div className="flex flex-col items-center mt-8 w-full max-w-md mx-auto bg-pastel-yellow/80 rounded-2xl shadow-lg p-6">
+                <h3 className="font-bold text-lg mb-2 text-pastel-foreground">Ingresar a make para actualizar los gastos</h3>
+                <a
+                  href="https://us2.make.com/855106/scenarios/1782501/edit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-pastel-green hover:bg-pastel-pink/90 hover:text-white text-pastel-foreground font-bold rounded-full px-6 py-2 shadow-lg transition-all duration-200 text-lg focus:ring-2 focus:ring-pastel-green/40 focus:outline-none active:scale-95 mb-2"
+                >
+                  Actualizar datos
+                </a>
+                <span className="text-sm text-pastel-foreground mt-2 font-semibold">El último día que se actualizó es: <span className="font-bold text-pastel-blue">{lastTransactionDate}</span></span>
               </div>
             </div>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* 3. Dialog para editar ingreso */}
+      <Dialog open={isEditIncomeDialogOpen} onOpenChange={setIsEditIncomeDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-green/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5 text-pastel-green" />
+              Editar Ingreso
+            </DialogTitle>
+            <DialogDescription>Modifica los detalles de este ingreso.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-source">Fuente</Label>
+              <Input id="edit-source" value={editingIncome.source} onChange={e => setEditingIncome({ ...editingIncome, source: e.target.value })} className="border-pastel-green/30" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-amount">Monto</Label>
+              <Input id="edit-amount" type="number" value={editingIncome.amount} onChange={e => setEditingIncome({ ...editingIncome, amount: e.target.value })} className="border-pastel-green/30" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-date">Fecha</Label>
+              <CustomDatePicker date={editingIncome.date} setDate={date => setEditingIncome({ ...editingIncome, date: date || new Date() })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditIncomeDialogOpen(false)} className="border-pastel-green/30">Cancelar</Button>
+            <Button onClick={handleEditIncome} className="bg-pastel-green hover:bg-pastel-green/80 text-foreground">Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

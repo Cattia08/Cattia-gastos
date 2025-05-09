@@ -1,10 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Star, Heart, PieChart, List, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const location = useLocation();
+
+  // Leer el nombre del sidebar desde localStorage y actualizar en tiempo real
+  const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
+  useEffect(() => {
+    const onStorage = () => setSidebarName(localStorage.getItem('sidebarName') || 'Catt');
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Permitir actualización inmediata tras cambiar el nombre en la misma pestaña
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const name = localStorage.getItem('sidebarName') || 'Catt';
+      setSidebarName(name);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   const navItems = [
     {
@@ -92,7 +109,7 @@ const Navbar = () => {
               className="w-16 h-16 rounded-full shadow-lg border-4 border-white object-cover transition-transform duration-200 group-hover:scale-105 group-hover:shadow-xl"
             />
           </div>
-          <span className="mt-2 text-base font-semibold font-quicksand tracking-wide text-sidebar-foreground">Catt</span>
+          <span className="mt-2 text-base font-semibold font-quicksand tracking-wide text-sidebar-foreground">{sidebarName}</span>
         </div>
       </div>
     </nav>

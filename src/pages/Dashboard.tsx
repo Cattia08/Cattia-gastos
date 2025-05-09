@@ -188,10 +188,8 @@ const Dashboard = () => {
   // Reset all filters
   const handleResetFilters = () => {
     setSearchQuery("");
-    setSelectedCategories([]);
     setSelectedDate(undefined);
     setEndDate(undefined);
-
     toast({
       title: "Filtros restablecidos",
       description: "Se ha vuelto a la vista general"
@@ -306,9 +304,6 @@ const Dashboard = () => {
           >
             <RefreshCcw className="w-3 h-3 mr-1" /> Restablecer
           </Button>
-          <Button className="bg-primary hover:bg-primary/90 rounded-full px-4">
-            <Heart className="w-4 h-4 mr-2" /> Añadir Gasto
-          </Button>
         </div>
       </div>
 
@@ -415,17 +410,6 @@ const Dashboard = () => {
             icon={<CircleDollarSign className="w-5 h-5 text-white" />}
             iconColor="bg-pastel-pink"
           />
-          {/* Comparison indicator */}
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full shadow-sm border border-pastel-pink/20">
-            {incomeTargetDiff > 0 ? (
-              <ArrowUp className="h-3 w-3 text-red-500 mr-1" />
-            ) : (
-              <ArrowDown className="h-3 w-3 text-green-500 mr-1" />
-            )}
-            <span className={`text-xs ${incomeTargetDiff > 0 ? "text-red-500" : "text-green-500"}`}>
-              {Math.abs(incomeTargetPercentage).toFixed(1)}%
-            </span>
-          </div>
         </div>
 
         <DashboardCard
@@ -459,16 +443,6 @@ const Dashboard = () => {
             icon={<Wallet className="w-5 h-5 text-white" />}
             iconColor="bg-pastel-green"
           />
-          {/* Income Target Indicator */}
-          {isIncomeTargetExceeded && (
-            <div className="absolute -top-2 -right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm">
-              ¡Meta alcanzada!
-            </div>
-          )}
-          {/* Comparison indicator */}
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex items-center bg-white dark:bg-gray-800 px-2 py-1 rounded-full shadow-sm border border-pastel-pink/20">
-            <span className="text-xs">Meta: S/ {incomeTarget.toFixed(2)}</span>
-          </div>
         </div>
       </div>
 
