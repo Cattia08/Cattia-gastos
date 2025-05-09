@@ -35,6 +35,7 @@ import {
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const COLORS = ["#FFB7B2", "#A8E6CF", "#FDFFAB", "#B5D8EB", "#E5C5F1"];
 
@@ -54,12 +55,13 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { transactions, income, categories, loading, error } = useSupabaseData();
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [filteredExpenses, setFilteredExpenses] = useState([]);
   const [expenseData, setExpenseData] = useState([]);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   // Previous month data for comparison
   const previousMonth = subMonths(currentMonth, 1);
@@ -116,8 +118,8 @@ const Dashboard = () => {
     }
 
     // Apply category filter
-    if (categoryFilter && categoryFilter !== "all") {
-      filtered = filtered.filter(expense => expense.categories?.id === categoryFilter);
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(expense => selectedCategories.includes(expense.categories?.id));
     }
 
     // Apply date filter
@@ -140,13 +142,13 @@ const Dashboard = () => {
     setExpenseData(generateExpenseData(currentMonth, filtered));
 
     // Show toast when filters are applied
-    if (searchQuery || categoryFilter || selectedDate) {
+    if (searchQuery || selectedCategories.length > 0 || selectedDate) {
       toast({
         title: "Filtros aplicados",
         description: "Los datos han sido filtrados según tus preferencias"
       });
     }
-  }, [searchQuery, categoryFilter, selectedDate, endDate, currentMonth, transactions, loading]);
+  }, [searchQuery, selectedCategories, selectedDate, endDate, currentMonth, transactions, loading]);
 
   // Calculate filtered stats
   const totalMonth = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -186,7 +188,7 @@ const Dashboard = () => {
   // Reset all filters
   const handleResetFilters = () => {
     setSearchQuery("");
-    setCategoryFilter("");
+    setSelectedCategories([]);
     setSelectedDate(undefined);
     setEndDate(undefined);
 
@@ -244,6 +246,18 @@ const Dashboard = () => {
         description: `Se han exportado ${filteredExpenses.length} gastos en formato PDF`
       });
     }
+  };
+
+  useEffect(() => {
+    if (categories.length > 0 && selectedCategories.length === 0) {
+      setSelectedCategories(categories.map(cat => cat.id));
+    }
+  }, [categories]);
+
+  const handleCategoryCheck = (id) => {
+    setSelectedCategories(prev =>
+      prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
+    );
   };
 
   if (loading) {
@@ -309,20 +323,33 @@ const Dashboard = () => {
             icon={<Search className="w-4 h-4 text-muted-foreground" />}
           />
         </div>
-        <div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full border-pastel-pink/30">
-              <SelectValue placeholder="Categoría" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
+        <div className="relative w-full">
+          <Button
+            variant="outline"
+            className="w-full border-pastel-pink/30 flex justify-between items-center"
+            onClick={() => setShowCategoryDropdown(v => !v)}
+          >
+            {selectedCategories.length === categories.length
+              ? "Todas las categorías"
+              : selectedCategories.length === 0
+              ? "Ninguna categoría"
+              : `${selectedCategories.length} seleccionadas`}
+            <ChevronDown className="ml-2 w-4 h-4" />
+          </Button>
+          {showCategoryDropdown && (
+            <div className="absolute z-10 mt-2 w-full bg-white border border-pastel-pink/30 rounded shadow-lg max-h-60 overflow-auto">
               {categories.map(cat => (
-                <SelectItem key={cat.id} value={cat.id}>
+                <label key={cat.id} className="flex items-center px-3 py-2 cursor-pointer hover:bg-pastel-pink/10">
+                  <Checkbox
+                    checked={selectedCategories.includes(cat.id)}
+                    onCheckedChange={() => handleCategoryCheck(cat.id)}
+                    className="mr-2"
+                  />
                   {cat.name}
-                </SelectItem>
+                </label>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          )}
         </div>
         <div>
           <InteractiveCalendar
