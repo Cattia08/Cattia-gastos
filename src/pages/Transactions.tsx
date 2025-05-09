@@ -36,13 +36,15 @@ import { Label } from "@/components/ui/label";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
-import { format, isSameDay, isWithinInterval } from "date-fns";
+import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import MonthSelector from "@/components/ui/MonthSelector";
+import { es } from "date-fns/locale";
 
 const Transactions = () => {
   const { toast } = useToast();
@@ -66,6 +68,8 @@ const Transactions = () => {
     category_id: "",
     date: new Date()
   });
+
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const handleSort = (key: string) => {
     let direction: "ascending" | "descending" = "ascending";
@@ -252,6 +256,16 @@ const Transactions = () => {
   };
 
   const memoizedCurrentTransaction = useMemo(() => currentTransaction, [currentTransaction.id]);
+
+  // Filtrar por mes seleccionado
+  const filteredByMonth = useMemo(() => {
+    const start = startOfMonth(currentMonth);
+    const end = endOfMonth(currentMonth);
+    return getSortedTransactions().filter(transaction => {
+      const date = new Date(transaction.date);
+      return date >= start && date <= end;
+    });
+  }, [getSortedTransactions, currentMonth]);
 
   const TransactionForm = ({ initialData, onSave, onCancel }) => {
     const [form, setForm] = useState(initialData);
@@ -511,6 +525,12 @@ const Transactions = () => {
         </div>
       )}
 
+      {/* Month selector */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">Transacciones</h2>
+        <MonthSelector currentMonth={currentMonth} onChange={setCurrentMonth} />
+      </div>
+
       {/* Transactions Table */}
       <Card className="border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
         <Table>
@@ -560,8 +580,8 @@ const Transactions = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {getSortedTransactions().length > 0 ? (
-              getSortedTransactions().map(transaction => (
+            {filteredByMonth.length > 0 ? (
+              filteredByMonth.map(transaction => (
                 <TableRow
                   key={transaction.id}
                   className={!transaction.category_id ? "bg-amber-50/50 dark:bg-amber-950/20" : ""}

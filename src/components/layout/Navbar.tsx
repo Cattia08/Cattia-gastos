@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Star, Heart, PieChart, List, Settings } from "lucide-react";
@@ -55,7 +54,7 @@ const Navbar = () => {
       </div>
 
       {/* Desktop Navigation */}
-      <div className="hidden md:flex flex-col items-start p-6 h-screen bg-gradient-to-b from-white to-pastel-pink/10 border-r border-pastel-pink/20">
+      <div className="hidden md:flex flex-col items-start p-6 h-screen bg-gradient-to-b from-white to-pastel-pink/10 border-r border-pastel-pink/20 w-64">
         <div className="flex items-center mb-8">
           <Heart className="w-6 h-6 text-primary mr-2 animate-pulse-soft" />
           <h1 className="text-xl font-bold">ExpenseTracker</h1>
@@ -84,6 +83,16 @@ const Navbar = () => {
               <span>{item.name}</span>
             </Link>
           ))}
+        </div>
+        <div className="mt-auto flex flex-col items-center pb-4 w-full">
+          <div className="relative group">
+            <img
+              src="/Foto-Catt.jpg"
+              alt="Foto de Catt"
+              className="w-16 h-16 rounded-full shadow-lg border-4 border-white object-cover transition-transform duration-200 group-hover:scale-105 group-hover:shadow-xl"
+            />
+          </div>
+          <span className="mt-2 text-base font-semibold font-quicksand tracking-wide text-sidebar-foreground">Catt</span>
         </div>
       </div>
     </nav>

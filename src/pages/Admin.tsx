@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,10 @@ const Admin = () => {
   const [newCategory, setNewCategory] = useState({ name: "", color: "" });
   const [editingCategory, setEditingCategory] = useState({ id: 0, name: "", color: "" });
   const [newIncome, setNewIncome] = useState({ source: "", amount: "", date: new Date() });
+
+  const fileInputRef = useRef(null);
+  const [selectedProfilePic, setSelectedProfilePic] = useState(null);
+  const [profilePicMessage, setProfilePicMessage] = useState("");
 
   const handleAddCategory = async () => {
     if (!newCategory.name || !newCategory.color) {
@@ -197,6 +201,19 @@ const Admin = () => {
       title: "Moneda actualizada",
       description: `La moneda ha sido actualizada a ${value}`
     });
+  };
+
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedProfilePic(file);
+      setProfilePicMessage("Haz clic en 'Guardar nueva foto' para actualizar tu imagen. Esto reemplazará la foto actual.");
+    }
+  };
+
+  const handleSaveProfilePic = () => {
+    // No se puede subir a /public desde el frontend, así que instruimos al usuario
+    setProfilePicMessage("Por seguridad, debes reemplazar manualmente el archivo 'Foto-Catt.jpg' en la carpeta /public de tu proyecto con la nueva imagen seleccionada.");
   };
 
   if (loading) {
@@ -525,6 +542,40 @@ const Admin = () => {
               </div>
 
               <Separator className="my-4" />
+
+              <div className="flex flex-col items-center mb-6">
+                <h3 className="font-medium mb-2">Foto de Perfil</h3>
+                <img
+                  src="/Foto-Catt.jpg"
+                  alt="Foto de Catt"
+                  className="w-24 h-24 rounded-full shadow-lg border-4 border-white object-cover mb-2"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleProfilePicChange}
+                />
+                <Button
+                  variant="outline"
+                  className="border-pastel-yellow/30 hover:bg-pastel-yellow/10 mb-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Cambiar foto
+                </Button>
+                {selectedProfilePic && (
+                  <Button
+                    className="bg-pastel-yellow hover:bg-pastel-yellow/80 text-foreground"
+                    onClick={handleSaveProfilePic}
+                  >
+                    Guardar nueva foto
+                  </Button>
+                )}
+                {profilePicMessage && (
+                  <span className="text-xs text-muted-foreground mt-2">{profilePicMessage}</span>
+                )}
+              </div>
 
               <div>
                 <h3 className="font-medium mb-2">Respaldo de Datos</h3>

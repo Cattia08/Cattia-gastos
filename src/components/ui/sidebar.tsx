@@ -244,11 +244,25 @@ const Sidebar = React.forwardRef<
           )}
           {...props}
         >
-          <div
-            data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
-          >
-            {children}
+          <div className="flex flex-col h-full">
+            <div className="flex-1 flex flex-col">
+              <div
+                data-sidebar="sidebar"
+                className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+              >
+                {children}
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-end pb-6 pt-2 bg-gradient-to-t from-white/80 via-white/60 to-transparent dark:from-gray-900/80 dark:via-gray-900/60">
+              <div className="relative group">
+                <img
+                  src="/Foto-Catt.jpg"
+                  alt="Foto de Catt"
+                  className="w-16 h-16 rounded-full shadow-lg border-4 border-white object-cover transition-transform duration-200 group-hover:scale-105 group-hover:shadow-xl"
+                />
+              </div>
+              <span className="mt-2 text-base font-semibold font-quicksand tracking-wide text-sidebar-foreground">Catt</span>
+            </div>
           </div>
         </div>
       </div>
