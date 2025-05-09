@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { supabase } from "@/lib/supabase";
@@ -14,7 +14,8 @@ import {
   Calendar,
   Edit,
   FileSpreadsheet,
-  FileType2
+  FileType2,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,56 +251,88 @@ const Transactions = () => {
     return format(selectedDate, "dd 'de' MMMM, yyyy");
   };
 
-  const TransactionForm = () => (
-    <div className="grid gap-4 py-4">
-      <div className="grid gap-2">
-        <Label htmlFor="name">Nombre</Label>
-        <Input
-          id="name"
-          value={currentTransaction.name}
-          onChange={e => setCurrentTransaction({ ...currentTransaction, name: e.target.value })}
-          className="border-pastel-pink/30"
-          placeholder="Ej. Compras supermercado"
-        />
+  const memoizedCurrentTransaction = useMemo(() => currentTransaction, [currentTransaction.id]);
+
+  const TransactionForm = ({ initialData, onSave, onCancel }) => {
+    const [form, setForm] = useState(initialData);
+
+    useEffect(() => {
+      setForm(initialData);
+    }, [initialData.id]);
+
+    return (
+      <div className="grid gap-4 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="name">Nombre</Label>
+          <Input
+            id="name"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            className="border-pastel-pink/30"
+            placeholder="Ej. Compras supermercado"
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="amount">Monto (S/)</Label>
+          <Input
+            id="amount"
+            type="number"
+            value={form.amount}
+            onChange={e => setForm({ ...form, amount: e.target.value })}
+            className="border-pastel-pink/30"
+            placeholder="0.00"
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="category">Categoría</Label>
+          <Select
+            value={form.category_id}
+            onValueChange={value => setForm({ ...form, category_id: value })}
+          >
+            <SelectTrigger className="border-pastel-pink/30">
+              <SelectValue placeholder="Selecciona una categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              {supabaseCategories.map(category => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="date">Fecha</Label>
+          <CustomDatePicker
+            date={form.date}
+            setDate={date => setForm({ ...form, date: date || new Date() })}
+          />
+        </div>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="outline" onClick={onCancel} className="border-pastel-pink/30">Cancelar</Button>
+          <Button onClick={() => onSave(form)} className="bg-primary hover:bg-primary/90">Guardar</Button>
+        </div>
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="amount">Monto (S/)</Label>
-        <Input
-          id="amount"
-          type="number"
-          value={currentTransaction.amount}
-          onChange={e => setCurrentTransaction({ ...currentTransaction, amount: e.target.value })}
-          className="border-pastel-pink/30"
-          placeholder="0.00"
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="category">Categoría</Label>
-        <Select
-          value={currentTransaction.category_id}
-          onValueChange={value => setCurrentTransaction({ ...currentTransaction, category_id: value })}
-        >
-          <SelectTrigger className="border-pastel-pink/30">
-            <SelectValue placeholder="Selecciona una categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            {supabaseCategories.map(category => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="date">Fecha</Label>
-        <CustomDatePicker
-          date={currentTransaction.date}
-          setDate={date => setCurrentTransaction({ ...currentTransaction, date: date || new Date() })}
-        />
-      </div>
-    </div>
-  );
+    );
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    try {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+      toast({
+        title: "Transacción eliminada",
+        description: "La transacción ha sido eliminada con éxito"
+      });
+      await refreshData();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la transacción",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -345,22 +378,34 @@ const Transactions = () => {
                 </DialogTitle>
                 <DialogDescription>Completa los detalles de tu nueva transacción aquí.</DialogDescription>
               </DialogHeader>
-              <TransactionForm />
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
+              <TransactionForm
+                initialData={{ id: 0, name: "", amount: "", category_id: "", date: new Date() }}
+                onSave={async (form) => {
+                  if (!form.name || !form.amount) {
+                    toast({ title: "Error", description: "Por favor completa los campos requeridos", variant: "destructive" });
+                    return;
+                  }
+                  try {
+                    const { error: insertError } = await supabase.from("transactions").insert([
+                      {
+                        name: form.name,
+                        amount: parseFloat(form.amount),
+                        category_id: form.category_id,
+                        date: form.date
+                      }
+                    ]);
+                    if (insertError) throw insertError;
+                    toast({ title: "Transacción añadida", description: "La transacción ha sido añadida con éxito" });
                     setIsAddDialogOpen(false);
-                    resetTransactionForm();
-                  }}
-                  className="border-pastel-pink/30"
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={handleAddTransaction} className="bg-primary hover:bg-primary/90">
-                  Guardar
-                </Button>
-              </DialogFooter>
+                    await refreshData();
+                  } catch (err) {
+                    toast({ title: "Error", description: "Hubo un error al procesar la transacción", variant: "destructive" });
+                  }
+                }}
+                onCancel={() => {
+                  setIsAddDialogOpen(false);
+                }}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -376,22 +421,36 @@ const Transactions = () => {
             </DialogTitle>
             <DialogDescription>Modifica los detalles de esta transacción.</DialogDescription>
           </DialogHeader>
-          <TransactionForm />
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
+          <TransactionForm
+            initialData={memoizedCurrentTransaction}
+            onSave={async (form) => {
+              if (!form.name || !form.amount) {
+                toast({ title: "Error", description: "Por favor completa los campos requeridos", variant: "destructive" });
+                return;
+              }
+              try {
+                const { error: updateError } = await supabase
+                  .from("transactions")
+                  .update({
+                    name: form.name,
+                    amount: parseFloat(form.amount),
+                    category_id: form.category_id,
+                    date: form.date
+                  })
+                  .eq("id", form.id);
+                if (updateError) throw updateError;
+                toast({ title: "Transacción actualizada", description: "La transacción ha sido actualizada con éxito" });
                 setIsEditDialogOpen(false);
-                resetTransactionForm();
-              }}
-              className="border-pastel-pink/30"
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleAddTransaction} className="bg-primary hover:bg-primary/90">
-              Actualizar
-            </Button>
-          </DialogFooter>
+                await refreshData();
+              } catch (err) {
+                toast({ title: "Error", description: "Hubo un error al procesar la transacción", variant: "destructive" });
+              }
+            }}
+            onCancel={() => {
+              setIsEditDialogOpen(false);
+              resetTransactionForm();
+            }}
+          />
         </DialogContent>
       </Dialog>
 
@@ -534,6 +593,9 @@ const Transactions = () => {
                   <TableCell>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(transaction)} className="h-8 w-8 p-0">
                       <Edit className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteTransaction(transaction.id)} className="h-8 w-8 p-0">
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </TableCell>
                 </TableRow>
