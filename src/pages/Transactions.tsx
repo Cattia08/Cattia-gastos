@@ -71,6 +71,10 @@ const Transactions = () => {
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  const [showNoCategoryDialog, setShowNoCategoryDialog] = useState(false);
+  const [noCategoryEdits, setNoCategoryEdits] = useState([]);
+  const [savingNoCategory, setSavingNoCategory] = useState(false);
+
   const handleSort = (key: string) => {
     let direction: "ascending" | "descending" = "ascending";
 
@@ -257,16 +261,6 @@ const Transactions = () => {
 
   const memoizedCurrentTransaction = useMemo(() => currentTransaction, [currentTransaction.id]);
 
-  // Filtrar por mes seleccionado
-  const filteredByMonth = useMemo(() => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    return getSortedTransactions().filter(transaction => {
-      const date = new Date(transaction.date);
-      return date >= start && date <= end;
-    });
-  }, [getSortedTransactions, currentMonth]);
-
   const TransactionForm = ({ initialData, onSave, onCancel }) => {
     const [form, setForm] = useState(initialData);
 
@@ -347,6 +341,44 @@ const Transactions = () => {
       });
     }
   };
+
+  const noCategoryTransactions = supabaseTransactions.filter(t => !t.category_id);
+
+  const handleOpenNoCategoryDialog = () => {
+    setNoCategoryEdits(noCategoryTransactions.map(t => ({ ...t, newCategory: "" })));
+    setShowNoCategoryDialog(true);
+  };
+
+  const handleNoCategoryChange = (id, value) => {
+    setNoCategoryEdits(edits => edits.map(t => t.id === id ? { ...t, newCategory: value } : t));
+  };
+
+  const handleSaveNoCategory = async () => {
+    setSavingNoCategory(true);
+    const updates = noCategoryEdits.filter(t => t.newCategory);
+    for (const t of updates) {
+      await supabase.from("transactions").update({ category_id: t.newCategory }).eq("id", t.id);
+    }
+    setSavingNoCategory(false);
+    setShowNoCategoryDialog(false);
+    await refreshData();
+  };
+
+  // Nueva función para saber si hay filtros activos
+  const hasActiveFilters = searchQuery || (categoryFilter && categoryFilter !== 'all') || selectedDate;
+
+  // Filtrado por mes seleccionado
+  const transactionsByMonth = useMemo(() => {
+    const start = startOfMonth(currentMonth);
+    const end = endOfMonth(currentMonth);
+    return supabaseTransactions.filter(transaction => {
+      const date = new Date(transaction.date);
+      return date >= start && date <= end;
+    });
+  }, [supabaseTransactions, currentMonth]);
+
+  // Decide qué transacciones mostrar
+  const transactionsToShow = hasActiveFilters ? getSortedTransactions() : transactionsByMonth;
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -580,8 +612,8 @@ const Transactions = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredByMonth.length > 0 ? (
-              filteredByMonth.map(transaction => (
+            {transactionsToShow.length > 0 ? (
+              transactionsToShow.map(transaction => (
                 <TableRow
                   key={transaction.id}
                   className={!transaction.category_id ? "bg-amber-50/50 dark:bg-amber-950/20" : ""}
@@ -633,6 +665,47 @@ const Transactions = () => {
           </TableBody>
         </Table>
       </Card>
+
+      {/* No Category Transactions Button */}
+      {noCategoryTransactions.length > 0 && (
+        <Button
+          className="mb-4 bg-pastel-yellow hover:bg-pastel-pink/80 text-pastel-foreground font-bold rounded-full px-6 py-2 shadow transition-all duration-200"
+          onClick={handleOpenNoCategoryDialog}
+        >
+          {noCategoryTransactions.length} gasto{noCategoryTransactions.length > 1 ? 's' : ''} sin categoría
+        </Button>
+      )}
+
+      {/* Dialog para asignar categorías */}
+      <Dialog open={showNoCategoryDialog} onOpenChange={setShowNoCategoryDialog}>
+        <DialogContent className="max-w-lg bg-white rounded-2xl border-pastel-yellow/30">
+          <DialogHeader>
+            <DialogTitle>Asignar categorías a gastos sin categoría</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {noCategoryEdits.map(t => (
+              <div key={t.id} className="flex items-center gap-2 p-2 border-b">
+                <span className="flex-1 text-sm">{t.name}</span>
+                <Select value={t.newCategory} onValueChange={val => handleNoCategoryChange(t.id, val)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Seleccionar categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {supabaseCategories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSaveNoCategory} disabled={savingNoCategory} className="bg-pastel-green hover:bg-pastel-pink/80 text-white font-bold rounded-full px-6 py-2 shadow">
+              Guardar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -51,6 +51,12 @@ const Admin = () => {
   const [isEditIncomeDialogOpen, setIsEditIncomeDialogOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState({ id: 0, source: '', amount: '', date: new Date() });
 
+  // Estado para edición inline
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [editingColorId, setEditingColorId] = useState(null);
+  const [showCheckId, setShowCheckId] = useState(null);
+
   const handleAddCategory = async () => {
     if (!newCategory.name || !newCategory.color) {
       toast({
@@ -273,6 +279,43 @@ const Admin = () => {
     }
   };
 
+  const handleInlineEditName = (category) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name);
+  };
+
+  const saveInlineEditName = async (category, cancel = false) => {
+    if (!cancel && editingCategoryName.trim() && editingCategoryName !== category.name) {
+      try {
+        const { error } = await supabase.from('categories').update({ name: editingCategoryName }).eq('id', category.id);
+        if (!error) {
+          setShowCheckId(category.id);
+          setTimeout(() => setShowCheckId(null), 1200);
+          await refreshData();
+        }
+      } catch (e) { /* opcional: toast({ title: 'Error', description: 'No se pudo actualizar el nombre', variant: 'destructive' }); */ }
+    }
+    setEditingCategoryId(null);
+  };
+
+  const handleInlineEditColor = (category) => {
+    setEditingColorId(category.id);
+  };
+
+  const saveInlineEditColor = async (category, color) => {
+    if (color && color !== category.color) {
+      try {
+        const { error } = await supabase.from('categories').update({ color }).eq('id', category.id);
+        if (!error) {
+          setShowCheckId(category.id);
+          setTimeout(() => setShowCheckId(null), 1200);
+          await refreshData();
+        }
+      } catch (e) { /* opcional: toast({ title: 'Error', description: 'No se pudo actualizar el color', variant: 'destructive' }); */ }
+    }
+    setEditingColorId(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -369,52 +412,6 @@ const Admin = () => {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-
-              <Dialog open={isEditCategoryDialogOpen} onOpenChange={setIsEditCategoryDialogOpen}>
-                <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Edit className="w-5 h-5 text-primary" />
-                      Editar Categoría
-                    </DialogTitle>
-                    <DialogDescription>Actualiza los detalles de esta categoría.</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-name">Nombre</Label>
-                      <Input
-                        id="edit-name"
-                        value={editingCategory.name}
-                        onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                        className="border-pastel-pink/30"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-color">Color</Label>
-                      <input
-                        id="edit-color"
-                        type="color"
-                        value={editingCategory.color || "#FFB7B2"}
-                        onChange={e => setEditingCategory({ ...editingCategory, color: e.target.value })}
-                        className="w-12 h-8 p-0 border-none bg-transparent"
-                        style={{ cursor: 'pointer' }}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditCategoryDialogOpen(false)}
-                      className="border-pastel-pink/30"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleEditCategory} className="bg-primary hover:bg-primary/90">
-                      Guardar
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -425,21 +422,50 @@ const Admin = () => {
                 >
                   <div className="flex items-center">
                     <div
-                      className={`w-6 h-6 rounded-full mr-3 border`}
+                      className={`w-6 h-6 rounded-full mr-3 border cursor-pointer relative group`}
                       style={category.color?.startsWith('#') ? { backgroundColor: category.color } : undefined}
                       {...(!category.color?.startsWith('#') && { className: `w-6 h-6 rounded-full mr-3 border ${category.color || "bg-pastel-pink"}` })}
-                    ></div>
-                    <span className="font-medium">{category.name}</span>
+                      onClick={() => handleInlineEditColor(category)}
+                    >
+                      {editingColorId === category.id && (
+                        <input
+                          type="color"
+                          value={category.color || "#FFB7B2"}
+                          onChange={e => saveInlineEditColor(category, e.target.value)}
+                          className="absolute -top-2 -left-2 w-10 h-10 opacity-100 z-10 border-none bg-transparent cursor-pointer"
+                          style={{ boxShadow: '0 0 0 2px #fff' }}
+                          autoFocus
+                          onBlur={() => setEditingColorId(null)}
+                        />
+                      )}
+                      {showCheckId === category.id && (
+                        <Check className="absolute -right-2 -top-2 w-4 h-4 text-green-500 bg-white rounded-full shadow" />
+                      )}
+                    </div>
+                    {editingCategoryId === category.id ? (
+                      <input
+                        type="text"
+                        value={editingCategoryName}
+                        onChange={e => setEditingCategoryName(e.target.value)}
+                        onBlur={() => saveInlineEditName(category)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') saveInlineEditName(category);
+                          if (e.key === 'Escape') saveInlineEditName(category, true);
+                        }}
+                        className="font-medium border-b-2 border-pastel-pink/60 bg-transparent outline-none px-1 text-pastel-blue"
+                        autoFocus
+                        maxLength={20}
+                      />
+                    ) : (
+                      <span
+                        className="font-medium cursor-pointer hover:underline"
+                        onDoubleClick={() => handleInlineEditName(category)}
+                      >
+                        {category.name}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-pastel-pink/10"
-                      onClick={() => handleStartEditCategory(category)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
