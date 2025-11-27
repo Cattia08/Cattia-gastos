@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Heart,
   Star,
@@ -36,6 +37,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import ExportButton from "@/components/export/ExportButton";
+import InsightsModal from "@/components/InsightsModal";
 import FilterBar from "@/components/FilterBar";
 import { Tooltip as UiTooltip, TooltipContent as UiTooltipContent, TooltipProvider as UiTooltipProvider, TooltipTrigger as UiTooltipTrigger } from "@/components/ui/tooltip";
 
@@ -56,6 +58,7 @@ interface Expense {
 const Dashboard = () => {
   const { toast } = useToast();
   const { transactions, income, categories, loading, error } = useSupabaseData();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -68,6 +71,7 @@ const Dashboard = () => {
   const [isDark, setIsDark] = useState<boolean>(() => document.documentElement.classList.contains('dark'));
   const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [isFilteredDialogOpen, setIsFilteredDialogOpen] = useState(false);
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
   // Previous month data for comparison
   const previousMonth = subMonths(currentMonth, 1);
@@ -207,6 +211,18 @@ const Dashboard = () => {
   const topCategory = useMemo(() => {
     return categoryDataForChart.length > 0 ? categoryDataForChart.slice().sort((a, b) => b.value - a.value)[0].name : "-";
   }, [categoryDataForChart]);
+  const topCategoryId = useMemo(() => {
+    if (!filteredExpenses.length) return undefined;
+    const sumById: Record<number, number> = {};
+    filteredExpenses.forEach(exp => {
+      const id = exp.categories?.id;
+      if (!id && id !== 0) return;
+      sumById[id] = (sumById[id] || 0) + exp.amount;
+    });
+    const entries = Object.entries(sumById).sort((a, b) => Number(b[1]) - Number(a[1]));
+    const top = entries[0]?.[0];
+    return top ? Number(top) : undefined;
+  }, [filteredExpenses]);
 
   const rankingData = useMemo(() => {
     return categoryDataForChart.slice().sort((a, b) => b.value - a.value);
@@ -279,6 +295,42 @@ const Dashboard = () => {
     window.addEventListener('themechange', handler as any);
     return () => window.removeEventListener('themechange', handler as any);
   }, []);
+
+  // Monthly category growth comparison
+  const monthlyGrowthText = useMemo(() => {
+    const currTotals: Record<number, number> = {};
+    const prevTotals: Record<number, number> = {};
+    transactions.forEach(t => {
+      const d = new Date(t.date);
+      const catId = t.categories?.id;
+      if (!catId && catId !== 0) return;
+      if (isWithinInterval(d, { start: monthStart, end: monthEnd })) {
+        currTotals[catId] = (currTotals[catId] || 0) + t.amount;
+      }
+      if (isWithinInterval(d, { start: prevStart, end: prevEnd })) {
+        prevTotals[catId] = (prevTotals[catId] || 0) + t.amount;
+      }
+    });
+    const hasPrevData = Object.values(prevTotals).some(v => v > 0);
+    if (!hasPrevData) return "Sin datos suficientes";
+    const growthByCat: Array<{ id: number; name: string; pct: number }> = [];
+    Object.keys(currTotals).forEach(k => {
+      const id = Number(k);
+      const curr = currTotals[id] || 0;
+      const prev = prevTotals[id] || 0;
+      const name = categories.find(c => c.id === id)?.name || "Sin categoría";
+      if (prev > 0) {
+        const pct = ((curr - prev) / prev) * 100;
+        growthByCat.push({ id, name, pct });
+      }
+    });
+    if (!growthByCat.length) return "Sin datos suficientes";
+    const mostUp = growthByCat.slice().sort((a, b) => b.pct - a.pct)[0];
+    const mostDown = growthByCat.slice().sort((a, b) => a.pct - b.pct)[0];
+    const upText = mostUp ? `${mostUp.name} ${mostUp.pct >= 0 ? '+' : ''}${Math.round(mostUp.pct)}%` : '';
+    const downText = mostDown ? `${mostDown.name} ${mostDown.pct >= 0 ? '+' : ''}${Math.round(mostDown.pct)}%` : '';
+    return `${upText}${mostDown ? ' • ' + downText : ''}`;
+  }, [transactions, categories, monthStart, monthEnd, prevStart, prevEnd]);
 
   // Calculate income data
   const totalIncome = income.reduce((sum, inc) => sum + inc.amount, 0);
@@ -574,6 +626,13 @@ const Dashboard = () => {
           >
             <RefreshCcw className="w-3 h-3 mr-1" /> Restablecer
           </Button>
+          <Button
+            variant="outline"
+            className="rounded-full px-3 text-sm border-pastel-pink/30"
+            onClick={() => setIsInsightsOpen(true)}
+          >
+            ✨ Insights
+          </Button>
         </div>
       </div>
 
@@ -655,7 +714,7 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Bento Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7 mt-6">
         {/* Fila 1: Resumen */}
         <DashboardCard
           title="Gasto Total"
@@ -663,6 +722,9 @@ const Dashboard = () => {
           icon={<Wallet className="w-7 h-7 text-pastel-blue" />}
           iconColor="bg-pastel-blue/10"
           className="shadow-soft-glow"
+          interactive
+          emphasis
+          onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'all' } } })}
         />
         <DashboardCard
           title={hasDateFilter ? "Gasto en Rango" : "Gasto Total del Mes"}
@@ -671,6 +733,9 @@ const Dashboard = () => {
           iconColor="bg-pastel-pink/10"
           className="shadow-soft-glow"
           subtext={hasDateFilter ? undefined : `vs. mes anterior: S/ ${previousMonthTotal.toFixed(2)}`}
+          interactive
+          emphasis
+          onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'month', start: monthStart, end: monthEnd } } })}
         />
         <DashboardCard
           title="Gasto Diario Promedio"
@@ -679,6 +744,7 @@ const Dashboard = () => {
           iconColor="bg-pastel-green/10"
           className="shadow-soft-glow"
           subtext={`Periodo: ${format(currentMonth, 'MMMM yyyy', { locale: es })}`}
+          interactive
         />
         <DashboardCard
           title="Categoría Top"
@@ -687,7 +753,10 @@ const Dashboard = () => {
           icon={<PieChart className="w-7 h-7 text-pastel-purple" />}
           iconColor="bg-pastel-purple/10"
           className="shadow-soft-glow"
-          subtext={`Más gasto este mes`}
+          subtext={monthlyGrowthText}
+          interactive
+          emphasis
+          onClick={() => topCategoryId && navigate('/transacciones', { state: { quickFilter: { type: 'category', id: topCategoryId } } })}
         />
 
         
@@ -713,15 +782,15 @@ const Dashboard = () => {
 
       {/* Grid de gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-3 flex items-center justify-between">
-            <CardTitle className="text-lg font-medium">Tendencias</CardTitle>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setTrendPeriod('week')} className={`px-3 py-1 rounded-full ${trendPeriod==='week' ? 'bg-pastel-pink/20 text-primary' : 'hover:bg-pastel-pink/10'}`}>Semana</button>
-              <button onClick={() => setTrendPeriod('month')} className={`px-3 py-1 rounded-full ${trendPeriod==='month' ? 'bg-pastel-pink/20 text-primary' : 'hover:bg-pastel-pink/10'}`}>Mes</button>
-              <button onClick={() => setTrendPeriod('year')} className={`px-3 py-1 rounded-full ${trendPeriod==='year' ? 'bg-pastel-pink/20 text-primary' : 'hover:bg-pastel-pink/10'}`}>Año</button>
-            </div>
-          </CardHeader>
+      <Card className="md:col-span-2">
+        <CardHeader className="pb-3 flex items-center justify-between">
+          <CardTitle className="text-lg font-medium">Tendencias</CardTitle>
+          <div className="flex items-center gap-2">
+              <button onClick={() => setTrendPeriod('week')} className={`px-3 py-1 rounded-full ${trendPeriod==='week' ? 'bg-pastel-pink/20 text-primary ring-1 ring-pastel-pink/40' : 'hover:bg-pastel-pink/10'}`}>Semana</button>
+              <button onClick={() => setTrendPeriod('month')} className={`px-3 py-1 rounded-full ${trendPeriod==='month' ? 'bg-pastel-pink/20 text-primary ring-1 ring-pastel-pink/40' : 'hover:bg-pastel-pink/10'}`}>Mes</button>
+              <button onClick={() => setTrendPeriod('year')} className={`px-3 py-1 rounded-full ${trendPeriod==='year' ? 'bg-pastel-pink/20 text-primary ring-1 ring-pastel-pink/40' : 'hover:bg-pastel-pink/10'}`}>Año</button>
+          </div>
+        </CardHeader>
           <CardContent className="pt-0">
             <div className="h-64 cursor-pointer">
               <ResponsiveContainer width="100%" height="100%">
@@ -814,6 +883,15 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      <InsightsModal
+        open={isInsightsOpen}
+        onOpenChange={setIsInsightsOpen}
+        transactions={filteredExpenses}
+        periodStart={periodStart}
+        periodEnd={periodEnd}
+        matchingTransactions={baseFiltered}
+      />
 
       
 

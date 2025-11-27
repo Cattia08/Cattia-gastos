@@ -403,7 +403,7 @@ const Admin = () => {
               {categories.map(category => (
                 <div
                   key={category.id}
-                  className="flex justify-between items-center p-4 bg-white/70 rounded-xl border border-pastel-pink/20 shadow-sm transition-colors hover:bg-pastel-pink/10 hover:border-pastel-pink/40"
+                  className="flex justify-between items-center p-4 bg-white/70 rounded-xl border border-pastel-pink/20 shadow-sm transition-colors hover:bg-pastel-pink/10 hover:border-pastel-pink/40 transition-transform duration-150 hover:scale-[0.99]"
                 >
                   <div className="flex items-center">
                     <div

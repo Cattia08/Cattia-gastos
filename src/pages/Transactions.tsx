@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +46,7 @@ import TransactionForm from "@/components/transactions/TransactionForm";
 const Transactions = () => {
   const { toast } = useToast();
   const { transactions: supabaseTransactions, categories: supabaseCategories, loading, error, refreshData } = useSupabaseData();
+  const location = useLocation();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
@@ -352,6 +354,26 @@ const Transactions = () => {
     });
     return groups;
   }, [transactionsToShow]);
+
+  useEffect(() => {
+    const state = location.state as any;
+    const quick = state?.quickFilter;
+    if (!quick) return;
+    if (quick.type === 'all') {
+      setSearchQuery("");
+      setSelectedCategories(supabaseCategories.map(c => c.id));
+      setSelectedDate(undefined);
+      setEndDate(undefined);
+    } else if (quick.type === 'month' && quick.start && quick.end) {
+      setSelectedDate(new Date(quick.start));
+      setEndDate(new Date(quick.end));
+      setSearchQuery("");
+      if (supabaseCategories.length > 0) setSelectedCategories(supabaseCategories.map(c => c.id));
+    } else if (quick.type === 'category' && typeof quick.id === 'number') {
+      setSelectedCategories([quick.id]);
+      setSearchQuery("");
+    }
+  }, [location.state, supabaseCategories]);
 
   useEffect(() => {
     if (supabaseCategories.length > 0 && selectedCategories.length === 0) {
