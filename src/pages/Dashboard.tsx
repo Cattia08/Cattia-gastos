@@ -40,6 +40,7 @@ import ExportButton from "@/components/export/ExportButton";
 import InsightsModal from "@/components/InsightsModal";
 import FilterBar from "@/components/FilterBar";
 import { Tooltip as UiTooltip, TooltipContent as UiTooltipContent, TooltipProvider as UiTooltipProvider, TooltipTrigger as UiTooltipTrigger } from "@/components/ui/tooltip";
+import WeeklyHeatmap from "@/components/WeeklyHeatmap";
 
 const COLORS = ["#FF7597", "#A594F9", "#6BCB77", "#FFD93D", "#FF6B6B"];
 
@@ -862,6 +863,10 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+        <WeeklyHeatmap
+          transactions={filteredExpenses.map(e => ({ id: e.id, amount: e.amount, date: e.date }))}
+          className="md:col-span-1"
+        />
         <Dialog open={isRadarOpen} onOpenChange={setIsRadarOpen}>
           <DialogContent className="max-w-4xl bg-white rounded-2xl border-pink-200">
             <DialogHeader>
