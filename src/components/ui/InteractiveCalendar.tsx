@@ -27,6 +27,7 @@ interface InteractiveCalendarProps {
   rangeDate?: Date | undefined;
   onRangeSelect?: (date: Date | undefined) => void;
   onReset?: () => void;
+  inline?: boolean;
 }
 
 const InteractiveCalendar = ({
@@ -37,7 +38,8 @@ const InteractiveCalendar = ({
   mode = "single",
   rangeDate,
   onRangeSelect,
-  onReset
+  onReset,
+  inline = false
 }: InteractiveCalendarProps) => {
   const [calendarMode, setCalendarMode] = React.useState<"single" | "range">(mode);
   
@@ -70,6 +72,64 @@ const InteractiveCalendar = ({
     );
   };
 
+  if (inline) {
+    return (
+      <div className={cn("w-auto", className)}>
+        <div className="p-3 border-b border-border/20">
+          <div className="flex items-center justify-between mb-2">
+            <Select value={calendarMode} onValueChange={handleModeChange}>
+              <SelectTrigger className="w-[160px] h-8 text-xs border-pastel-pink/30">
+                <SelectValue placeholder="Tipo de selección" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Fecha única</SelectItem>
+                <SelectItem value="range">Rango de fechas</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={handleReset}>
+              <X className="h-4 w-4 mr-1" /> Limpiar
+            </Button>
+          </div>
+        </div>
+        {calendarMode === "single" ? (
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={onDateSelect}
+            initialFocus
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            components={{
+              DayContent: ({ date }) => renderDateContent(date)
+            }}
+          />
+        ) : (
+          <Calendar
+            mode="range"
+            selected={{ from: selectedDate, to: rangeDate }}
+            onSelect={(range) => {
+              if (!range) {
+                onDateSelect(undefined);
+                if (onRangeSelect) onRangeSelect(undefined);
+                return;
+              }
+              if ('from' in range && range.from) {
+                onDateSelect(range.from);
+              }
+              if ('to' in range && range.to && onRangeSelect) {
+                onRangeSelect(range.to);
+              }
+            }}
+            initialFocus
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            components={{
+              DayContent: ({ date }) => renderDateContent(date)
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -101,10 +161,7 @@ const InteractiveCalendar = ({
       <PopoverContent className="w-auto p-0" align="start">
         <div className="p-3 border-b border-border/20">
           <div className="flex items-center justify-between mb-2">
-            <Select
-              value={calendarMode}
-              onValueChange={handleModeChange}
-            >
+            <Select value={calendarMode} onValueChange={handleModeChange}>
               <SelectTrigger className="w-[160px] h-8 text-xs border-pastel-pink/30">
                 <SelectValue placeholder="Tipo de selección" />
               </SelectTrigger>
@@ -113,12 +170,7 @@ const InteractiveCalendar = ({
                 <SelectItem value="range">Rango de fechas</SelectItem>
               </SelectContent>
             </Select>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="h-8 px-2 text-xs"
-              onClick={handleReset}
-            >
+            <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={handleReset}>
               <X className="h-4 w-4 mr-1" /> Limpiar
             </Button>
           </div>
@@ -137,21 +189,16 @@ const InteractiveCalendar = ({
         ) : (
           <Calendar
             mode="range"
-            selected={{
-              from: selectedDate,
-              to: rangeDate
-            }}
+            selected={{ from: selectedDate, to: rangeDate }}
             onSelect={(range) => {
               if (!range) {
                 onDateSelect(undefined);
                 if (onRangeSelect) onRangeSelect(undefined);
                 return;
               }
-              
               if ('from' in range && range.from) {
                 onDateSelect(range.from);
               }
-              
               if ('to' in range && range.to && onRangeSelect) {
                 onRangeSelect(range.to);
               }

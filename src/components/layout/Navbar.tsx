@@ -49,12 +49,12 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-md border-b border-pastel-pink/20 shadow-soft-glow">
+    <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-[10px] border-b border-pastel-pink/20 shadow-soft-glow">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Heart className="w-5 h-5 text-primary" />
           <span className="font-medium">ExpenseTracker</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-2">
           {navItems.map((item) => (
             <Link

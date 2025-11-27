@@ -1,11 +1,17 @@
 
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "./Navbar";
 import CatWalker from "@/components/CatWalker";
 import { Outlet, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
+import AddTransactionDialog from "@/components/transactions/AddTransactionDialog";
 
 const AppLayout = () => {
   const location = useLocation();
+  const { categories, refreshData } = useSupabaseData();
+  const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
   const showCat = location.pathname === "/" || location.pathname === "/transacciones";
   return (
     <div className="min-h-screen bg-background">
@@ -24,6 +30,21 @@ const AppLayout = () => {
         <div className="container mx-auto p-4 md:p-6">
           <Outlet />
         </div>
+        <Button
+          size="icon"
+          variant="default"
+          aria-label="Añadir transacción"
+          className="fixed bottom-8 right-8 z-[60] shadow-lg h-14 w-14 rounded-full"
+          onClick={() => setIsGlobalAddOpen(true)}
+        >
+          <Plus className="w-7 h-7 text-white" />
+        </Button>
+        <AddTransactionDialog
+          open={isGlobalAddOpen}
+          onOpenChange={setIsGlobalAddOpen}
+          categories={categories}
+          onCreated={refreshData}
+        />
       </main>
     </div>
   );

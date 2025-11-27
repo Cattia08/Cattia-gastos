@@ -324,15 +324,15 @@ const Admin = () => {
 
       <Tabs defaultValue="categories" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="categories" className="data-[state=active]:bg-pastel-pink/20">
+          <TabsTrigger value="categories" className="data-[state=active]:bg-pastel-pink/20 data-[state=inactive]:text-gray-600">
             <Tag className="w-4 h-4 mr-2" />
             Categorías
           </TabsTrigger>
-          <TabsTrigger value="incomes" className="data-[state=active]:bg-pastel-green/20">
+          <TabsTrigger value="incomes" className="data-[state=active]:bg-pastel-green/20 data-[state=inactive]:text-gray-600">
             <CircleDollarSign className="w-4 h-4 mr-2" />
             Ingresos
           </TabsTrigger>
-          <TabsTrigger value="settings" className="data-[state=active]:bg-pastel-yellow/20">
+          <TabsTrigger value="settings" className="data-[state=active]:bg-pastel-yellow/20 data-[state=inactive]:text-gray-600">
             <Settings className="w-4 h-4 mr-2" />
             Configuración
           </TabsTrigger>
@@ -348,7 +348,7 @@ const Admin = () => {
               </h2>
               <Dialog open={isAddCategoryDialogOpen} onOpenChange={setIsAddCategoryDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-primary hover:bg-primary/90 rounded-full">
+                  <Button>
                     <Plus className="w-4 h-4 mr-2" /> Añadir Categoría
                   </Button>
                 </DialogTrigger>
@@ -391,7 +391,7 @@ const Admin = () => {
                     >
                       Cancelar
                     </Button>
-                    <Button onClick={handleAddCategory} className="bg-primary hover:bg-primary/90">
+                    <Button onClick={handleAddCategory}>
                       Guardar
                     </Button>
                   </DialogFooter>
@@ -403,7 +403,7 @@ const Admin = () => {
               {categories.map(category => (
                 <div
                   key={category.id}
-                  className="flex justify-between items-center p-4 bg-white/70 rounded-xl border border-pastel-pink/20 shadow-sm"
+                  className="flex justify-between items-center p-4 bg-white/70 rounded-xl border border-pastel-pink/20 shadow-sm transition-colors hover:bg-pastel-pink/10 hover:border-pastel-pink/40"
                 >
                   <div className="flex items-center">
                     <div
@@ -476,7 +476,7 @@ const Admin = () => {
               </h2>
               <Dialog open={isAddIncomeDialogOpen} onOpenChange={setIsAddIncomeDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-pastel-green hover:bg-pastel-green/80 text-foreground rounded-full">
+                  <Button variant="success">
                     <Plus className="w-4 h-4 mr-2" /> Añadir Ingreso
                   </Button>
                 </DialogTrigger>
@@ -600,10 +600,7 @@ const Admin = () => {
                   Cambiar foto
                 </Button>
                 {selectedProfilePic && (
-                  <Button
-                    className="bg-pastel-yellow hover:bg-pastel-yellow/80 text-foreground"
-                    onClick={handleSaveProfilePic}
-                  >
+                  <Button variant="success" onClick={handleSaveProfilePic}>
                     Guardar nueva foto
                   </Button>
                 )}
@@ -624,7 +621,7 @@ const Admin = () => {
                   maxLength={20}
                 />
                 <Button
-                  className="bg-pastel-green hover:bg-pastel-green/50 text-foreground rounded-full"
+                  variant="success"
                   onClick={handleUpdateSidebarName}
                   disabled={nameInput.trim() === sidebarName.trim() || nameInput.trim() === ''}
                 >

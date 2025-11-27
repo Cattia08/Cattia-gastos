@@ -45,13 +45,11 @@ const FilterBar = ({
     }
   };
 
-  const btnBase = "rounded-full bg-white border text-gray-600 transition-colors";
-  const btnBorder = "border-pink-200 hover:bg-pink-50 hover:border-pink-300 hover:text-pink-700";
   const iconClass = "w-4 h-4 text-pink-500";
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col md:flex-row md:items-center gap-4">
-      <div className="flex-1 min-w-[220px]">
+      <div className="flex-1 min-w-[220px] md:max-w-md">
       <InputWithIcon
         placeholder="Buscar"
         value={searchQuery}
@@ -63,7 +61,7 @@ const FilterBar = ({
       <div className="flex items-center gap-3 overflow-x-auto md:overflow-visible flex-wrap">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className={`${btnBase} ${btnBorder}`}>
+          <Button variant="default">
             <Tag className={`${iconClass} mr-2`} /> Categorías
           </Button>
         </DropdownMenuTrigger>
@@ -89,7 +87,7 @@ const FilterBar = ({
       </DropdownMenu>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className={`${btnBase} ${btnBorder}`}>
+          <Button variant="default">
             <CalendarIcon className={`${iconClass} mr-2`} />
             {selectedDate && endDate ? `${format(selectedDate, 'dd MMM')} - ${format(endDate, 'dd MMM')}` : 'Rango de fechas'}
           </Button>
@@ -103,14 +101,15 @@ const FilterBar = ({
             onReset={() => { onDateSelect(undefined); onRangeSelect(undefined); }}
             className="w-full"
             expenses={expenses}
+            mode={endDate ? 'range' : 'single'}
+            inline
           />
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button onClick={onReset} className={`${btnBase} ${btnBorder}`}>Limpiar</Button>
+      <Button onClick={onReset} variant="default">Limpiar</Button>
       </div>
     </div>
   );
 };
 
 export default FilterBar;
-
