@@ -8,6 +8,7 @@ interface DashboardCardProps {
   className?: string;
   iconColor?: string;
   isCurrency?: boolean;
+  subtext?: string;
 }
 
 const DashboardCard = ({
@@ -16,7 +17,8 @@ const DashboardCard = ({
   icon,
   className,
   iconColor = "bg-pastel-pink",
-  isCurrency = true
+  isCurrency = true,
+  subtext
 }: DashboardCardProps) => {
   // Format the value if it's a currency amount
   const formattedValue = typeof value === "number" && isCurrency ? `S/ ${value.toFixed(2)}` : value;
@@ -27,6 +29,7 @@ const DashboardCard = ({
         <div className="flex-1 min-w-0">
           <h3 className="text-xs font-medium text-text-muted truncate">{title}</h3>
           <p className="text-2xl md:text-3xl font-extrabold mt-1 tracking-tight break-words">{formattedValue}</p>
+          {subtext && (<p className="text-xs text-muted-foreground mt-1">{subtext}</p>)}
         </div>
         <div className={cn("shrink-0 w-12 h-12 rounded-full flex items-center justify-center", iconColor)}>{icon}</div>
       </div>

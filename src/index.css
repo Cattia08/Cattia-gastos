@@ -1,89 +1,52 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 60 30% 98%;
-    --foreground: 240 10% 3.9%;
-
+    --background: 340 100% 98%;
+    --foreground: 270 18% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-
+    --card-foreground: 270 18% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-
-    --primary: 340 82% 76%;
-    --primary-foreground: 355 100% 97%;
-
-    --secondary: 160 84% 76%;
-    --secondary-foreground: 355 100% 97%;
-
-    --muted: 60 44% 94%;
-    --muted-foreground: 240 3.8% 46.1%;
-
-    --accent: 39 100% 85%;
-    --accent-foreground: 240 5.9% 10%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 340 82% 76%;
-
+    --popover-foreground: 270 18% 20%;
+    --primary: 340 82% 66%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 260 60% 70%;
+    --secondary-foreground: 270 18% 20%;
+    --muted: 330 25% 96%;
+    --muted-foreground: 270 14% 45%;
+    --accent: 340 82% 66%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 330 20% 90%;
+    --input: 330 20% 90%;
+    --ring: 340 82% 66%;
     --radius: 1rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 340 82% 76%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 160 84% 76%;
-    --secondary-foreground: 240 5.9% 10%;
-
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 39 100% 85%;
-    --accent-foreground: 240 5.9% 10%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 340 82% 76%;
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 276 36% 11%;
+    --foreground: 276 25% 92%;
+    --card: 276 28% 16%;
+    --card-foreground: 276 25% 92%;
+    --popover: 276 28% 16%;
+    --popover-foreground: 276 25% 92%;
+    --primary: 340 82% 66%;
+    --primary-foreground: 276 25% 92%;
+    --secondary: 260 40% 60%;
+    --secondary-foreground: 276 25% 92%;
+    --muted: 276 20% 20%;
+    --muted-foreground: 276 25% 80%;
+    --accent: 340 82% 66%;
+    --accent-foreground: 276 25% 92%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 276 25% 92%;
+    --border: 330 20% 35%;
+    --input: 276 20% 20%;
+    --ring: 340 82% 66%;
   }
 }
 
@@ -127,16 +90,7 @@
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Outfit:wght@400;500&display=swap');
-
-html, body {
-  background-color: #FFF9FA;
-  color: #4A404E;
-  font-family: 'Outfit', sans-serif;
-}
-
-h1, h2, h3 {
-  font-family: 'Nunito', sans-serif;
-}
+html.dark { color-scheme: dark; }
 
 /* Pastel Colors for charts and UI */
 :root {
@@ -148,31 +102,22 @@ h1, h2, h3 {
 }
 
 /* Additional dark mode adjustments */
-.dark .recharts-cartesian-grid-bg {
-  fill: #2D3748;
-}
-
-.dark .recharts-cartesian-axis-line {
-  stroke: #4A5568;
-}
-
-.dark .recharts-cartesian-axis-tick-line {
-  stroke: #4A5568;
-}
-
-.dark .recharts-cartesian-axis-tick-value {
-  fill: #CBD5E0;
-}
+.dark .recharts-cartesian-grid-bg { fill: hsl(276 28% 16%); }
+.dark .recharts-cartesian-axis-line { stroke: #372f45; }
+.dark .recharts-cartesian-axis-tick-line { stroke: #372f45; }
+.dark .recharts-cartesian-axis-tick-value { fill: hsl(276 25% 92%); }
 
 .dark .recharts-legend-item-text {
-  color: #E2E8F0 !important;
+  color: #E9E1EF !important;
 }
 
-.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
-  background-color: rgba(45, 55, 72, 0.9) !important;
-  border-color: #4A5568 !important;
-}
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip { background-color: rgba(30,18,38,0.92) !important; border-color: rgba(255, 117, 151, 0.3) !important; }
 
 .dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item {
-  color: #E2E8F0 !important;
+  color: #E9E1EF !important;
 }
+
+.dark .recharts-polar-grid line {
+  stroke: rgba(233, 225, 239, 0.25);
+}
+/* Los estilos principales se derivan de variables Tailwind; no forzar body */

@@ -19,9 +19,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { InputWithIcon } from "@/components/ui/InputWithIcon";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +50,7 @@ import html2canvas from "html2canvas";
 import Chart from 'chart.js/auto';
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import FilterBar from "@/components/FilterBar";
 
 const Transactions = () => {
   const { toast } = useToast();
@@ -58,7 +58,7 @@ const Transactions = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "ascending" | "descending";
@@ -117,9 +117,8 @@ const Transactions = () => {
       );
     }
 
-    // Apply category filter
-    if (categoryFilter && categoryFilter !== "all") {
-      sortableTransactions = sortableTransactions.filter(transaction => transaction.categories?.id === categoryFilter);
+    if (selectedCategories.length > 0) {
+      sortableTransactions = sortableTransactions.filter(transaction => selectedCategories.includes(transaction.categories?.id));
     }
 
     // Apply date filter
@@ -272,7 +271,7 @@ const Transactions = () => {
 
   const handleResetFilters = () => {
     setSearchQuery("");
-    setCategoryFilter("all");
+    setSelectedCategories([]);
     setSelectedDate(undefined);
     setEndDate(undefined);
     setSortConfig(null);
@@ -399,7 +398,7 @@ const Transactions = () => {
   };
 
   // Nueva función para saber si hay filtros activos
-  const hasActiveFilters = searchQuery || (categoryFilter && categoryFilter !== 'all') || selectedDate;
+  const hasActiveFilters = searchQuery || selectedCategories.length > 0 || selectedDate;
 
   // Filtrado por mes seleccionado
   const transactionsByMonth = useMemo(() => {
@@ -422,6 +421,29 @@ const Transactions = () => {
   useEffect(() => {
     setCurrentPage(1); // Reinicia a la primera página si cambia el filtro o cantidad de filas
   }, [transactionsToShow, rowsPerPage]);
+
+  const groupedFeed = React.useMemo(() => {
+    const groups: { label: string; items: typeof transactionsToShow }[] = [];
+    const byDate: Record<string, typeof transactionsToShow> = {};
+    transactionsToShow.forEach(t => {
+      const d = new Date(t.date);
+      const key = d.toDateString();
+      byDate[key] = byDate[key] || [];
+      byDate[key].push(t);
+    });
+    const entries = Object.entries(byDate).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    entries.forEach(([key, items]) => {
+      const d = new Date(key);
+      let label = d.toLocaleDateString();
+      if (isSameDay(d, today)) label = "Hoy";
+      else if (isSameDay(d, yesterday)) label = "Ayer";
+      groups.push({ label, items });
+    });
+    return groups;
+  }, [transactionsToShow]);
 
   const handleOpenExportDialog = (format) => {
     setExportFormat(format);
@@ -700,52 +722,7 @@ const Transactions = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Filter section */}
-      <Card className="p-6 mt-6 rounded-2xl shadow-sm border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <InputWithIcon
-              placeholder="Buscar transacciones"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full"
-              icon={<Search className="w-4 h-4 text-gray-500" />}
-            />
-          </div>
-          <div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Filtrar por categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {supabaseCategories.map(category => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <InteractiveCalendar
-              selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
-              rangeDate={endDate}
-              onRangeSelect={setEndDate}
-              onReset={() => {
-                setSelectedDate(undefined);
-                setEndDate(undefined);
-              }}
-              className="w-full"
-              expenses={supabaseTransactions.map(transaction => ({
-                date: new Date(transaction.date),
-                amount: transaction.amount
-              }))}
-            />
-          </div>
-        </div>
-      </Card>
+      
 
       {/* Date filter display */}
       {hasDateFilter && (
@@ -766,107 +743,102 @@ const Transactions = () => {
         <MonthSelector currentMonth={currentMonth} onChange={setCurrentMonth} />
       </div>
 
-      {/* Transactions Table */}
-      <Card className="p-0 rounded-2xl overflow-hidden border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
-        <Table>
-          <TableHeader className="bg-primary-light/20">
-            <TableRow>
-              <TableHead className="w-[200px] cursor-pointer text-primary-hover" onClick={() => handleSort("name")}>
-                Nombre
-                {sortConfig?.key === "name" ? (
-                  sortConfig.direction === "ascending" ? (
-                    <ChevronUp className="inline w-4 h-4 ml-1" />
-                  ) : (
-                    <ChevronDown className="inline w-4 h-4 ml-1" />
-                  )
-                ) : null}
-              </TableHead>
-              <TableHead className="cursor-pointer text-right text-primary-hover" onClick={() => handleSort("amount")}>
-                Monto (S/)
-                {sortConfig?.key === "amount" ? (
-                  sortConfig.direction === "ascending" ? (
-                    <ChevronUp className="inline w-4 h-4 ml-1" />
-                  ) : (
-                    <ChevronDown className="inline w-4 h-4 ml-1" />
-                  )
-                ) : null}
-              </TableHead>
-              <TableHead className="cursor-pointer text-primary-hover" onClick={() => handleSort("category_id")}>
-                Categoría
-                {sortConfig?.key === "category_id" ? (
-                  sortConfig.direction === "ascending" ? (
-                    <ChevronUp className="inline w-4 h-4 ml-1" />
-                  ) : (
-                    <ChevronDown className="inline w-4 h-4 ml-1" />
-                  )
-                ) : null}
-              </TableHead>
-              <TableHead className="cursor-pointer text-primary-hover" onClick={() => handleSort("date")}> 
-                Fecha
-                {sortConfig?.key === "date" ? (
-                  sortConfig.direction === "ascending" ? (
-                    <ChevronUp className="inline w-4 h-4 ml-1" />
-                  ) : (
-                    <ChevronDown className="inline w-4 h-4 ml-1" />
-                  )
-                ) : null}
-              </TableHead>
-              <TableHead className="text-primary-hover">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedTransactions.length > 0 ? (
-              paginatedTransactions.map(transaction => (
-                <TableRow
-                  key={transaction.id}
-                  className={!transaction.category_id ? "bg-amber-50/50 dark:bg-amber-950/20" : ""}
-                >
-                  <TableCell className="font-medium">{transaction.name}</TableCell>
-                  <TableCell className="text-right tabular-nums font-medium">S/ {transaction.amount.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {transaction.categories ? (
-                      <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
-                    ) : (
-                      <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
-                        <SelectTrigger className="h-8 border-pastel-pink/30 pr-2 mr-2 max-w-[160px] bg-amber-50/80 dark:bg-amber-950/40">
-                          <div className="flex items-center">
-                            <CircleAlert className="w-4 h-4 text-amber-500 mr-1" />
-                            <span>Sin categoría</span>
-                          </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {supabaseCategories.map(category => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </TableCell>
-                  <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(transaction)} className="h-8 w-8 p-0">
-                      <Edit className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteTransaction(transaction.id)} className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+      {/* Tabla estilizada */}
+      <Card className="p-0 rounded-3xl shadow-card bg-white">
+        <CardHeader className="p-4 border-b border-pink-100/50">
+          <div className="flex items-center flex-wrap gap-4">
+            <FilterBar
+              categories={supabaseCategories}
+              selectedCategories={selectedCategories}
+              onSelectedCategoriesChange={setSelectedCategories}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              selectedDate={selectedDate}
+              endDate={endDate}
+              onDateSelect={setSelectedDate}
+              onRangeSelect={setEndDate}
+              onReset={() => { setSearchQuery(''); setSelectedDate(undefined); setEndDate(undefined); setSelectedCategories(supabaseCategories.map(c=>c.id)); }}
+              expenses={supabaseTransactions.map(t => ({ date: new Date(t.date), amount: t.amount }))}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto md:overflow-visible scroll-smooth" style={{ scrollbarWidth: 'thin' }}>
+          <Table className="min-w-[800px]">
+            <TableHeader className="bg-primary/5">
+              <TableRow>
+                <TableHead className="text-primary-hover font-bold">Comercio</TableHead>
+                <TableHead className="text-primary-hover font-bold">Categoría</TableHead>
+                <TableHead className="text-primary-hover font-bold">Fecha</TableHead>
+                <TableHead className="text-right text-primary-hover font-bold">Monto</TableHead>
+                <TableHead className="text-primary-hover font-bold">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedTransactions.length > 0 ? (
+                paginatedTransactions.map(transaction => (
+                  <TableRow key={transaction.id} className="hover:bg-pink-50/50 [&>td]:py-3">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-full"
+                          style={{ backgroundColor: `${transaction.categories?.color || '#FFB7B2'}1A` }}
+                        />
+                        <div className="leading-tight">
+                          <div className="text-gray-700 font-medium">{transaction.name}</div>
+                          <div className="text-xs text-muted-foreground">{transaction.categories?.name || 'Sin categoría'}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {transaction.categories ? (
+                        <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
+                      ) : (
+                        <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
+                          <SelectTrigger className="h-8 border-pastel-pink/30 pr-2 mr-2 max-w-[160px] bg-amber-50/80 dark:bg-amber-950/40">
+                            <div className="flex items-center">
+                              <CircleAlert className="w-4 h-4 text-amber-500 mr-1" />
+                              <span>Sin categoría</span>
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {supabaseCategories.map(category => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-gray-500">{new Date(transaction.date).toLocaleDateString()}</span>
+                    </TableCell>
+                    <TableCell className="text-right font-bold">S/ {transaction.amount.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(transaction)} className="h-8 w-8 p-0">
+                        <Edit className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteTransaction(transaction.id)} className="h-8 w-8 p-0">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="flex flex-col items-center justify-center">
+                      <Star className="w-10 h-10 text-pastel-yellow mb-2 animate-pulse" />
+                      <p className="text-muted-foreground">No hay transacciones que mostrar</p>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  <div className="flex flex-col items-center justify-center">
-                    <Star className="w-10 h-10 text-pastel-yellow mb-2 animate-pulse" />
-                    <p className="text-muted-foreground">No hay transacciones que mostrar</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+          </div>
+        </CardContent>
       </Card>
 
       {/* No Category Transactions Button */}

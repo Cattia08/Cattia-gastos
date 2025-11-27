@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CategoryBadge from "@/components/ui/CategoryBadge";
@@ -31,7 +30,6 @@ const Admin = () => {
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [isAddIncomeDialogOpen, setIsAddIncomeDialogOpen] = useState(false);
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [currency, setCurrency] = useState("USD");
 
   // Form states
@@ -196,19 +194,6 @@ const Admin = () => {
     });
   };
 
-  const handleToggleDarkMode = (checked: boolean) => {
-    setIsDarkMode(checked);
-    if (checked) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-
-    toast({
-      title: checked ? "Modo oscuro activado" : "Modo claro activado",
-      description: "La apariencia de la aplicación ha sido actualizada"
-    });
-  };
 
   const handleCurrencyChange = (value: string) => {
     setCurrency(value);
@@ -591,14 +576,6 @@ const Admin = () => {
             </h2>
 
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium">Modo Oscuro</h3>
-                  <p className="text-sm text-muted-foreground">Cambia la apariencia de la aplicación</p>
-                </div>
-                <Switch checked={isDarkMode} onCheckedChange={handleToggleDarkMode} />
-              </div>
-
               <Separator className="my-4" />
 
               <div className="flex flex-col items-center mb-6">

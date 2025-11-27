@@ -1,13 +1,26 @@
 
 import React from "react";
 import Navbar from "./Navbar";
-import { Outlet } from "react-router-dom";
+import CatWalker from "@/components/CatWalker";
+import { Outlet, useLocation } from "react-router-dom";
 
 const AppLayout = () => {
+  const location = useLocation();
+  const showCat = location.pathname === "/" || location.pathname === "/transacciones";
   return (
-    <div className="flex h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="flex-1 overflow-auto pb-20 md:pb-0 md:pl-0">
+      {showCat && (
+        <CatWalker
+          key={location.pathname}
+          initialDelayMs={0}
+          minDuration={9}
+          maxDuration={12}
+          top={24}
+          debug={true}
+        />
+      )}
+      <main className="overflow-auto">
         <div className="container mx-auto p-4 md:p-6">
           <Outlet />
         </div>

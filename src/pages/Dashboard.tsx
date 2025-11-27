@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Heart,
+import { Heart,
   Star,
   PieChart,
   ArrowUp,
@@ -14,15 +13,17 @@ import {
   RefreshCcw,
   FileSpreadsheet,
   FileType2,
-  Wallet
+  Wallet,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import DashboardCard from "@/components/ui/DashboardCard";
 import { InputWithIcon } from "@/components/ui/InputWithIcon";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PieChart as PieChartComponent, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip } from "recharts";
-import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
+import { ResponsiveContainer, Tooltip, BarChart, Bar } from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip, Legend } from "recharts";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import MonthSelector from "@/components/ui/MonthSelector";
 import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
@@ -44,8 +45,10 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import FilterBar from "@/components/FilterBar";
+import { Tooltip as UiTooltip, TooltipContent as UiTooltipContent, TooltipProvider as UiTooltipProvider, TooltipTrigger as UiTooltipTrigger } from "@/components/ui/tooltip";
 
-const COLORS = ["#FF7597", "#A594F9", "#6BCB77", "#FF6B6B", "#FFD93D"];
+const COLORS = ["#FF7597", "#A594F9", "#6BCB77", "#FFD93D", "#FF6B6B"];
 
 interface Expense {
   id: number;
@@ -84,6 +87,9 @@ const Dashboard = () => {
     )
   ).sort((a, b) => b.localeCompare(a));
   const [exportMonths, setExportMonths] = useState<string[]>([]);
+  const [trendPeriod, setTrendPeriod] = useState<'week' | 'month' | 'year'>('week');
+  const [isDark, setIsDark] = useState<boolean>(() => document.documentElement.classList.contains('dark'));
+  const [isRadarOpen, setIsRadarOpen] = useState(false);
 
   // Previous month data for comparison
   const previousMonth = subMonths(currentMonth, 1);
@@ -199,6 +205,72 @@ const Dashboard = () => {
 
   // Calculate category data for pie chart
   const categoryDataForChart = calculateCategoryData(filteredExpenses);
+
+  const rankingData = useMemo(() => {
+    const sorted = categoryDataForChart.slice().sort((a, b) => b.value - a.value);
+    const top = sorted.slice(0, 4);
+    const others = sorted.slice(4);
+    const othersTotal = others.reduce((sum, e) => sum + e.value, 0);
+    if (othersTotal > 0) {
+      return [...top, { name: 'Otros', value: othersTotal, color: '#A3A3A3', list: others.map(o => ({ name: o.name, value: o.value })) }];
+    }
+    return sorted.slice(0, 5);
+  }, [categoryDataForChart]);
+
+  // Últimos 7 días para BarChart
+  const last7Data = useMemo(() => {
+    const today = new Date();
+    const data = [] as { day: string; amount: number }[];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const totalAmount = filteredExpenses
+        .filter(exp => isSameDay(new Date(exp.date), d))
+        .reduce((sum, exp) => sum + exp.amount, 0);
+      data.push({ day: format(d, "dd/MM"), amount: totalAmount });
+    }
+    return data;
+  }, [filteredExpenses]);
+
+  const monthData = useMemo(() => {
+    return expenseData.map(d => ({ day: d.day, amount: d.amount }));
+  }, [expenseData]);
+
+  const yearData = useMemo(() => {
+    const map: Record<string, number> = {};
+    transactions.forEach(t => {
+      const d = new Date(t.date);
+      const key = format(d, 'MMM');
+      map[key] = (map[key] || 0) + t.amount;
+    });
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months.map(m => ({ day: m, amount: map[m] || 0 }));
+  }, [transactions]);
+
+  const trendData = trendPeriod === 'week' ? last7Data : trendPeriod === 'month' ? monthData : yearData;
+
+  const renderRadarTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const p = payload[0];
+      const category = p.payload?.category;
+      const value = Number(p.value || 0).toFixed(2);
+      return (
+        <div className="bg-white rounded-md shadow-md px-3 py-2 text-sm">
+          <div className="font-medium">{category}</div>
+          <div className="text-gray-600">S/ {value}</div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    const applyTheme = () => setIsDark(document.documentElement.classList.contains('dark'));
+    applyTheme();
+    const handler = () => applyTheme();
+    window.addEventListener('themechange', handler as any);
+    return () => window.removeEventListener('themechange', handler as any);
+  }, []);
 
   // Calculate income data
   const totalIncome = income.reduce((sum, inc) => sum + inc.amount, 0);
@@ -466,10 +538,10 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
               Hola, Catt!
               <Heart className="inline ml-2 w-6 h-6 text-pastel-pink" />
             </h1>
@@ -506,60 +578,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Filter section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        <div>
-          <InputWithIcon
-            placeholder="Buscar gastos"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full border-pastel-pink/30"
-            icon={<Search className="w-4 h-4 text-muted-foreground" />}
-          />
-        </div>
-        <div className="relative w-full">
-          <Button
-            variant="outline"
-            className="w-full border-pastel-pink/30 flex justify-between items-center"
-            onClick={() => setShowCategoryDropdown(v => !v)}
-          >
-            {selectedCategories.length === categories.length
-              ? "Todas las categorías"
-              : selectedCategories.length === 0
-              ? "Ninguna categoría"
-              : `${selectedCategories.length} seleccionadas`}
-            <ChevronDown className="ml-2 w-4 h-4" />
-          </Button>
-          {showCategoryDropdown && (
-            <div className="absolute z-10 mt-2 w-full bg-white border border-pastel-pink/30 rounded shadow-lg max-h-60 overflow-auto">
-              {categories.map(cat => (
-                <label key={cat.id} className="flex items-center px-3 py-2 cursor-pointer hover:bg-pastel-pink/10">
-                  <Checkbox
-                    checked={selectedCategories.includes(cat.id)}
-                    onCheckedChange={() => handleCategoryCheck(cat.id)}
-                    className="mr-2"
-                  />
-                  {cat.name}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-        <div>
-          <InteractiveCalendar
-            selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
-            rangeDate={endDate}
-            onRangeSelect={setEndDate}
-            onReset={handleResetFilters}
-            expenses={transactions.map(expense => ({
-              date: new Date(expense.date),
-              amount: expense.amount
-            }))}
-            mode={endDate ? "range" : "single"}
-          />
-        </div>
-      </div>
+      
 
       {/* Show selected date expenses if a date is selected */}
       {selectedDate && (
@@ -600,133 +619,178 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-6">
-        <div className="relative">
+      {/* Bento Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        {/* Fila 1: Resumen */}
+        <DashboardCard
+          title="Gasto Total del Mes"
+          value={totalMonth}
+          icon={<CircleDollarSign className="w-7 h-7 text-pastel-pink" />}
+          iconColor="bg-pastel-pink/10"
+          className="shadow-soft-glow"
+          subtext={`vs. mes anterior`}
+        />
+        <div data-catwalker="rest-daily">
           <DashboardCard
-            title="Total del Mes"
-            value={totalMonth}
-            icon={<CircleDollarSign className="w-6 h-6 text-pastel-pink" />}
-            iconColor="bg-pastel-pink/10"
-            className="bg-gradient-to-br from-white to-primary-light/30"
+            title="Gasto Diario Promedio"
+            value={dailyAvg.toFixed(2)}
+            icon={<CreditCard className="w-7 h-7 text-pastel-green" />}
+            iconColor="bg-pastel-green/10"
+            className="shadow-soft-glow"
+            subtext={`Periodo: ${format(currentMonth, 'MMMM yyyy', { locale: es })}`}
           />
         </div>
-
         <DashboardCard
-          title="Promedio Diario"
-          value={dailyAvg.toFixed(2)}
-          icon={<CreditCard className="w-6 h-6 text-pastel-green" />}
-          iconColor="bg-pastel-green/10"
-        />
-
-        <DashboardCard
-          title="Día con Mayor Gasto"
-          value={maxExpenseDay}
-          isCurrency={false}
-          icon={<Calendar className="w-6 h-6 text-pastel-blue" />}
-          iconColor="bg-pastel-blue/10"
-        />
-
-        <DashboardCard
-          title="Categoría Más Usada"
+          title="Categoría Top"
           value={topCategory}
           isCurrency={false}
-          icon={<PieChart className="w-6 h-6 text-pastel-purple" />}
+          icon={<PieChart className="w-7 h-7 text-pastel-purple" />}
           iconColor="bg-pastel-purple/10"
+          className="shadow-soft-glow"
+          subtext={`Más gasto este mes`}
         />
 
-        {/* New Income Card */}
-        <div className="relative">
-          <DashboardCard
-            title="Ingresos del Mes"
-            value={totalIncome}
-            icon={<Wallet className="w-6 h-6 text-pastel-green" />}
-            iconColor="bg-pastel-green/10"
-          />
-        </div>
-      </div>
+        
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card-pastel p-6 dark:bg-gray-800 dark:border-pastel-pink/20 lg:col-span-1">
-          <h3 className="text-lg font-medium mb-4 flex items-center">
-            <PieChart className="w-5 h-5 mr-2 text-pastel-pink" />
-            Gastos por Categoría
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChartComponent>
-                <Pie
-                  data={categoryDataForChart}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  innerRadius={60}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {categoryDataForChart.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={value => [`S/ ${Number(value).toFixed(2)}`, "Monto"]} />
-              </PieChartComponent>
-            </ResponsiveContainer>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4">
-            {categoryDataForChart.map((cat, index) => (
-              <div key={cat.name} className="flex items-center text-sm">
-                <div
-                  className="w-3 h-3 rounded-full mr-2"
-                  style={{ backgroundColor: cat.color || COLORS[index % COLORS.length] }}
-                ></div>
-                <span>
-                  {cat.name}: S/ {cat.value.toFixed(2)}
-                </span>
-              </div>
-            ))}
-          </div>
+        
         </div>
 
-        <div className="card-pastel p-4 md:p-6 dark:bg-gray-800 dark:border-pastel-pink/20 lg:col-span-2">
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-            <h3 className="text-lg font-medium flex items-center">
-              <ArrowUp className="w-5 h-5 mr-2 text-pastel-green" />
-              Gastos Diarios
-            </h3>
-            <MonthSelector currentMonth={currentMonth} onChange={setCurrentMonth} className="mt-2 sm:mt-0" />
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={expenseData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <LineTooltip formatter={value => [`S/ ${Number(value).toFixed(2)}`, "Monto"]} />
-                <defs>
-                  <linearGradient id="colorPink" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FFB7B2" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="#FFB7B2" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  name={`Gastos de ${format(currentMonth, "MMMM yyyy", { locale: es })}`}
-                  stroke="#FFB7B2"
-                  strokeWidth={2}
-                  fill="url(#colorPink)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-3 text-center text-sm text-muted-foreground">
-            {format(currentMonth, "MMMM yyyy", { locale: es }).charAt(0).toUpperCase() +
-              format(currentMonth, "MMMM yyyy", { locale: es }).slice(1)}
-          </div>
-        </div>
+      <div className="mt-4">
+        <FilterBar
+          categories={categories}
+          selectedCategories={selectedCategories}
+          onSelectedCategoriesChange={setSelectedCategories}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          selectedDate={selectedDate}
+          endDate={endDate}
+          onDateSelect={setSelectedDate}
+          onRangeSelect={setEndDate}
+          onReset={() => { setSearchQuery(''); setSelectedDate(undefined); setEndDate(undefined); setSelectedCategories(categories.map(c=>c.id)); }}
+          expenses={transactions.map(t => ({ date: new Date(t.date), amount: t.amount }))}
+        />
       </div>
+
+      {/* Grid de gráficos */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-3 flex items-center justify-between">
+            <CardTitle className="text-lg font-medium">Tendencias</CardTitle>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setTrendPeriod('week')} className={`px-3 py-1 rounded-full ${trendPeriod==='week' ? 'bg-pastel-pink/20 text-primary' : 'hover:bg-pastel-pink/10'}`}>Semana</button>
+              <button onClick={() => setTrendPeriod('month')} className={`px-3 py-1 rounded-full ${trendPeriod==='month' ? 'bg-pastel-pink/20 text-primary' : 'hover:bg-pastel-pink/10'}`}>Mes</button>
+              <button onClick={() => setTrendPeriod('year')} className={`px-3 py-1 rounded-full ${trendPeriod==='year' ? 'bg-pastel-pink/20 text-primary' : 'hover:bg-pastel-pink/10'}`}>Año</button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={trendData} key={trendPeriod}>
+                  <CartesianGrid vertical={false} stroke={isDark ? "#372f45" : "#e5e7eb"} />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: isDark ? "#E9E1EF" : "#4A404E" }} axisLine={{ stroke: isDark ? '#372f45' : '#e5e7eb' }} tickLine={{ stroke: isDark ? '#372f45' : '#e5e7eb' }} />
+                  <YAxis tick={{ fill: isDark ? "#E9E1EF" : "#4A404E" }} axisLine={{ stroke: isDark ? '#372f45' : '#e5e7eb' }} tickLine={{ stroke: isDark ? '#372f45' : '#e5e7eb' }} />
+                  <LineTooltip formatter={value => [
+                    `S/ ${Number(value).toFixed(2)}`,
+                    "Monto"
+                  ]} />
+                  <Bar dataKey="amount" fill="#FFB7B2" radius={[8, 8, 0, 0]} isAnimationActive animationDuration={500} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium">Ranking de Categorías</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-3">
+              {rankingData.map((entry, index) => {
+                  const total = rankingData.reduce((acc, e) => acc + e.value, 0);
+                  const pct = total ? Math.round((entry.value / total) * 100) : 0;
+                  const color = entry.color || COLORS[index % COLORS.length];
+                  const isOthers = entry.name === 'Otros' && 'list' in entry;
+                  return (
+                    <div key={`${entry.name}-${index}`} className="group relative flex items-center justify-between gap-3 overflow-visible">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full" style={{ backgroundColor: `${color}1A` }} />
+                        <div className="w-40">
+                          <div className="text-sm font-medium">
+                            {isOthers ? (
+                              <span className="cursor-help" onMouseEnter={e => {
+                                const el = (e.currentTarget.parentElement as HTMLElement);
+                                el?.setAttribute('data-hover', 'true');
+                              }} onMouseLeave={e => {
+                                const el = (e.currentTarget.parentElement as HTMLElement);
+                                el?.removeAttribute('data-hover');
+                              }}>Otros</span>
+                            ) : entry.name}
+                          </div>
+                          <div className="h-2 rounded-full bg-pink-100/60">
+                            <div className={`h-full ${["bg-green-300","bg-orange-300","bg-blue-300"][index % 3]}`} style={{ width: `${pct}%` }} />
+                          </div>
+                          {isOthers && (
+                            <div className="absolute z-50 mt-2 left-0 top-6 hidden group-hover:block [data-hover=true]:block">
+                              <div className="bg-gray-900 text-white dark:bg-[#1E1226] dark:text-[#E9E1EF] border border-pink-300/30 shadow-md rounded-md px-3 py-2 text-xs max-w-xs">
+                                {(entry as any).list.map((i: any) => `${i.name}: ${Number(i.value).toFixed(0)}`).join(', ')}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-sm font-bold">S/ {entry.value.toFixed(2)}</div>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-medium">Estrella de Gastos</CardTitle>
+              <Button variant="outline" size="icon" className="rounded-full border-pink-200 hover:bg-pink-50 hover:border-pink-300" onClick={() => setIsRadarOpen(true)}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-pink-500"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={categoryDataForChart.map(d => ({ category: d.name, value: d.value }))}>
+                  <PolarGrid gridType="circle" stroke={isDark ? "rgba(233,225,239,0.25)" : "#f5f5f5"} />
+                  <PolarAngleAxis dataKey="category" tick={{ fontSize: 12 }} />
+                  <PolarRadiusAxis angle={45} tick={false} />
+                  <Tooltip content={renderRadarTooltip} />
+                  <Radar dataKey="value" stroke="#FF7597" fill="#FF7597" fillOpacity={0.4} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        <Dialog open={isRadarOpen} onOpenChange={setIsRadarOpen}>
+          <DialogContent className="max-w-4xl bg-white rounded-2xl border-pink-200">
+            <DialogHeader>
+              <DialogTitle>Estrella de Gastos</DialogTitle>
+              <DialogDescription>Explora tus gastos por categoría con detalle.</DialogDescription>
+            </DialogHeader>
+            <div className="h-[480px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={categoryDataForChart.map(d => ({ category: d.name, value: d.value }))}>
+                  <PolarGrid gridType="circle" stroke={isDark ? "rgba(233,225,239,0.25)" : "#f5f5f5"} />
+                  <PolarAngleAxis dataKey="category" tick={{ fontSize: 12, fill: isDark ? "#E9E1EF" : "#4A404E" }} />
+                  <PolarRadiusAxis angle={45} tick={{ fill: isDark ? "#E9E1EF" : "#4A404E" }} />
+                  <Tooltip content={renderRadarTooltip} />
+                  <Legend />
+                  <Radar dataKey="value" stroke="#FF7597" fill="#FF7597" fillOpacity={0.4} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      
 
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogContent className="max-w-lg bg-white rounded-2xl border-pastel-yellow/30">
