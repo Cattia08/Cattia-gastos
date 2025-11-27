@@ -89,7 +89,7 @@ const FilterBar = ({
         <DropdownMenuTrigger asChild>
           <Button variant="default">
             <CalendarIcon className={`${iconClass} mr-2`} />
-            {selectedDate && endDate ? `${format(selectedDate, 'dd MMM')} - ${format(endDate, 'dd MMM')}` : 'Rango de fechas'}
+            {selectedDate && endDate ? `${format(selectedDate, 'dd MMM')} - ${format(endDate, 'dd MMM')}` : selectedDate ? `${format(selectedDate, 'dd MMM')}` : 'Seleccionar fecha'}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="p-2">

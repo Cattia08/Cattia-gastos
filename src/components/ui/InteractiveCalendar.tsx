@@ -1,22 +1,12 @@
 
 import * as React from "react";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon, X } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface InteractiveCalendarProps {
   selectedDate: Date | undefined;
@@ -42,10 +32,8 @@ const InteractiveCalendar = ({
   inline = false
 }: InteractiveCalendarProps) => {
   const [calendarMode, setCalendarMode] = React.useState<"single" | "range">(mode);
-  
   const handleModeChange = (value: string) => {
     setCalendarMode(value as "single" | "range");
-    // Reset dates when changing modes
     onDateSelect(undefined);
     if (onRangeSelect) onRangeSelect(undefined);
   };
@@ -54,22 +42,6 @@ const InteractiveCalendar = ({
     onDateSelect(undefined);
     if (onRangeSelect) onRangeSelect(undefined);
     if (onReset) onReset();
-  };
-
-  // Function to render date cell with expense indicator
-  const renderDateContent = (date: Date) => {
-    const hasExpense = expenses.some(expense => 
-      expense.date instanceof Date && isSameDay(expense.date, date)
-    );
-    
-    return (
-      <div className="relative w-full h-full flex items-center justify-center">
-        {date.getDate()}
-        {hasExpense && (
-          <div className="absolute bottom-0 w-1.5 h-1.5 bg-pastel-pink rounded-full" />
-        )}
-      </div>
-    );
   };
 
   if (inline) {
@@ -98,9 +70,6 @@ const InteractiveCalendar = ({
             onSelect={onDateSelect}
             initialFocus
             className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
-            components={{
-              DayContent: ({ date }) => renderDateContent(date)
-            }}
           />
         ) : (
           <Calendar
@@ -121,9 +90,6 @@ const InteractiveCalendar = ({
             }}
             initialFocus
             className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
-            components={{
-              DayContent: ({ date }) => renderDateContent(date)
-            }}
           />
         )}
       </div>
@@ -182,9 +148,6 @@ const InteractiveCalendar = ({
             onSelect={onDateSelect}
             initialFocus
             className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
-            components={{
-              DayContent: ({ date }) => renderDateContent(date)
-            }}
           />
         ) : (
           <Calendar
@@ -205,9 +168,6 @@ const InteractiveCalendar = ({
             }}
             initialFocus
             className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
-            components={{
-              DayContent: ({ date }) => renderDateContent(date)
-            }}
           />
         )}
       </PopoverContent>

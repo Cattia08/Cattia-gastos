@@ -41,6 +41,7 @@ import InsightsModal from "@/components/InsightsModal";
 import FilterBar from "@/components/FilterBar";
 import { Tooltip as UiTooltip, TooltipContent as UiTooltipContent, TooltipProvider as UiTooltipProvider, TooltipTrigger as UiTooltipTrigger } from "@/components/ui/tooltip";
 import WeeklyHeatmap from "@/components/WeeklyHeatmap";
+import FilteredTransactionsDialog from "@/components/FilteredTransactionsDialog";
 
 const COLORS = ["#FF7597", "#A594F9", "#6BCB77", "#FFD93D", "#FF6B6B"];
 
@@ -662,57 +663,13 @@ const Dashboard = () => {
         </div>
       )}
 
-      <Dialog open={isFilteredDialogOpen} onOpenChange={setIsFilteredDialogOpen}>
-        <DialogContent className="max-w-2xl bg-white rounded-2xl border-pastel-pink/30">
-          <DialogHeader>
-            <DialogTitle>Transacciones filtradas</DialogTitle>
-            <DialogDescription>
-              {selectedDate && (
-                <>Periodo: {format(selectedDate, "dd 'de' MMMM, yyyy", { locale: es })}{endDate && ` al ${format(endDate, "dd 'de' MMMM, yyyy", { locale: es })}`}</>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="overflow-hidden rounded-xl">
-            <div className="max-h-[420px] overflow-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-3 font-medium">Fecha</th>
-                    <th className="text-left py-2 px-3 font-medium">Concepto</th>
-                    <th className="text-left py-2 px-3 font-medium">Categoría</th>
-                    <th className="text-right py-2 px-3 font-medium">Monto (S/)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredExpenses.length > 0 ? (
-                    [...filteredExpenses]
-                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                      .map(expense => (
-                        <tr key={expense.id} className="hover:bg-muted/50">
-                          <td className="py-2 px-3">{new Date(expense.date).toLocaleDateString()}</td>
-                          <td className="py-2 px-3">{expense.name}</td>
-                          <td className="py-2 px-3">{expense.categories?.name || 'Sin categoría'}</td>
-                          <td className="py-2 px-3 text-right font-medium">S/ {expense.amount.toFixed(2)}</td>
-                        </tr>
-                      ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="py-4 text-center text-muted-foreground">
-                        No hay gastos para el período seleccionado
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={() => setIsFilteredDialogOpen(false)} className="rounded-full px-3 text-sm border-pastel-pink/30">
-              Cerrar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <FilteredTransactionsDialog
+        open={isFilteredDialogOpen}
+        onOpenChange={setIsFilteredDialogOpen}
+        transactions={filteredExpenses}
+        periodStart={selectedDate || undefined}
+        periodEnd={endDate || undefined}
+      />
 
       {/* Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7 mt-6">
@@ -864,7 +821,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         <WeeklyHeatmap
-          transactions={filteredExpenses.map(e => ({ id: e.id, amount: e.amount, date: e.date }))}
+          transactions={filteredExpenses.map(e => ({ id: e.id, name: e.name, amount: e.amount, date: e.date, categories: e.categories }))}
           className="md:col-span-1"
         />
         <Dialog open={isRadarOpen} onOpenChange={setIsRadarOpen}>

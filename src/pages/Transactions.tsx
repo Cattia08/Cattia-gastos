@@ -323,14 +323,25 @@ const Transactions = () => {
   // Decide qué transacciones mostrar
   const transactionsToShow = hasActiveFilters ? getSortedTransactions() : transactionsByMonth;
 
-  // Calcular datos paginados
   const totalRows = transactionsToShow.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-  const paginatedTransactions = transactionsToShow.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+  const indexOfFirstItem = (currentPage - 1) * rowsPerPage;
+  const indexOfLastItem = currentPage * rowsPerPage;
+  const paginatedTransactions = transactionsToShow.slice(indexOfFirstItem, indexOfLastItem);
 
   useEffect(() => {
-    setCurrentPage(1); // Reinicia a la primera página si cambia el filtro o cantidad de filas
-  }, [transactionsToShow, rowsPerPage]);
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategories, selectedDate, endDate, currentMonth]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [rowsPerPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   const groupedFeed = React.useMemo(() => {
     const groups: { label: string; items: typeof transactionsToShow }[] = [];
