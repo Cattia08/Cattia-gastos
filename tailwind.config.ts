@@ -20,14 +20,32 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Quicksand', 'sans-serif'],
+				sans: ['Outfit', 'sans-serif'],
+				heading: ['Nunito', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				background: '#FFF9FA',
+				foreground: '#4A404E',
+				primary: {
+					DEFAULT: '#FF7597',
+					hover: '#FF5C85',
+					light: '#FFB3C6',
+					foreground: 'white'
+				},
+				secondary: '#A594F9',
+				surface: '#FFFFFF',
+				text: {
+					main: '#4A404E',
+					muted: '#9D8D9F',
+				},
+				status: {
+					success: '#6BCB77',
+					error: '#FF6B6B',
+					warning: '#FFD93D',
+				},
 				pastel: {
 					green: '#A8E6CF',
 					red: '#FFB7B2',
@@ -35,14 +53,6 @@ export default {
 					pink: '#FFDBE6',
 					purple: '#E5C5F1',
 					blue: '#B5D8EB',
-				},
-				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
-				},
-				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -78,7 +88,14 @@ export default {
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				xl: '1rem',
+				'2xl': '1.5rem',
+				'3xl': '2rem'
+			},
+			boxShadow: {
+				'soft-glow': '0 10px 40px -10px rgba(255, 117, 151, 0.15)',
+				card: '0 4px 20px -5px rgba(0, 0, 0, 0.03)'
 			},
 			keyframes: {
 				'accordion-down': {

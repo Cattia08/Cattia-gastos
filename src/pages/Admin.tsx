@@ -534,17 +534,10 @@ const Admin = () => {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddIncomeDialogOpen(false)}
-                      className="border-pastel-green/30"
-                    >
+                    <Button variant="outline" onClick={() => setIsAddIncomeDialogOpen(false)}>
                       Cancelar
                     </Button>
-                    <Button
-                      onClick={handleAddIncome}
-                      className="bg-pastel-green hover:bg-pastel-green/80 text-foreground"
-                    >
+                    <Button onClick={handleAddIncome}>
                       Guardar
                     </Button>
                   </DialogFooter>
@@ -553,33 +546,33 @@ const Admin = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white/70 rounded-xl border border-pastel-green/20 shadow-sm p-4">
+              <div className="bg-white/70 rounded-xl border border-pastel-green/20 shadow-sm p-6">
                 <h3 className="text-lg font-medium mb-4">Historial de Ingresos</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="text-sm text-muted-foreground border-b">
-                        <th className="text-left p-2">Fuente</th>
-                        <th className="text-left p-2">Fecha</th>
-                        <th className="text-right p-2">Monto</th>
-                        <th className="text-center p-2">Acciones</th>
+                      <tr className="text-sm text-gray-500 border-b">
+                        <th className="text-left p-3">Fuente</th>
+                        <th className="text-left p-3">Fecha</th>
+                        <th className="text-right p-3">Monto</th>
+                        <th className="text-center p-3">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {income.map(inc => (
                         <tr key={inc.id} className="border-b border-pastel-green/10">
-                          <td className="p-2">{inc.source}</td>
-                          <td className="p-2">{new Date(inc.date).toLocaleDateString()}</td>
-                          <td className="p-2 text-right font-medium">${inc.amount.toFixed(2)}</td>
-                          <td className="p-2 text-center">
+                          <td className="p-3">{inc.source}</td>
+                          <td className="p-3">{new Date(inc.date).toLocaleDateString()}</td>
+                          <td className="p-3 text-right font-medium">${inc.amount.toFixed(2)}</td>
+                          <td className="p-3 text-center">
                             <Button size="icon" variant="ghost" className="text-pastel-blue hover:bg-pastel-blue/10 mr-1" onClick={() => handleStartEditIncome(inc)}><Edit className="w-4 h-4" /></Button>
                             <Button size="icon" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteIncome(inc.id)}><Trash className="w-4 h-4" /></Button>
                           </td>
                         </tr>
                       ))}
                       <tr className="bg-pastel-green/10">
-                        <td className="p-2 font-bold" colSpan={3}>Total</td>
-                        <td className="p-2 text-right font-bold">${income.reduce((sum, inc) => sum + inc.amount, 0).toFixed(2)}</td>
+                        <td className="p-3 font-bold" colSpan={3}>Total</td>
+                        <td className="p-3 text-right font-bold">${income.reduce((sum, inc) => sum + inc.amount, 0).toFixed(2)}</td>
                       </tr>
                     </tbody>
                   </table>

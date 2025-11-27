@@ -701,20 +701,20 @@ const Transactions = () => {
       </Dialog>
 
       {/* Filter section */}
-      <Card className="p-4 border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card className="p-6 mt-6 rounded-2xl shadow-sm border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <InputWithIcon
               placeholder="Buscar transacciones"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full border-pastel-pink/30"
-              icon={<Search className="w-4 h-4 text-muted-foreground" />}
+              className="w-full"
+              icon={<Search className="w-4 h-4 text-gray-500" />}
             />
           </div>
           <div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full border-pastel-pink/30">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Filtrar por categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -749,8 +749,8 @@ const Transactions = () => {
 
       {/* Date filter display */}
       {hasDateFilter && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center text-sm text-muted-foreground">
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center text-sm text-gray-500">
             <Calendar className="w-4 h-4 mr-1" />
             Mostrando transacciones del: {displayDateFilter()}
           </div>
@@ -758,17 +758,20 @@ const Transactions = () => {
       )}
 
       {/* Month selector */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Transacciones</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-extrabold flex items-center gap-2">
+          Transacciones
+          <Heart className="w-5 h-5 text-pastel-pink" />
+        </h2>
         <MonthSelector currentMonth={currentMonth} onChange={setCurrentMonth} />
       </div>
 
       {/* Transactions Table */}
-      <Card className="border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
+      <Card className="p-0 rounded-2xl overflow-hidden border-pastel-pink/30 dark:border-pastel-pink/20 dark:bg-gray-800">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-primary-light/20">
             <TableRow>
-              <TableHead className="w-[200px] cursor-pointer" onClick={() => handleSort("name")}>
+              <TableHead className="w-[200px] cursor-pointer text-primary-hover" onClick={() => handleSort("name")}>
                 Nombre
                 {sortConfig?.key === "name" ? (
                   sortConfig.direction === "ascending" ? (
@@ -778,7 +781,7 @@ const Transactions = () => {
                   )
                 ) : null}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("amount")}>
+              <TableHead className="cursor-pointer text-right text-primary-hover" onClick={() => handleSort("amount")}>
                 Monto (S/)
                 {sortConfig?.key === "amount" ? (
                   sortConfig.direction === "ascending" ? (
@@ -788,7 +791,7 @@ const Transactions = () => {
                   )
                 ) : null}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("category_id")}>
+              <TableHead className="cursor-pointer text-primary-hover" onClick={() => handleSort("category_id")}>
                 Categoría
                 {sortConfig?.key === "category_id" ? (
                   sortConfig.direction === "ascending" ? (
@@ -798,7 +801,7 @@ const Transactions = () => {
                   )
                 ) : null}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("date")}>
+              <TableHead className="cursor-pointer text-primary-hover" onClick={() => handleSort("date")}> 
                 Fecha
                 {sortConfig?.key === "date" ? (
                   sortConfig.direction === "ascending" ? (
@@ -808,7 +811,7 @@ const Transactions = () => {
                   )
                 ) : null}
               </TableHead>
-              <TableHead>Acciones</TableHead>
+              <TableHead className="text-primary-hover">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -819,7 +822,7 @@ const Transactions = () => {
                   className={!transaction.category_id ? "bg-amber-50/50 dark:bg-amber-950/20" : ""}
                 >
                   <TableCell className="font-medium">{transaction.name}</TableCell>
-                  <TableCell>S/ {transaction.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">S/ {transaction.amount.toFixed(2)}</TableCell>
                   <TableCell>
                     {transaction.categories ? (
                       <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />

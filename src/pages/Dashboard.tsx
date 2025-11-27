@@ -21,7 +21,7 @@ import DashboardCard from "@/components/ui/DashboardCard";
 import { InputWithIcon } from "@/components/ui/InputWithIcon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart as PieChartComponent, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip, Legend } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip } from "recharts";
 import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
 import MonthSelector from "@/components/ui/MonthSelector";
 import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth, subMonths } from "date-fns";
@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const COLORS = ["#FFB7B2", "#A8E6CF", "#FDFFAB", "#B5D8EB", "#E5C5F1"];
+const COLORS = ["#FF7597", "#A594F9", "#6BCB77", "#FF6B6B", "#FFD93D"];
 
 interface Expense {
   id: number;
@@ -466,13 +466,18 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            <span>¡Hola, Catt, bienvenida!</span>
-            <Star className="inline ml-2 w-5 h-5 text-pastel-yellow" />
-          </h1>
-          <h2 className="text-xl text-primary mt-1">Dashboard</h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              Hola, Catt!
+              <Heart className="inline ml-2 w-6 h-6 text-pastel-pink" />
+            </h1>
+            <div className="mt-2 flex items-center text-muted-foreground">
+              <Calendar className="w-4 h-4 mr-2 text-pastel-blue" />
+              {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
+            </div>
+          </div>
         </div>
         <div className="flex space-x-2">
           <DropdownMenu>
@@ -502,7 +507,7 @@ const Dashboard = () => {
       </div>
 
       {/* Filter section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
         <div>
           <InputWithIcon
             placeholder="Buscar gastos"
@@ -601,32 +606,33 @@ const Dashboard = () => {
           <DashboardCard
             title="Total del Mes"
             value={totalMonth}
-            icon={<CircleDollarSign className="w-5 h-5 text-white" />}
-            iconColor="bg-pastel-pink"
+            icon={<CircleDollarSign className="w-6 h-6 text-pastel-pink" />}
+            iconColor="bg-pastel-pink/10"
+            className="bg-gradient-to-br from-white to-primary-light/30"
           />
         </div>
 
         <DashboardCard
           title="Promedio Diario"
           value={dailyAvg.toFixed(2)}
-          icon={<CreditCard className="w-5 h-5 text-white" />}
-          iconColor="bg-pastel-green"
+          icon={<CreditCard className="w-6 h-6 text-pastel-green" />}
+          iconColor="bg-pastel-green/10"
         />
 
         <DashboardCard
           title="Día con Mayor Gasto"
           value={maxExpenseDay}
           isCurrency={false}
-          icon={<Calendar className="w-5 h-5 text-white" />}
-          iconColor="bg-pastel-blue"
+          icon={<Calendar className="w-6 h-6 text-pastel-blue" />}
+          iconColor="bg-pastel-blue/10"
         />
 
         <DashboardCard
           title="Categoría Más Usada"
           value={topCategory}
           isCurrency={false}
-          icon={<PieChart className="w-5 h-5 text-white" />}
-          iconColor="bg-pastel-purple"
+          icon={<PieChart className="w-6 h-6 text-pastel-purple" />}
+          iconColor="bg-pastel-purple/10"
         />
 
         {/* New Income Card */}
@@ -634,15 +640,15 @@ const Dashboard = () => {
           <DashboardCard
             title="Ingresos del Mes"
             value={totalIncome}
-            icon={<Wallet className="w-5 h-5 text-white" />}
-            iconColor="bg-pastel-green"
+            icon={<Wallet className="w-6 h-6 text-pastel-green" />}
+            iconColor="bg-pastel-green/10"
           />
         </div>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card-pastel p-4 md:p-6 dark:bg-gray-800 dark:border-pastel-pink/20">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="card-pastel p-6 dark:bg-gray-800 dark:border-pastel-pink/20 lg:col-span-1">
           <h3 className="text-lg font-medium mb-4 flex items-center">
             <PieChart className="w-5 h-5 mr-2 text-pastel-pink" />
             Gastos por Categoría
@@ -655,6 +661,7 @@ const Dashboard = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
+                  innerRadius={60}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -682,7 +689,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="card-pastel p-4 md:p-6 dark:bg-gray-800 dark:border-pastel-pink/20">
+        <div className="card-pastel p-4 md:p-6 dark:bg-gray-800 dark:border-pastel-pink/20 lg:col-span-2">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
             <h3 className="text-lg font-medium flex items-center">
               <ArrowUp className="w-5 h-5 mr-2 text-pastel-green" />
@@ -692,22 +699,26 @@ const Dashboard = () => {
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={expenseData}>
+              <AreaChart data={expenseData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="day" />
                 <YAxis />
                 <LineTooltip formatter={value => [`S/ ${Number(value).toFixed(2)}`, "Monto"]} />
-                <Legend />
-                <Line
+                <defs>
+                  <linearGradient id="colorPink" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FFB7B2" stopOpacity={0.6} />
+                    <stop offset="100%" stopColor="#FFB7B2" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
                   type="monotone"
                   dataKey="amount"
                   name={`Gastos de ${format(currentMonth, "MMMM yyyy", { locale: es })}`}
                   stroke="#FFB7B2"
                   strokeWidth={2}
-                  dot={{ stroke: "#FFB7B2", strokeWidth: 2, r: 4, fill: "white" }}
-                  activeDot={{ r: 6, fill: "#FFB7B2" }}
+                  fill="url(#colorPink)"
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-3 text-center text-sm text-muted-foreground">

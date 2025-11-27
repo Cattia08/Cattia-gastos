@@ -126,6 +126,18 @@
   }
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Outfit:wght@400;500&display=swap');
+
+html, body {
+  background-color: #FFF9FA;
+  color: #4A404E;
+  font-family: 'Outfit', sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Nunito', sans-serif;
+}
+
 /* Pastel Colors for charts and UI */
 :root {
   --pastel-pink: #FFB7B2;
