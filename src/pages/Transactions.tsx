@@ -6,9 +6,6 @@ import { supabase } from "@/lib/supabase";
 import {
   Plus,
   Star,
-  Search,
-  ChevronUp,
-  ChevronDown,
   Heart,
   CircleAlert,
   RefreshCcw,
@@ -17,8 +14,7 @@ import {
   Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
@@ -30,15 +26,11 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CategoryBadge from "@/components/ui/CategoryBadge";
-import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
 import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
-// removed old dropdown export UI imports
 import MonthSelector from "@/components/ui/MonthSelector";
 import { es } from "date-fns/locale";
-// moved export logic into ExportModal component
 import ExportButton from "@/components/export/ExportButton";
 import FilterBar from "@/components/FilterBar";
 import TransactionForm from "@/components/transactions/TransactionForm";
@@ -140,68 +132,6 @@ const Transactions = () => {
     return sortableTransactions;
   };
 
-  const handleAddTransaction = async () => {
-    if (!currentTransaction.name || !currentTransaction.amount) {
-      toast({
-        title: "Error",
-        description: "Por favor completa los campos requeridos",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      if (isEditDialogOpen) {
-        // Update existing transaction
-        const { error: updateError } = await supabase
-          .from("transactions")
-          .update({
-            name: currentTransaction.name,
-            amount: parseFloat(currentTransaction.amount),
-            category_id: currentTransaction.category_id,
-            date: currentTransaction.date
-          })
-          .eq("id", currentTransaction.id);
-
-        if (updateError) throw updateError;
-
-        toast({
-          title: "Transacción actualizada",
-          description: "La transacción ha sido actualizada con éxito"
-        });
-        setIsEditDialogOpen(false);
-        await refreshData();
-      } else {
-        // Add new transaction
-        const { error: insertError } = await supabase.from("transactions").insert([
-          {
-            name: currentTransaction.name,
-            amount: parseFloat(currentTransaction.amount),
-            category_id: currentTransaction.category_id,
-            date: currentTransaction.date
-          }
-        ]);
-
-        if (insertError) throw insertError;
-
-        toast({
-          title: "Transacción añadida",
-          description: "La transacción ha sido añadida con éxito"
-        });
-        setIsAddDialogOpen(false);
-        await refreshData();
-      }
-
-      resetTransactionForm();
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Hubo un error al procesar la transacción",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleEdit = transaction => {
     setCurrentTransaction({
       id: transaction.id,
@@ -265,7 +195,13 @@ const Transactions = () => {
     return format(selectedDate, "dd 'de' MMMM, yyyy");
   };
 
-  const memoizedCurrentTransaction = useMemo(() => currentTransaction, [currentTransaction.id]);
+  const memoizedCurrentTransaction = useMemo(() => currentTransaction, [
+    currentTransaction.id,
+    currentTransaction.name,
+    currentTransaction.amount,
+    currentTransaction.category_id,
+    currentTransaction.date
+  ]);
 
   const handleDeleteTransaction = async (id) => {
     try {
@@ -410,11 +346,11 @@ const Transactions = () => {
             <RefreshCcw className="w-3 h-3 mr-1" /> Restablecer
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
+            <DialogTrigger asChild>
               <Button>
                 <Plus className="w-4 h-4 mr-2" /> Añadir Transacción
               </Button>
-              </DialogTrigger>
+            </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30 dark:bg-gray-800 dark:border-pastel-pink/20">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
@@ -501,7 +437,7 @@ const Transactions = () => {
         </DialogContent>
       </Dialog>
 
-      
+
 
       {/* Date filter display */}
       {hasDateFilter && (
@@ -532,86 +468,86 @@ const Transactions = () => {
               endDate={endDate}
               onDateSelect={setSelectedDate}
               onRangeSelect={setEndDate}
-              onReset={() => { setSearchQuery(''); setSelectedDate(undefined); setEndDate(undefined); setSelectedCategories(supabaseCategories.map(c=>c.id)); }}
+              onReset={() => { setSearchQuery(''); setSelectedDate(undefined); setEndDate(undefined); setSelectedCategories(supabaseCategories.map(c => c.id)); }}
               expenses={supabaseTransactions.map(t => ({ date: new Date(t.date), amount: t.amount }))}
             />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto md:overflow-visible scroll-smooth" style={{ scrollbarWidth: 'thin' }}>
-          <Table className="min-w-[800px]">
-            <TableHeader className="bg-primary/5">
-              <TableRow>
-                <TableHead className="text-primary-hover font-bold">Comercio</TableHead>
-                <TableHead className="text-primary-hover font-bold">Categoría</TableHead>
-                <TableHead className="text-primary-hover font-bold">Fecha</TableHead>
-                <TableHead className="text-right text-primary-hover font-bold">Monto</TableHead>
-                <TableHead className="text-primary-hover font-bold">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedTransactions.length > 0 ? (
-                paginatedTransactions.map(transaction => (
-                  <TableRow key={transaction.id} className="hover:bg-pink-50/50 [&>td]:py-3">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-full"
-                          style={{ backgroundColor: `${transaction.categories?.color || '#FFB7B2'}1A` }}
-                        />
-                        <div className="leading-tight">
-                          <div className="text-gray-700 font-medium">{transaction.name}</div>
-                          <div className="text-xs text-muted-foreground">{transaction.categories?.name || 'Sin categoría'}</div>
+            <Table className="min-w-[800px]">
+              <TableHeader className="bg-primary/5">
+                <TableRow>
+                  <TableHead className="text-primary-hover font-bold">Comercio</TableHead>
+                  <TableHead className="text-primary-hover font-bold">Categoría</TableHead>
+                  <TableHead className="text-primary-hover font-bold">Fecha</TableHead>
+                  <TableHead className="text-right text-primary-hover font-bold">Monto</TableHead>
+                  <TableHead className="text-primary-hover font-bold">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedTransactions.length > 0 ? (
+                  paginatedTransactions.map(transaction => (
+                    <TableRow key={transaction.id} className="hover:bg-pink-50/50 [&>td]:py-3">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-full"
+                            style={{ backgroundColor: `${transaction.categories?.color || '#FFB7B2'}1A` }}
+                          />
+                          <div className="leading-tight">
+                            <div className="text-gray-700 font-medium">{transaction.name}</div>
+                            <div className="text-xs text-muted-foreground">{transaction.categories?.name || 'Sin categoría'}</div>
+                          </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {transaction.categories ? (
+                          <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
+                        ) : (
+                          <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
+                            <SelectTrigger className="h-8 border-pastel-pink/30 pr-2 mr-2 max-w-[160px] bg-amber-50/80 dark:bg-amber-950/40">
+                              <div className="flex items-center">
+                                <CircleAlert className="w-4 h-4 text-amber-500 mr-1" />
+                                <span>Sin categoría</span>
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {supabaseCategories.map(category => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-gray-500">{new Date(transaction.date).toLocaleDateString()}</span>
+                      </TableCell>
+                      <TableCell className="text-right font-bold">S/ {transaction.amount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(transaction)} className="h-8 w-8 p-0">
+                          <Edit className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteTransaction(transaction.id)} className="h-8 w-8 p-0">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <div className="flex flex-col items-center justify-center">
+                        <Star className="w-10 h-10 text-pastel-yellow mb-2 animate-pulse" />
+                        <p className="text-muted-foreground">No hay transacciones que mostrar</p>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {transaction.categories ? (
-                        <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
-                      ) : (
-                        <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
-                          <SelectTrigger className="h-8 border-pastel-pink/30 pr-2 mr-2 max-w-[160px] bg-amber-50/80 dark:bg-amber-950/40">
-                            <div className="flex items-center">
-                              <CircleAlert className="w-4 h-4 text-amber-500 mr-1" />
-                              <span>Sin categoría</span>
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {supabaseCategories.map(category => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-gray-500">{new Date(transaction.date).toLocaleDateString()}</span>
-                    </TableCell>
-                    <TableCell className="text-right font-bold">S/ {transaction.amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(transaction)} className="h-8 w-8 p-0">
-                        <Edit className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteTransaction(transaction.id)} className="h-8 w-8 p-0">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <div className="flex flex-col items-center justify-center">
-                      <Star className="w-10 h-10 text-pastel-yellow mb-2 animate-pulse" />
-                      <p className="text-muted-foreground">No hay transacciones que mostrar</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
