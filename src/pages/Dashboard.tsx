@@ -9,7 +9,8 @@ import {
   CreditCard,
   RefreshCcw,
   Wallet,
-  Tag
+  Tag,
+  TrendingUp
 } from "lucide-react";
 import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
 import { Button } from "@/components/ui/button";
@@ -370,32 +371,76 @@ const Dashboard = () => {
     }
   }, [categories]);
 
-
+  // Generate sparkline data from historical months
+  const sparklineMonthlyData = useMemo(() => {
+    const data: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthStart = new Date(selectedYear, (selectedMonth ?? 11) - i, 1);
+      const monthEnd = endOfMonth(monthStart);
+      const monthTotal = transactions
+        .filter(t => {
+          const d = new Date(t.date);
+          return isWithinInterval(d, { start: monthStart, end: monthEnd });
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+      data.push(monthTotal);
+    }
+    return data;
+  }, [transactions, selectedYear, selectedMonth]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="space-y-8 animate-fade-in">
+        {/* Skeleton header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="skeleton-shimmer h-14 w-64 rounded-xl" />
+            <div className="skeleton-shimmer h-5 w-48 rounded-lg mt-3" />
+          </div>
+          <div className="flex gap-3">
+            <div className="skeleton-shimmer h-10 w-24 rounded-xl" />
+            <div className="skeleton-shimmer h-10 w-28 rounded-xl" />
+          </div>
+        </div>
+
+        {/* Skeleton metric cards */}
+        <div className="space-y-6">
+          <div className="flex justify-center">
+            <div className="skeleton-shimmer h-36 w-full max-w-lg rounded-2xl" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+            <div className="skeleton-shimmer h-24 rounded-2xl" />
+            <div className="skeleton-shimmer h-24 rounded-2xl" />
+            <div className="skeleton-shimmer h-24 rounded-2xl" />
+          </div>
+        </div>
+
+        {/* Skeleton charts */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="skeleton-shimmer h-72 md:col-span-2 rounded-2xl" />
+          <div className="skeleton-shimmer h-72 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-center text-red-500">Error al cargar los datos: {error.message}</div>;
+    return <div className="text-center text-red-500 view-transition">Error al cargar los datos: {error.message}</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 view-transition">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-text-emphasis dark:text-foreground">
               Hola, Catt!
-              <Heart className="inline ml-2 w-6 h-6 text-theme-green" />
+              <Heart className="inline ml-3 w-8 h-8 text-theme-green animate-pulse" />
             </h1>
-            <div className="mt-2 flex items-center text-muted-foreground">
-              <Calendar className="w-4 h-4 mr-2 text-theme-green" />
-              {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
+            <div className="mt-3 flex items-center text-text-secondary">
+              <Calendar className="w-5 h-5 mr-2 text-theme-green" />
+              <span className="text-base">{format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}</span>
             </div>
             {/* Year/Month selectors */}
             <DatePeriodSelector
@@ -404,23 +449,22 @@ const Dashboard = () => {
               onYearChange={setSelectedYear}
               onMonthChange={setSelectedMonth}
               availableYears={availableYears}
-              className="mt-3"
+              className="mt-4"
             />
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-3">
           <ExportButton transactions={transactions} categories={categories} />
-
           <Button
             variant="outline"
             onClick={handleResetFilters}
-            className="rounded-xl px-4 text-sm border-gray-200 hover:bg-pastel-mint/30"
+            className="rounded-xl px-4 text-sm border-border hover:bg-pastel-mint/30 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-all"
           >
-            <RefreshCcw className="w-3 h-3 mr-1" /> Restablecer
+            <RefreshCcw className="w-3.5 h-3.5 mr-1.5" /> Restablecer
           </Button>
           <Button
             variant="outline"
-            className="rounded-xl px-4 text-sm border-gray-200 hover:bg-pastel-lavender/30"
+            className="rounded-xl px-4 text-sm border-border hover:bg-pastel-lavender/30 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-all"
             onClick={() => setIsInsightsOpen(true)}
           >
             ✨ Insights
@@ -428,61 +472,67 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Metric Cards - Hierarchical Layout */}
+      <div className="space-y-6">
+        {/* Primary Metric: Gasto del Mes/Año */}
+        <div className="flex justify-center">
+          <DashboardCard
+            title={selectedMonth !== null ? "Gasto del Mes" : "Gasto del Año"}
+            value={periodTotal}
+            icon={<CircleDollarSign className="w-10 h-10 text-theme-rose" />}
+            iconColor="bg-pastel-rose"
+            variant="primary"
+            tint="rose"
+            className="shadow-soft-md max-w-lg w-full"
+            subtext={`vs. anterior: S/ ${previousMonthTotal.toFixed(2)}`}
+            sparklineData={sparklineMonthlyData}
+            interactive
+            onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end } } })}
+          />
+        </div>
 
-
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-7 mt-6">
-        {/* Fila 1: Resumen */}
-        <DashboardCard
-          title="Gasto Total"
-          value={periodTotal}
-          icon={<Wallet className="w-7 h-7 text-theme-green" />}
-          iconColor="bg-pastel-green"
-          className="shadow-soft"
-          interactive
-          emphasis
-          onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'all' } } })}
-        />
-        <DashboardCard
-          title={selectedMonth !== null ? "Gasto del Mes" : "Gasto del Año"}
-          value={periodTotal}
-          icon={<CircleDollarSign className="w-7 h-7 text-theme-rose" />}
-          iconColor="bg-pastel-rose"
-          className="shadow-soft"
-          subtext={`vs. anterior: S/ ${previousMonthTotal.toFixed(2)}`}
-          interactive
-          emphasis
-          onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end } } })}
-        />
-        <DashboardCard
-          title="Gasto Diario Promedio"
-          value={dailyAvg.toFixed(2)}
-          icon={<CreditCard className="w-7 h-7 text-theme-sage" />}
-          iconColor="bg-pastel-mint"
-          className="shadow-soft"
-          subtext={`Periodo: ${trendSubtitle}`}
-          interactive
-        />
-        <DashboardCard
-          title="Categoría Top"
-          value={topCategory}
-          isCurrency={false}
-          icon={<PieChart className="w-7 h-7 text-theme-lavender" />}
-          iconColor="bg-pastel-lavender"
-          className="shadow-soft"
-          subtext={monthlyGrowthText}
-          interactive
-          emphasis
-          onClick={() => topCategoryId && navigate('/transacciones', { state: { quickFilter: { type: 'category', id: topCategoryId } } })}
-        />
-
-
-
-
+        {/* Secondary Metrics Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+          <DashboardCard
+            title="Gasto Total"
+            value={periodTotal}
+            icon={<Wallet className="w-6 h-6 text-theme-green" />}
+            iconColor="bg-pastel-green"
+            variant="secondary"
+            tint="green"
+            className="shadow-soft"
+            interactive
+            onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'all' } } })}
+          />
+          <DashboardCard
+            title="Gasto Diario Promedio"
+            value={dailyAvg.toFixed(2)}
+            icon={<TrendingUp className="w-6 h-6 text-theme-sage" />}
+            iconColor="bg-pastel-mint"
+            variant="secondary"
+            tint="sage"
+            className="shadow-soft"
+            subtext={`Periodo: ${trendSubtitle}`}
+            interactive
+          />
+          <DashboardCard
+            title="Categoría Top"
+            value={topCategory}
+            isCurrency={false}
+            icon={<PieChart className="w-6 h-6 text-theme-lavender" />}
+            iconColor="bg-pastel-lavender"
+            variant="secondary"
+            tint="lavender"
+            className="shadow-soft"
+            subtext={monthlyGrowthText}
+            interactive
+            onClick={() => topCategoryId && navigate('/transacciones', { state: { quickFilter: { type: 'category', id: topCategoryId } } })}
+          />
+        </div>
       </div>
 
       {/* Barra de filtros de categoría */}
-      <div className="mt-4">
+      <div className="mt-2">
         <MultiSelectFilter
           label="Categorías"
           icon={Tag}
@@ -495,7 +545,7 @@ const Dashboard = () => {
       </div>
 
       {/* Grid de gráficos */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         <Card className="md:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">

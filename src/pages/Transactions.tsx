@@ -37,20 +37,21 @@ import ExportButton from "@/components/export/ExportButton";
 import FilterBar from "@/components/FilterBar";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import { cn } from "@/lib/utils";
+import { groupTransactionsByDate } from "@/lib/dateGrouping";
 
 const Transactions = () => {
   const toast = useThemedToast();
   const { transactions: supabaseTransactions, categories: supabaseCategories, paymentMethods, loading, error, refreshData } = useSupabaseData();
   const location = useLocation();
 
-  
+
   // Filter states
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<number[]>([]);
-  
+
   // Period selector states (unified with Dashboard)
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number | null>(new Date().getMonth());
@@ -150,6 +151,11 @@ const Transactions = () => {
   const periodTotal = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
   const transactionCount = filteredTransactions.length;
 
+  // Group paginated transactions by date
+  const groupedTransactions = useMemo(() => {
+    return groupTransactionsByDate(paginatedTransactions);
+  }, [paginatedTransactions]);
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -174,7 +180,7 @@ const Transactions = () => {
     const state = location.state as any;
     const quick = state?.quickFilter;
     if (!quick) return;
-    
+
     if (quick.type === 'all') {
       setSearchQuery("");
       setSelectedCategories(supabaseCategories.map(c => c.id));
@@ -314,10 +320,10 @@ const Transactions = () => {
             {periodSubtitle} • {transactionCount} transacciones • S/ {periodTotal.toFixed(2)}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2 flex-wrap">
           <ExportButton transactions={supabaseTransactions} categories={supabaseCategories} />
-          
+
           <Button
             variant="outline"
             onClick={handleResetFilters}
@@ -331,7 +337,7 @@ const Transactions = () => {
             <RefreshCcw className="w-3.5 h-3.5 mr-1.5" />
             Restablecer
           </Button>
-          
+
           <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
             console.log('🚪 Add Dialog opening:', open, 'paymentMethods at this moment:', paymentMethods, 'length:', paymentMethods?.length);
             setIsAddDialogOpen(open);
@@ -436,7 +442,7 @@ const Transactions = () => {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -451,117 +457,137 @@ const Transactions = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedTransactions.length > 0 ? (
-                  paginatedTransactions.map((transaction, index) => (
-                    <TableRow
-                      key={transaction.id}
-                      className={cn(
-                        "group transition-colors duration-150",
-                        "hover:bg-pink-50/60 dark:hover:bg-pink-950/20",
-                        index % 2 === 0 ? "bg-white/60 dark:bg-gray-900/40" : "bg-pink-50/20 dark:bg-pink-950/10"
-                      )}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={cn(
-                              "w-10 h-10 rounded-xl flex items-center justify-center",
-                              "transition-transform duration-200 group-hover:scale-110"
-                            )}
-                            style={{ backgroundColor: `${transaction.categories?.color || '#FF7597'}15` }}
-                          >
-                            <span 
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: transaction.categories?.color || '#FF7597' }}
-                            />
+                {groupedTransactions.length > 0 ? (
+                  groupedTransactions.map((group) => (
+                    <React.Fragment key={group.dateKey}>
+                      {/* Date group header */}
+                      <TableRow className="date-group-header hover:bg-muted/90">
+                        <TableCell colSpan={6} className="p-0">
+                          <div className="flex items-center justify-between px-4 py-2.5">
+                            <span className="font-semibold text-text-primary capitalize">{group.label}</span>
+                            <span className="text-xs text-text-secondary">
+                              {group.transactions.length} transacción{group.transactions.length > 1 ? 'es' : ''} • S/ {group.total.toFixed(2)}
+                            </span>
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-800 dark:text-gray-200">
-                              {transaction.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {transaction.categories?.name || 'Sin categoría'}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {transaction.categories ? (
-                          <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
-                        ) : (
-                          <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
-                            <SelectTrigger className={cn(
-                              "h-8 max-w-[150px]",
-                              "bg-amber-50/80 dark:bg-amber-950/40",
-                              "border-amber-200 dark:border-amber-800"
-                            )}>
-                              <div className="flex items-center gap-1">
-                                <CircleAlert className="w-3.5 h-3.5 text-amber-500" />
-                                <span className="text-xs">Sin categoría</span>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Transactions in this group */}
+                      {group.transactions.map((transaction) => (
+                        <TableRow
+                          key={transaction.id}
+                          className={cn(
+                            "group transition-all duration-150",
+                            "hover:bg-muted/40 dark:hover:bg-muted/20",
+                            "bg-white dark:bg-card"
+                          )}
+                        >
+                          <TableCell className="py-3.5">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={cn(
+                                  "w-10 h-10 rounded-xl flex items-center justify-center",
+                                  "transition-transform duration-200 group-hover:scale-110"
+                                )}
+                                style={{ backgroundColor: `${transaction.categories?.color || '#FF7597'}15` }}
+                              >
+                                <span
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: transaction.categories?.color || '#FF7597' }}
+                                />
                               </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {supabaseCategories.map(category => (
-                                <SelectItem key={category.id} value={category.id.toString()}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {transaction.payment_methods ? (
-                          <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
-                            <CreditCard className="w-3.5 h-3.5 text-gray-400" />
-                            {transaction.payment_methods.name}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">
-                            -
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {format(new Date(transaction.date), "d MMM, yyyy", { locale: es })}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className="font-bold text-gray-800 dark:text-gray-200">
-                          S/ {transaction.amount.toFixed(2)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(transaction)}
-                            className="h-8 w-8 hover:bg-pink-100 dark:hover:bg-pink-900/40 rounded-lg"
-                          >
-                            <Edit className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteTransaction(transaction.id)}
-                            className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                              <div>
+                                <div className="font-medium text-text-primary">
+                                  {transaction.name}
+                                </div>
+                                <div className="text-xs text-text-secondary mt-0.5">
+                                  {transaction.categories?.name || (
+                                    <span className="badge-uncategorized">
+                                      <CircleAlert className="w-3 h-3" />
+                                      Sin categoría
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-3.5">
+                            {transaction.categories ? (
+                              <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
+                            ) : (
+                              <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
+                                <SelectTrigger className={cn(
+                                  "h-8 max-w-[150px]",
+                                  "bg-amber-50/80 dark:bg-amber-950/40",
+                                  "border-amber-200 dark:border-amber-800"
+                                )}>
+                                  <div className="flex items-center gap-1">
+                                    <CircleAlert className="w-3.5 h-3.5 text-amber-500" />
+                                    <span className="text-xs">Seleccionar</span>
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {supabaseCategories.map(category => (
+                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-3.5">
+                            {transaction.payment_methods ? (
+                              <div className="flex items-center gap-1.5 text-sm text-text-secondary">
+                                <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
+                                {transaction.payment_methods.name}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-3.5">
+                            <span className="text-sm text-text-secondary">
+                              {format(new Date(transaction.date), "d MMM", { locale: es })}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right py-3.5">
+                            <span className="font-bold text-text-primary text-base">
+                              S/ {transaction.amount.toFixed(2)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-3.5">
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(transaction)}
+                                className="h-8 w-8 hover:bg-pink-100 dark:hover:bg-pink-900/40 rounded-lg"
+                              >
+                                <Edit className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteTransaction(transaction.id)}
+                                className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-48">
+                    <TableCell colSpan={6} className="h-48">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
                           <Star className="w-8 h-8 text-pink-400 animate-pulse" />
                         </div>
-                        <p className="text-muted-foreground font-medium">No hay transacciones que mostrar</p>
+                        <p className="text-text-secondary font-medium">No hay transacciones que mostrar</p>
                         <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva transacción</p>
                       </div>
                     </TableCell>
@@ -592,7 +618,7 @@ const Transactions = () => {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

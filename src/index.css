@@ -4,7 +4,7 @@
 
 /* ===============================================
    CATTIA THEME - Pastel Moderno Equilibrado
-   Para: Tu enamorado 💚
+   De: Tu enamorado 💚
    =============================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Outfit:wght@400;500;600&display=swap');
@@ -14,41 +14,62 @@
     /* Background & Foreground */
     --background: 0 0% 98.5%;
     --foreground: 0 0% 24%;
-    
+
+    /* Semantic Text Colors - WCAG AA Compliant */
+    --text-primary: 0 0% 18%;
+    /* High contrast: ~10:1 ratio */
+    --text-secondary: 0 0% 35%;
+    /* WCAG AA: ~6:1 ratio */
+    --text-muted: 0 0% 45%;
+    /* Standard muted */
+    --text-emphasis: 0 0% 12%;
+    /* Extra emphasis */
+
     /* Cards & Popovers */
     --card: 0 0% 100%;
     --card-foreground: 0 0% 24%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 24%;
-    
+
     /* Primary - Rose equilibrado */
     --primary: 338 60% 65%;
     --primary-foreground: 0 0% 100%;
-    
+
     /* Secondary - Lavender */
     --secondary: 260 45% 78%;
     --secondary-foreground: 0 0% 24%;
-    
+
     /* Accent - Verde sage (favorito!) */
     --accent: 152 42% 55%;
     --accent-foreground: 0 0% 100%;
-    
+
     /* Muted */
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    
+    --muted-foreground: 0 0% 40%;
+    /* Increased contrast */
+
     /* Destructive */
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
-    
+
     /* Borders & Inputs */
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 152 42% 55%;
-    
+
+    /* Category Tint Backgrounds (5% opacity equivalent) */
+    --category-rose-tint: 338 60% 97%;
+    --category-green-tint: 152 42% 97%;
+    --category-lavender-tint: 260 45% 97%;
+    --category-sage-tint: 152 30% 97%;
+
+    /* Interactive States */
+    --hover-lift: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+    --focus-ring: 0 0 0 3px hsla(152, 42%, 55%, 0.3);
+
     /* Radius */
     --radius: 0.875rem;
-    
+
     /* Sidebar */
     --sidebar-background: 0 0% 99%;
     --sidebar-foreground: 0 0% 24%;
@@ -64,6 +85,13 @@
   .dark {
     --background: 276 36% 11%;
     --foreground: 276 25% 92%;
+
+    /* Semantic Text Colors - Dark Mode */
+    --text-primary: 276 25% 95%;
+    --text-secondary: 276 25% 80%;
+    --text-muted: 276 25% 65%;
+    --text-emphasis: 0 0% 100%;
+
     --card: 276 28% 16%;
     --card-foreground: 276 25% 92%;
     --popover: 276 28% 16%;
@@ -75,12 +103,18 @@
     --accent: 152 42% 55%;
     --accent-foreground: 276 25% 92%;
     --muted: 276 20% 20%;
-    --muted-foreground: 276 25% 80%;
+    --muted-foreground: 276 25% 75%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 276 25% 92%;
     --border: 330 20% 35%;
     --input: 276 20% 20%;
     --ring: 340 82% 66%;
+
+    /* Category Tint Backgrounds - Dark Mode */
+    --category-rose-tint: 340 30% 18%;
+    --category-green-tint: 152 25% 18%;
+    --category-lavender-tint: 260 25% 18%;
+    --category-sage-tint: 152 20% 18%;
   }
 }
 
@@ -98,12 +132,18 @@
   }
 
   /* Typography */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading font-bold tracking-tight;
   }
 }
 
 @layer components {
+
   /* ===============================================
      CARD SYSTEM
      =============================================== */
@@ -127,10 +167,15 @@
   .btn-theme {
     @apply rounded-xl font-medium transition-all duration-200;
     @apply px-4 py-2 shadow-soft;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
   }
 
   .btn-theme:hover {
     @apply shadow-soft-md transform -translate-y-0.5;
+  }
+
+  .btn-theme:active {
+    @apply transform translate-y-0 shadow-soft;
   }
 
   .btn-primary {
@@ -153,6 +198,19 @@
     @apply btn-theme bg-pastel-cream text-foreground;
   }
 
+  .btn-soft:hover {
+    @apply bg-pastel-mint/50;
+  }
+
+  /* Unified outline button style */
+  .btn-outline {
+    @apply btn-theme bg-transparent border border-border text-foreground;
+  }
+
+  .btn-outline:hover {
+    @apply bg-muted border-muted-foreground/30;
+  }
+
   /* ===============================================
      INPUT SYSTEM
      =============================================== */
@@ -173,14 +231,33 @@
     @apply flex items-center justify-center rounded-xl transition-all duration-200;
   }
 
-  .icon-sm { @apply w-8 h-8; }
-  .icon-md { @apply w-10 h-10; }
-  .icon-lg { @apply w-12 h-12; }
+  .icon-sm {
+    @apply w-8 h-8;
+  }
 
-  .icon-rose { @apply bg-pastel-rose text-theme-rose; }
-  .icon-green { @apply bg-pastel-green text-theme-green; }
-  .icon-lavender { @apply bg-pastel-lavender text-theme-lavender; }
-  .icon-sky { @apply bg-pastel-sky text-blue-500; }
+  .icon-md {
+    @apply w-10 h-10;
+  }
+
+  .icon-lg {
+    @apply w-12 h-12;
+  }
+
+  .icon-rose {
+    @apply bg-pastel-rose text-theme-rose;
+  }
+
+  .icon-green {
+    @apply bg-pastel-green text-theme-green;
+  }
+
+  .icon-lavender {
+    @apply bg-pastel-lavender text-theme-lavender;
+  }
+
+  .icon-sky {
+    @apply bg-pastel-sky text-blue-500;
+  }
 
   /* ===============================================
      BADGE SYSTEM
@@ -189,9 +266,17 @@
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
-  .badge-rose { @apply bg-pastel-rose text-theme-rose; }
-  .badge-green { @apply bg-pastel-green text-theme-green; }
-  .badge-lavender { @apply bg-pastel-lavender text-theme-lavender; }
+  .badge-rose {
+    @apply bg-pastel-rose text-theme-rose;
+  }
+
+  .badge-green {
+    @apply bg-pastel-green text-theme-green;
+  }
+
+  .badge-lavender {
+    @apply bg-pastel-lavender text-theme-lavender;
+  }
 
   /* ===============================================
      ANIMATIONS
@@ -208,6 +293,7 @@
     from {
       opacity: 0;
     }
+
     to {
       opacity: 1;
     }
@@ -218,6 +304,7 @@
       transform: translateY(10px);
       opacity: 0;
     }
+
     to {
       transform: translateY(0);
       opacity: 1;
@@ -236,6 +323,173 @@
   [class*="hover:scale"] {
     backface-visibility: hidden;
     transform: translateZ(0);
+  }
+
+  /* ===============================================
+     LOADING & FEEDBACK ANIMATIONS
+     =============================================== */
+
+  /* Shimmer skeleton loading */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--muted));
+  }
+
+  .skeleton-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Success flash animation */
+  .animate-success-flash {
+    animation: success-flash 0.3s ease-out;
+  }
+
+  @keyframes success-flash {
+    0% {
+      background-color: transparent;
+    }
+
+    50% {
+      background-color: hsla(152, 42%, 55%, 0.15);
+    }
+
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  /* Card hover lift - optimized 150ms */
+  .card-hover-lift {
+    @apply transition-all duration-150 ease-out;
+  }
+
+  .card-hover-lift:hover {
+    @apply -translate-y-1 shadow-soft-md;
+  }
+
+  .card-hover-lift:active {
+    @apply translate-y-0 shadow-soft;
+  }
+
+  /* Smooth view transition */
+  .view-transition {
+    animation: view-enter 0.2s ease-out;
+  }
+
+  @keyframes view-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Chart loading placeholder */
+  .chart-loading {
+    @apply relative overflow-hidden rounded-xl;
+    background: linear-gradient(135deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--background)) 50%,
+        hsl(var(--muted)) 100%);
+    background-size: 200% 200%;
+    animation: chart-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes chart-pulse {
+
+    0%,
+    100% {
+      background-position: 0% 0%;
+    }
+
+    50% {
+      background-position: 100% 100%;
+    }
+  }
+
+  /* ===============================================
+     TRANSACTION LIST STYLES
+     =============================================== */
+
+  /* Date group header - sticky */
+  .date-group-header {
+    @apply sticky top-0 z-10;
+    @apply px-4 py-2.5 text-sm font-semibold;
+    @apply bg-muted/90 dark:bg-muted/70 backdrop-blur-sm;
+    @apply text-text-secondary capitalize;
+    @apply border-b border-border/50;
+  }
+
+  /* Transaction item row */
+  .transaction-item {
+    @apply flex items-center gap-4 py-3.5 px-4;
+    @apply border-b border-border/30;
+    @apply transition-all duration-150 ease-out;
+    @apply bg-white dark:bg-card;
+  }
+
+  .transaction-item:hover {
+    @apply bg-muted/40 dark:bg-muted/20;
+  }
+
+  .transaction-item:last-child {
+    @apply border-b-0;
+  }
+
+  /* Transaction item - mobile card variant */
+  @media (max-width: 640px) {
+    .transaction-item-mobile {
+      @apply flex flex-col gap-2 p-4;
+      @apply rounded-xl mb-2 mx-2;
+      @apply bg-white dark:bg-card;
+      @apply border border-border/40;
+      @apply shadow-soft;
+    }
+
+    .transaction-item-mobile:active {
+      @apply scale-[0.99];
+    }
+  }
+
+  /* Period summary header */
+  .period-summary {
+    @apply flex flex-wrap items-center justify-between gap-4 px-4 py-3;
+    @apply bg-gradient-to-r from-pastel-green/30 to-pastel-mint/20;
+    @apply dark:from-green-950/20 dark:to-teal-950/10;
+    @apply border-b border-border/40;
+    @apply rounded-t-2xl;
+  }
+
+  /* Uncategorized badge */
+  .badge-uncategorized {
+    @apply inline-flex items-center gap-1 px-2 py-0.5;
+    @apply text-xs font-medium rounded-full;
+    @apply bg-amber-100/80 text-amber-700;
+    @apply dark:bg-amber-900/30 dark:text-amber-300;
+    @apply border border-amber-200/50 dark:border-amber-800/30;
   }
 
   /* ===============================================
@@ -302,20 +556,33 @@
 }
 
 /* Dark mode chart adjustments */
-html.dark { color-scheme: dark; }
+html.dark {
+  color-scheme: dark;
+}
 
-.dark .recharts-cartesian-grid-bg { fill: hsl(276 28% 16%); }
-.dark .recharts-cartesian-axis-line { stroke: #372f45; }
-.dark .recharts-cartesian-axis-tick-line { stroke: #372f45; }
-.dark .recharts-cartesian-axis-tick-value { fill: hsl(276 25% 92%); }
+.dark .recharts-cartesian-grid-bg {
+  fill: hsl(276 28% 16%);
+}
+
+.dark .recharts-cartesian-axis-line {
+  stroke: #372f45;
+}
+
+.dark .recharts-cartesian-axis-tick-line {
+  stroke: #372f45;
+}
+
+.dark .recharts-cartesian-axis-tick-value {
+  fill: hsl(276 25% 92%);
+}
 
 .dark .recharts-legend-item-text {
   color: #E9E1EF !important;
 }
 
-.dark .recharts-tooltip-wrapper .recharts-default-tooltip { 
-  background-color: rgba(30,18,38,0.92) !important; 
-  border-color: rgba(255, 117, 151, 0.3) !important; 
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: rgba(30, 18, 38, 0.92) !important;
+  border-color: rgba(255, 117, 151, 0.3) !important;
 }
 
 .dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item {

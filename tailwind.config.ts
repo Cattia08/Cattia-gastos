@@ -29,7 +29,7 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				
+
 				// Primary - Rose suave equilibrado
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
@@ -37,35 +37,46 @@ export default {
 					light: '#F8D7E3',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
-				
+
 				// Secondary - Lavender moderno
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
 				},
-				
+
 				// Accent - Verde sage (favorito!)
 				accent: {
 					DEFAULT: 'hsl(var(--accent))',
 					foreground: 'hsl(var(--accent-foreground))'
 				},
-				
+
 				// Surface
 				surface: '#FFFFFF',
-				
-				// Text
+
+				// Text - Semantic Colors (WCAG AA Compliant)
 				text: {
 					main: '#3D3D3D',
 					muted: '#8B8B8B',
+					primary: 'hsl(var(--text-primary))',
+					secondary: 'hsl(var(--text-secondary))',
+					emphasis: 'hsl(var(--text-emphasis))',
 				},
-				
+
+				// Category Tints (for card backgrounds)
+				'category-tint': {
+					rose: 'hsl(var(--category-rose-tint))',
+					green: 'hsl(var(--category-green-tint))',
+					lavender: 'hsl(var(--category-lavender-tint))',
+					sage: 'hsl(var(--category-sage-tint))',
+				},
+
 				// Status
 				status: {
 					success: '#5DBE8A',
 					error: '#E57373',
 					warning: '#F5C869',
 				},
-				
+
 				// Pastel palette - equilibrada con más verde
 				pastel: {
 					rose: '#F4E0E6',
@@ -77,7 +88,7 @@ export default {
 					peach: '#FAE8E0',
 					cream: '#FDF8F3',
 				},
-				
+
 				// Theme accents
 				theme: {
 					rose: '#E879A8',
@@ -85,7 +96,7 @@ export default {
 					lavender: '#B8A9E8',
 					sage: '#7CB899',
 				},
-				
+
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
@@ -169,16 +180,34 @@ export default {
 					'0%': { backgroundPosition: '-200% 0' },
 					'100%': { backgroundPosition: '200% 0' },
 				},
+				'bounce-in': {
+					'0%': { opacity: '0', transform: 'scale(0.3)' },
+					'50%': { transform: 'scale(1.05)' },
+					'70%': { transform: 'scale(0.9)' },
+					'100%': { opacity: '1', transform: 'scale(1)' },
+				},
+				'slide-in-right': {
+					'0%': { opacity: '0', transform: 'translateX(20px)' },
+					'100%': { opacity: '1', transform: 'translateX(0)' },
+				},
+				'pop': {
+					'0%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.1)' },
+					'100%': { transform: 'scale(1)' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.3s ease-out',
-				'fade-in-up': 'fade-in-up 0.4s ease-out',
-				'scale-in': 'scale-in 0.2s ease-out',
+				'fade-in': 'fade-in 0.2s ease-out',
+				'fade-in-up': 'fade-in-up 0.25s ease-out',
+				'scale-in': 'scale-in 0.15s ease-out',
 				'pulse-soft': 'pulse-soft 2s infinite',
 				'float': 'float 3s ease-in-out infinite',
-				'shimmer': 'shimmer 2s linear infinite',
+				'shimmer': 'shimmer 1.5s linear infinite',
+				'bounce-in': 'bounce-in 0.3s ease-out',
+				'slide-in-right': 'slide-in-right 0.2s ease-out',
+				'pop': 'pop 0.2s ease-out',
 			}
 		}
 	},
