@@ -20,7 +20,6 @@ type TxForm = {
 type Props = {
   initialData: TxForm;
   categories: Category[];
-  paymentMethods?: { id: number; name: string }[];
   onSave: (form: TxForm) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -30,8 +29,7 @@ type Props = {
  * TransactionForm - Reusable form for creating/editing transactions
  * Uses theme tokens for consistent styling
  */
-const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave, onCancel, isLoading = false }: Props) => {
-  console.log('TransactionForm Render. PaymentMethods:', paymentMethods);
+const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave, onCancel, isLoading = false }: Props & { paymentMethods?: { id: number; name: string }[] }) => {
   const safePaymentMethods = paymentMethods || [];
   const [form, setForm] = useState<TxForm & { payment_method_id?: number }>(initialData);
 
