@@ -5,8 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { Category, PaymentMethod } from "@/types";
 
-type Category = { id: number; name: string };
 
 type TxForm = {
   id: number;
@@ -20,6 +20,7 @@ type TxForm = {
 type Props = {
   initialData: TxForm;
   categories: Category[];
+  paymentMethods?: PaymentMethod[];
   onSave: (form: TxForm) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -29,9 +30,9 @@ type Props = {
  * TransactionForm - Reusable form for creating/editing transactions
  * Uses theme tokens for consistent styling
  */
-const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave, onCancel, isLoading = false }: Props & { paymentMethods?: { id: number; name: string }[] }) => {
-  const safePaymentMethods = paymentMethods || [];
+const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave, onCancel, isLoading = false }: Props) => {
   const [form, setForm] = useState<TxForm & { payment_method_id?: number }>(initialData);
+
 
   useEffect(() => {
     setForm(initialData);
@@ -72,7 +73,7 @@ const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave,
         <div className="grid gap-2">
           <Label htmlFor="category" className="text-sm font-medium">Categoría</Label>
           <Select
-            value={form.category_id}
+            value={form.category_id?.toString()}
             onValueChange={value => setForm({ ...form, category_id: value })}
             disabled={isLoading}
           >
@@ -99,13 +100,22 @@ const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave,
               <SelectValue placeholder="Método" />
             </SelectTrigger>
             <SelectContent>
-              {safePaymentMethods.map(method => (
-                <SelectItem key={method.id} value={method.id.toString()}>
-                  {method.name}
+              {paymentMethods.length === 0 ? (
+                <SelectItem value="0" disabled>
+                  No hay métodos disponibles
                 </SelectItem>
-              ))}
+              ) : (
+                paymentMethods.map(method => (
+                  <SelectItem key={method.id} value={method.id.toString()}>
+                    {method.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
+          {paymentMethods.length === 0 && (
+            <p className="text-xs text-red-500">⚠️ Debug: paymentMethods array is empty</p>
+          )}
         </div>
       </div>
       <div className="grid gap-2">

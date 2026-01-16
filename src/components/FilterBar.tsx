@@ -7,9 +7,7 @@ import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
 import { Search, Calendar as CalendarIcon, X, CreditCard, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-type Category = { id: number; name: string; color?: string };
-type PaymentMethod = { id: number; name: string };
+import type { Category, PaymentMethod } from "@/types";
 
 interface FilterBarProps {
   categories: Category[];

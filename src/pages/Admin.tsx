@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check } from "lucide-react";
+import { useThemedToast } from "@/hooks/useThemedToast";
+import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -20,22 +20,26 @@ import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { usePaymentMethodMutations } from "@/hooks/usePaymentMethodMutations";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 const Admin = () => {
-  const { toast } = useToast();
-  const { categories, income, loading, error, refreshData, transactions } = useSupabaseData();
+  const toast = useThemedToast();
+  const { categories, income, paymentMethods, loading, error, refreshData, transactions } = useSupabaseData();
+  const { createPaymentMethod, updatePaymentMethod, deletePaymentMethod, isCreating, isUpdating, isDeleting } = usePaymentMethodMutations();
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [isAddIncomeDialogOpen, setIsAddIncomeDialogOpen] = useState(false);
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
   const [currency, setCurrency] = useState("USD");
 
   // Form states
-  const [newCategory, setNewCategory] = useState({ name: "", color: "" });
+  const [newCategory, setNewCategory] = useState({ name: "", color: "#FF69B4" }); // Default pink color
   const [editingCategory, setEditingCategory] = useState({ id: 0, name: "", color: "" });
   const [newIncome, setNewIncome] = useState({ source: "", amount: "", date: new Date() });
+  const [newPaymentMethod, setNewPaymentMethod] = useState({ name: "" });
+  const [isAddPaymentMethodDialogOpen, setIsAddPaymentMethodDialogOpen] = useState(false);
 
   const fileInputRef = useRef(null);
   const [selectedProfilePic, setSelectedProfilePic] = useState(null);
@@ -55,48 +59,38 @@ const Admin = () => {
   const [editingColorId, setEditingColorId] = useState(null);
   const [showCheckId, setShowCheckId] = useState(null);
 
+  // Estado para edición inline de payment methods
+  const [editingPaymentMethodId, setEditingPaymentMethodId] = useState(null);
+  const [editingPaymentMethodName, setEditingPaymentMethodName] = useState('');
+  const [showCheckPaymentMethodId, setShowCheckPaymentMethodId] = useState(null);
+
   const handleAddCategory = async () => {
-    if (!newCategory.name || !newCategory.color) {
-      toast({
-        title: "Error",
-        description: "Por favor completa todos los campos",
-        variant: "destructive"
-      });
+    if (!newCategory.name) {
+      toast.error({ title: "Error", description: "Por favor completa el nombre de la categoría" });
       return;
     }
 
     try {
       const { data, error } = await supabase
         .from("categories")
-        .insert([{ name: newCategory.name, color: newCategory.color }])
+        .insert([{ name: newCategory.name, color: newCategory.color || "#FF69B4" }])
         .select();
 
       if (error) throw error;
 
       setIsAddCategoryDialogOpen(false);
-      setNewCategory({ name: "", color: "" });
+      setNewCategory({ name: "", color: "#FF69B4" });
 
-      toast({
-        title: "Categoría añadida",
-        description: "La categoría ha sido añadida con éxito"
-      });
+      toast.success({ title: "Categoría añadida", description: "La categoría ha sido añadida con éxito" });
       await refreshData();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo añadir la categoría",
-        variant: "destructive"
-      });
+      toast.error({ title: "Error", description: "No se pudo añadir la categoría" });
     }
   };
 
   const handleEditCategory = async () => {
     if (!editingCategory.name || !editingCategory.color) {
-      toast({
-        title: "Error",
-        description: "Por favor completa todos los campos",
-        variant: "destructive"
-      });
+      toast.error({ title: "Error", description: "Por favor completa todos los campos" });
       return;
     }
 
@@ -110,17 +104,10 @@ const Admin = () => {
 
       setIsEditCategoryDialogOpen(false);
 
-      toast({
-        title: "Categoría actualizada",
-        description: "La categoría ha sido actualizada con éxito"
-      });
+      toast.success({ title: "Categoría actualizada", description: "La categoría ha sido actualizada con éxito" });
       await refreshData();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la categoría",
-        variant: "destructive"
-      });
+      toast.error({ title: 'Error', description: 'No se pudo actualizar el ingreso' });
     }
   };
 
@@ -130,17 +117,10 @@ const Admin = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Categoría eliminada",
-        description: "La categoría ha sido eliminada con éxito"
-      });
+      toast.deleted({ title: "Categoría eliminada", description: "La categoría ha sido eliminada con éxito" });
       await refreshData();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la categoría",
-        variant: "destructive"
-      });
+      toast.error({ title: "Error", description: "No se pudo eliminar la categoría" });
     }
   };
 
@@ -151,11 +131,7 @@ const Admin = () => {
 
   const handleAddIncome = async () => {
     if (!newIncome.source || !newIncome.amount) {
-      toast({
-        title: "Error",
-        description: "Por favor completa los campos requeridos",
-        variant: "destructive"
-      });
+      toast.error({ title: 'Error', description: 'Por favor completa los campos requeridos' });
       return;
     }
 
@@ -173,35 +149,20 @@ const Admin = () => {
       setIsAddIncomeDialogOpen(false);
       setNewIncome({ source: "", amount: "", date: new Date() });
 
-      toast({
-        title: "Ingreso añadido",
-        description: "El ingreso ha sido añadido con éxito"
-      });
+      toast.success({ title: "Ingreso añadido", description: "El ingreso ha sido añadido con éxito" });
       await refreshData();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo añadir el ingreso",
-        variant: "destructive"
-      });
+      toast.error({ title: "Error", description: "No se pudo añadir el ingreso" });
     }
   };
 
   const handleExportData = () => {
-    toast({
-      title: "Exportación de datos",
-      description: "Tus datos han sido exportados con éxito"
-    });
+    toast.info({ title: "Exportación lista", description: "Se ha descargado el archivo CSV con éxito" });
   };
 
 
   const handleCurrencyChange = (value: string) => {
     setCurrency(value);
-
-    toast({
-      title: "Moneda actualizada",
-      description: `La moneda ha sido actualizada a ${value}`
-    });
   };
 
   const handleProfilePicChange = (e) => {
@@ -220,7 +181,7 @@ const Admin = () => {
   const handleUpdateSidebarName = () => {
     setSidebarName(nameInput);
     localStorage.setItem('sidebarName', nameInput);
-    toast({ title: 'Nombre actualizado', description: 'El nombre del sidebar/navbar ha sido actualizado.' });
+    toast.success({ title: 'Nombre actualizado', description: 'El nombre del sidebar/navbar ha sido actualizado.' });
   };
 
   // Obtener la última fecha de gasto correctamente de transactions
@@ -235,7 +196,7 @@ const Admin = () => {
 
   const handleEditIncome = async () => {
     if (!editingIncome.source || !editingIncome.amount) {
-      toast({ title: 'Error', description: 'Por favor completa los campos requeridos', variant: 'destructive' });
+      toast.error({ title: 'Error', description: 'Por favor completa los campos requeridos' });
       return;
     }
     try {
@@ -246,10 +207,10 @@ const Admin = () => {
       }).eq('id', editingIncome.id);
       if (error) throw error;
       setIsEditIncomeDialogOpen(false);
-      toast({ title: 'Ingreso actualizado', description: 'El ingreso ha sido actualizado con éxito' });
+      toast.success({ title: 'Ingreso actualizado', description: 'El ingreso ha sido actualizado con éxito' });
       await refreshData();
     } catch (error) {
-      toast({ title: 'Error', description: 'No se pudo actualizar el ingreso', variant: 'destructive' });
+      toast.error({ title: 'Error', description: 'No se pudo actualizar el ingreso' });
     }
   };
 
@@ -257,10 +218,10 @@ const Admin = () => {
     try {
       const { error } = await supabase.from('income').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: 'Ingreso eliminado', description: 'El ingreso ha sido eliminado con éxito' });
+      toast.deleted({ title: 'Ingreso eliminado', description: 'El ingreso ha sido eliminado con éxito' });
       await refreshData();
     } catch (error) {
-      toast({ title: 'Error', description: 'No se pudo eliminar el ingreso', variant: 'destructive' });
+      toast.error({ title: 'Error', description: 'No se pudo eliminar el ingreso' });
     }
   };
 
@@ -278,7 +239,7 @@ const Admin = () => {
           setTimeout(() => setShowCheckId(null), 1200);
           await refreshData();
         }
-      } catch (e) { /* opcional: toast({ title: 'Error', description: 'No se pudo actualizar el nombre', variant: 'destructive' }); */ }
+      } catch (e) { /* opcional: toast.error */ }
     }
     setEditingCategoryId(null);
   };
@@ -296,9 +257,58 @@ const Admin = () => {
           setTimeout(() => setShowCheckId(null), 1200);
           await refreshData();
         }
-      } catch (e) { /* opcional: toast({ title: 'Error', description: 'No se pudo actualizar el color', variant: 'destructive' }); */ }
+      } catch (e) { /* opcional: toast.error */ }
     }
     setEditingColorId(null);
+  };
+
+  // Payment Method handlers
+  const handleAddPaymentMethod = async () => {
+    if (!newPaymentMethod.name) {
+      toast.error({ title: "Error", description: "Por favor completa el nombre" });
+      return;
+    }
+    try {
+      await createPaymentMethod({ name: newPaymentMethod.name });
+      setIsAddPaymentMethodDialogOpen(false);
+      setNewPaymentMethod({ name: "" });
+      toast.success({ title: "Método de pago añadido", description: "El método de pago ha sido añadido con éxito" });
+      await refreshData();
+    } catch (error: any) {
+      // Check for duplicate name error (409 Conflict)
+      if (error?.code === '23505' || error?.message?.includes('duplicate') || error?.message?.includes('unique')) {
+        toast.error({ title: "Nombre duplicado", description: `El método de pago "${newPaymentMethod.name}" ya existe` });
+      } else {
+        toast.error({ title: "Error", description: "No se pudo añadir el método de pago" });
+      }
+    }
+  };
+
+  const handleDeletePaymentMethod = async (id: number) => {
+    try {
+      await deletePaymentMethod(id);
+      toast.deleted({ title: "Método de pago eliminado", description: "Se eliminó correctamente" });
+      await refreshData();
+    } catch (error) {
+      toast.error({ title: 'Error', description: 'No se pudo eliminar el ingreso' });
+    }
+  };
+
+  const handleInlineEditPaymentMethod = (paymentMethod) => {
+    setEditingPaymentMethodId(paymentMethod.id);
+    setEditingPaymentMethodName(paymentMethod.name);
+  };
+
+  const saveInlineEditPaymentMethod = async (paymentMethod, cancel = false) => {
+    if (!cancel && editingPaymentMethodName.trim() && editingPaymentMethodName !== paymentMethod.name) {
+      try {
+        await updatePaymentMethod({ id: paymentMethod.id, name: editingPaymentMethodName });
+        setShowCheckPaymentMethodId(paymentMethod.id);
+        setTimeout(() => setShowCheckPaymentMethodId(null), 1200);
+        await refreshData();
+      } catch (e) { /* toast if needed */ }
+    }
+    setEditingPaymentMethodId(null);
   };
 
   if (loading) {
@@ -314,7 +324,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl md:text-3xl font-bold">
           <span className="text-primary">Administración</span>
@@ -323,10 +333,14 @@ const Admin = () => {
       </div>
 
       <Tabs defaultValue="categories" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="categories" className="data-[state=active]:bg-pastel-pink/20 data-[state=inactive]:text-gray-600">
             <Tag className="w-4 h-4 mr-2" />
             Categorías
+          </TabsTrigger>
+          <TabsTrigger value="payment-methods" className="data-[state=active]:bg-pastel-blue/20 data-[state=inactive]:text-gray-600">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Métodos de Pago
           </TabsTrigger>
           <TabsTrigger value="incomes" className="data-[state=active]:bg-pastel-green/20 data-[state=inactive]:text-gray-600">
             <CircleDollarSign className="w-4 h-4 mr-2" />
@@ -456,6 +470,109 @@ const Admin = () => {
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       onClick={() => handleDeleteCategory(category.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* Payment Methods Tab */}
+        <TabsContent value="payment-methods">
+          <Card className="p-6 border-pastel-blue/30">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold flex items-center">
+                <CreditCard className="w-5 h-5 mr-2 text-pastel-blue" />
+                Administrar Métodos de Pago
+              </h2>
+              <Dialog open={isAddPaymentMethodDialogOpen} onOpenChange={setIsAddPaymentMethodDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-pastel-blue hover:bg-pastel-blue/80">
+                    <Plus className="w-4 h-4 mr-2" /> Añadir Método
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-blue/30">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-pastel-blue" />
+                      Nuevo Método de Pago
+                    </DialogTitle>
+                    <DialogDescription>Crea un nuevo método de pago para tus transacciones.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="payment-method-name">Nombre</Label>
+                      <Input
+                        id="payment-method-name"
+                        value={newPaymentMethod.name}
+                        onChange={e => setNewPaymentMethod({ name: e.target.value })}
+                        className="border-pastel-blue/30"
+                        placeholder="Ej. Tarjeta de crédito, Efectivo..."
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddPaymentMethodDialogOpen(false)}
+                      className="border-pastel-blue/30"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleAddPaymentMethod} disabled={isCreating}>
+                      {isCreating ? "Guardando..." : "Guardar"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {paymentMethods.map(paymentMethod => (
+                <div
+                  key={paymentMethod.id}
+                  className="flex justify-between items-center p-4 bg-white/70 rounded-xl border border-pastel-blue/20 shadow-sm transition-colors hover:bg-pastel-blue/10 hover:border-pastel-blue/40 transition-transform duration-150 hover:scale-[0.99]"
+                >
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-full mr-3 bg-pastel-blue/20 flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-pastel-blue" />
+                    </div>
+                    {editingPaymentMethodId === paymentMethod.id ? (
+                      <input
+                        type="text"
+                        value={editingPaymentMethodName}
+                        onChange={e => setEditingPaymentMethodName(e.target.value)}
+                        onBlur={() => saveInlineEditPaymentMethod(paymentMethod)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') saveInlineEditPaymentMethod(paymentMethod);
+                          if (e.key === 'Escape') saveInlineEditPaymentMethod(paymentMethod, true);
+                        }}
+                        className="font-medium border-b-2 border-pastel-blue/60 bg-transparent outline-none px-1 text-pastel-blue"
+                        autoFocus
+                        maxLength={30}
+                      />
+                    ) : (
+                      <span
+                        className="font-medium cursor-pointer hover:underline"
+                        onDoubleClick={() => handleInlineEditPaymentMethod(paymentMethod)}
+                      >
+                        {paymentMethod.name}
+                      </span>
+                    )}
+                    {showCheckPaymentMethodId === paymentMethod.id && (
+                      <Check className="ml-2 w-4 h-4 text-green-500" />
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeletePaymentMethod(paymentMethod.id)}
+                      disabled={isDeleting}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>

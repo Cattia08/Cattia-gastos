@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useThemedToast } from "@/hooks/useThemedToast";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { supabase } from "@/lib/supabase";
 import {
   Plus,
@@ -40,10 +39,10 @@ import TransactionForm from "@/components/transactions/TransactionForm";
 import { cn } from "@/lib/utils";
 
 const Transactions = () => {
-  const { toast } = useToast();
-  const { transactions: supabaseTransactions, categories: supabaseCategories, loading, error, refreshData } = useSupabaseData();
-  const { paymentMethods } = usePaymentMethods();
+  const toast = useThemedToast();
+  const { transactions: supabaseTransactions, categories: supabaseCategories, paymentMethods, loading, error, refreshData } = useSupabaseData();
   const location = useLocation();
+
   
   // Filter states
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -205,10 +204,10 @@ const Transactions = () => {
     try {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
-      toast({ title: "Transacción eliminada", description: "La transacción ha sido eliminada con éxito" });
+      toast.deleted({ title: "Transacción eliminada", description: "La transacción ha sido eliminada con éxito" });
       await refreshData();
     } catch {
-      toast({ title: "Error", description: "No se pudo eliminar la transacción", variant: "destructive" });
+      toast.error({ title: "Error", description: "No se pudo eliminar la transacción" });
     }
   };
 
@@ -216,10 +215,10 @@ const Transactions = () => {
     try {
       const { error } = await supabase.from("transactions").update({ category_id }).eq("id", id);
       if (error) throw error;
-      toast({ title: "Categoría actualizada", description: "La categoría ha sido actualizada con éxito" });
+      toast.success({ title: "Categoría actualizada", description: "La categoría ha sido actualizada con éxito" });
       await refreshData();
     } catch {
-      toast({ title: "Error", description: "Hubo un error al actualizar la categoría", variant: "destructive" });
+      toast.error({ title: "Error", description: "Hubo un error al actualizar la categoría" });
     }
   };
 
@@ -232,7 +231,7 @@ const Transactions = () => {
     setEndDate(undefined);
     setSelectedYear(now.getFullYear());
     setSelectedMonth(now.getMonth());
-    toast({ title: "Filtros restablecidos", description: "Se ha vuelto a la vista del mes actual" });
+    toast.info({ title: "Filtros restablecidos", description: "Se ha vuelto a la vista del mes actual" });
   };
 
   // No category transactions handling
@@ -301,7 +300,7 @@ const Transactions = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -333,28 +332,26 @@ const Transactions = () => {
             Restablecer
           </Button>
           
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            console.log('🚪 Add Dialog opening:', open, 'paymentMethods at this moment:', paymentMethods, 'length:', paymentMethods?.length);
+            setIsAddDialogOpen(open);
+          }}>
             <DialogTrigger asChild>
               <Button className={cn(
                 "rounded-xl px-5",
                 "bg-gradient-to-r from-theme-green to-theme-sage",
                 "hover:shadow-glow-green",
                 "shadow-soft",
-                "transition-all duration-200"
+                "transition-colors duration-150"
               )}>
-                <Plus className="w-4 h-4 mr-1.5" />
-                Nueva
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Transacción
               </Button>
             </DialogTrigger>
-            <DialogContent className={cn(
-              "sm:max-w-[425px]",
-              "bg-white/95 backdrop-blur-xl",
-              "border-gray-200",
-              "rounded-2xl shadow-soft-lg"
-            )}>
+            <DialogContent className="sm:max-w-[500px] bg-white border-pastel-green/30 rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-theme-green" />
+                  <Plus className="w-5 h-5 text-theme-green" />
                   Nueva Transacción
                 </DialogTitle>
                 <DialogDescription>
@@ -367,7 +364,7 @@ const Transactions = () => {
                 paymentMethods={paymentMethods}
                 onSave={async (form) => {
                   if (!form.name || !form.amount) {
-                    toast({ title: "Error", description: "Por favor completa los campos requeridos", variant: "destructive" });
+                    toast.error({ title: "Error", description: "Por favor completa los campos requeridos" });
                     return;
                   }
                   try {
@@ -379,11 +376,11 @@ const Transactions = () => {
                       date: form.date
                     }]);
                     if (insertError) throw insertError;
-                    toast({ title: "Transacción añadida", description: "La transacción ha sido añadida con éxito" });
+                    toast.success({ title: "Transacción añadida", description: "La transacción ha sido añadida con éxito" });
                     setIsAddDialogOpen(false);
                     await refreshData();
                   } catch {
-                    toast({ title: "Error", description: "Hubo un error al procesar la transacción", variant: "destructive" });
+                    toast.error({ title: "Error", description: "Hubo un error al procesar la transacción" });
                   }
                 }}
                 onCancel={() => setIsAddDialogOpen(false)}
@@ -459,7 +456,7 @@ const Transactions = () => {
                     <TableRow
                       key={transaction.id}
                       className={cn(
-                        "group transition-all duration-200",
+                        "group transition-colors duration-150",
                         "hover:bg-pink-50/60 dark:hover:bg-pink-950/20",
                         index % 2 === 0 ? "bg-white/60 dark:bg-gray-900/40" : "bg-pink-50/20 dark:bg-pink-950/10"
                       )}
@@ -662,7 +659,7 @@ const Transactions = () => {
             paymentMethods={paymentMethods}
             onSave={async (form) => {
               if (!form.name || !form.amount) {
-                toast({ title: "Error", description: "Por favor completa los campos requeridos", variant: "destructive" });
+                toast.error({ title: "Error", description: "Por favor completa los campos requeridos" });
                 return;
               }
               try {
@@ -677,11 +674,11 @@ const Transactions = () => {
                   })
                   .eq("id", form.id);
                 if (updateError) throw updateError;
-                toast({ title: "Transacción actualizada", description: "La transacción ha sido actualizada con éxito" });
+                toast.success({ title: "Transacción actualizada", description: "La transacción ha sido actualizada con éxito" });
                 setIsEditDialogOpen(false);
                 await refreshData();
               } catch {
-                toast({ title: "Error", description: "Hubo un error al procesar la transacción", variant: "destructive" });
+                toast.error({ title: "Error", description: "Hubo un error al procesar la transacción" });
               }
             }}
             onCancel={() => setIsEditDialogOpen(false)}

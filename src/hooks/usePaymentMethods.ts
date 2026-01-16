@@ -1,11 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
-
-export interface PaymentMethod {
-  id: number;
-  name: string;
-}
+import type { PaymentMethod } from '@/types';
 
 async function fetchPaymentMethods(): Promise<PaymentMethod[]> {
   const { data, error } = await supabase
@@ -19,7 +15,7 @@ async function fetchPaymentMethods(): Promise<PaymentMethod[]> {
 
 export function usePaymentMethods() {
   const query = useQuery({
-    queryKey: ['payment_methods'],
+    queryKey: queryKeys.paymentMethods.list(),
     queryFn: fetchPaymentMethods,
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours

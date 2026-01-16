@@ -1,12 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
-
-export interface Category {
-  id: number;
-  name: string;
-  color?: string;
-}
+import type { Category } from '@/types';
 
 // Query function
 async function fetchCategories(): Promise<Category[]> {

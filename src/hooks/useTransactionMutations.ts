@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
-import { useToast } from '@/hooks/use-toast';
+import { useThemedToast } from '@/hooks/useThemedToast';
 
 export interface TransactionInput {
   name: string;
@@ -75,7 +75,7 @@ async function updateTransactionCategory(id: number, category_id: string) {
  */
 export function useTransactionMutations() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const toast = useThemedToast();
 
   const invalidateTransactions = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all });
@@ -86,17 +86,10 @@ export function useTransactionMutations() {
     mutationFn: createTransaction,
     onSuccess: () => {
       invalidateTransactions();
-      toast({
-        title: "Transacción añadida",
-        description: "La transacción ha sido añadida con éxito",
-      });
+      toast.success({ title: 'Transacción añadida', description: 'La transacción ha sido añadida con éxito' });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Hubo un error al crear la transacción",
-        variant: "destructive",
-      });
+      toast.error({ title: 'Error', description: 'No se pudo añadir la transacción' });
     },
   });
 
@@ -105,17 +98,10 @@ export function useTransactionMutations() {
     mutationFn: updateTransaction,
     onSuccess: () => {
       invalidateTransactions();
-      toast({
-        title: "Transacción actualizada",
-        description: "La transacción ha sido actualizada con éxito",
-      });
+      toast.success({ title: 'Transacción actualizada', description: 'La transacción ha sido actualizada con éxito' });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Hubo un error al actualizar la transacción",
-        variant: "destructive",
-      });
+      toast.error({ title: 'Error', description: 'No se pudo actualizar la transacción' });
     },
   });
 
@@ -124,17 +110,10 @@ export function useTransactionMutations() {
     mutationFn: deleteTransaction,
     onSuccess: () => {
       invalidateTransactions();
-      toast({
-        title: "Transacción eliminada",
-        description: "La transacción ha sido eliminada con éxito",
-      });
+      toast.deleted({ title: 'Transacción eliminada', description: 'La transacción ha sido eliminada con éxito' });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la transacción",
-        variant: "destructive",
-      });
+      toast.error({ title: 'Error', description: 'No se pudo eliminar la transacción' });
     },
   });
 
@@ -144,17 +123,10 @@ export function useTransactionMutations() {
       updateTransactionCategory(id, category_id),
     onSuccess: () => {
       invalidateTransactions();
-      toast({
-        title: "Categoría actualizada",
-        description: "La categoría ha sido actualizada con éxito",
-      });
+      toast.success({ title: "Categoría actualizada", description: "La categoría ha sido actualizada con éxito" });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Hubo un error al actualizar la categoría",
-        variant: "destructive",
-      });
+      toast.error({ title: "Error", description: "Hubo un error al actualizar la categoría" });
     },
   });
 

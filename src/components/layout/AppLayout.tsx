@@ -9,7 +9,7 @@ import AddTransactionDialog from "@/components/transactions/AddTransactionDialog
 import { Remi, useOneko } from "@/addons/oneko";
 
 const AppLayout = () => {
-  const { categories, refreshData } = useSupabaseData();
+  const { categories, paymentMethods, refreshData } = useSupabaseData();
   const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
   const { shouldRender, isHiding, onHideComplete } = useOneko();
   
@@ -25,7 +25,7 @@ const AppLayout = () => {
           size="icon"
           variant="default"
           aria-label="Añadir transacción"
-          className="fixed bottom-8 right-8 z-[60] shadow-lg h-14 w-14 rounded-full"
+          className="fixed bottom-8 right-8 z-[60] h-14 w-14 rounded-full shadow-soft-glow bg-gradient-to-br from-theme-green to-theme-sage hover:shadow-glow-green transition-all duration-200 hover:scale-110 active:scale-95 border border-green-200/50"
           onClick={() => setIsGlobalAddOpen(true)}
         >
           <Plus className="w-7 h-7 text-white" />
@@ -34,6 +34,7 @@ const AppLayout = () => {
           open={isGlobalAddOpen}
           onOpenChange={setIsGlobalAddOpen}
           categories={categories}
+          paymentMethods={paymentMethods}
           onCreated={refreshData}
         />
       </main>

@@ -5,6 +5,7 @@
 import { useTransactions } from './useTransactions';
 import { useCategories } from './useCategories';
 import { useIncome } from './useIncome';
+import { usePaymentMethods } from './usePaymentMethods';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -29,11 +30,17 @@ export const useSupabaseData = () => {
     error: incomeError,
   } = useIncome();
 
+  const {
+    paymentMethods,
+    isLoading: paymentMethodsLoading,
+    error: paymentMethodsError,
+  } = usePaymentMethods();
+
   // Combined loading state
-  const loading = transactionsLoading || categoriesLoading || incomeLoading;
+  const loading = transactionsLoading || categoriesLoading || incomeLoading || paymentMethodsLoading;
   
   // First error encountered
-  const error = transactionsError || categoriesError || incomeError;
+  const error = transactionsError || categoriesError || incomeError || paymentMethodsError;
 
   // Refresh all data - invalidates all caches
   const refreshData = async () => {
@@ -41,13 +48,15 @@ export const useSupabaseData = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all }),
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all }),
       queryClient.invalidateQueries({ queryKey: queryKeys.income.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.paymentMethods.all }),
     ]);
   };
 
   return { 
     transactions, 
     income, 
-    categories, 
+    categories,
+    paymentMethods, 
     loading, 
     error, 
     refreshData,

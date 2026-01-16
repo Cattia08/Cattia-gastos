@@ -20,4 +20,10 @@ export const queryKeys = {
     all: ['income'] as const,
     list: () => [...queryKeys.income.all, 'list'] as const,
   },
+  
+  // Payment Methods
+  paymentMethods: {
+    all: ['payment_methods'] as const,
+    list: () => [...queryKeys.paymentMethods.all, 'list'] as const,
+  },
 } as const;

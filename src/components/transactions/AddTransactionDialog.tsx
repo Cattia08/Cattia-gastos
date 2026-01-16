@@ -11,11 +11,13 @@ import { useTransactionMutations } from "@/hooks/useTransactionMutations";
 import { Sparkles } from "lucide-react";
 
 type Category = { id: number; name: string };
+type PaymentMethod = { id: number; name: string };
 
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   categories: Category[];
+  paymentMethods: PaymentMethod[];
   onCreated?: () => Promise<void> | void;
 };
 
@@ -23,16 +25,17 @@ type Props = {
  * AddTransactionDialog - Reusable dialog for adding new transactions
  * Uses centralized mutation hook for CRUD operations
  */
-const AddTransactionDialog = ({ open, onOpenChange, categories, onCreated }: Props) => {
+const AddTransactionDialog = ({ open, onOpenChange, categories, paymentMethods, onCreated }: Props) => {
   const { create, isCreating } = useTransactionMutations();
 
-  const handleSave = async (form: { name: string; amount: string; category_id: string; date: Date }) => {
+  const handleSave = async (form: { name: string; amount: string; category_id: string; payment_method_id?: number; date: Date }) => {
     if (!form.name || !form.amount) return;
     
     await create({
       name: form.name,
       amount: parseFloat(form.amount),
       category_id: form.category_id,
+      payment_method_id: form.payment_method_id,
       date: form.date,
     });
     
@@ -52,8 +55,9 @@ const AddTransactionDialog = ({ open, onOpenChange, categories, onCreated }: Pro
           </ThemedDialogDescription>
         </ThemedDialogHeader>
         <TransactionForm
-          initialData={{ id: 0, name: "", amount: "", category_id: "", date: new Date() }}
+          initialData={{ id: 0, name: "", amount: "", category_id: "", payment_method_id: undefined, date: new Date() }}
           categories={categories}
+          paymentMethods={paymentMethods}
           onSave={handleSave}
           onCancel={() => onOpenChange(false)}
           isLoading={isCreating}
