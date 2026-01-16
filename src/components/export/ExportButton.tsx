@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ExportModal from "@/components/export/ExportModal";
 
-type Tx = { id: number; name: string; amount: number; date: string; category_id?: number };
+type Tx = { id: number; name: string; amount: number; date: string; category_id?: string | number };
 type Category = { id: number; name: string };
 
 type ExportButtonProps = {

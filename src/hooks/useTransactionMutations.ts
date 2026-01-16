@@ -7,6 +7,7 @@ export interface TransactionInput {
   name: string;
   amount: number;
   category_id?: string;
+  payment_method_id?: number;
   date: Date | string;
 }
 
@@ -22,6 +23,7 @@ async function createTransaction(input: TransactionInput) {
       name: input.name,
       amount: input.amount,
       category_id: input.category_id,
+      payment_method_id: input.payment_method_id,
       date: input.date,
     }])
     .select()
@@ -38,6 +40,7 @@ async function updateTransaction(input: TransactionUpdateInput) {
       name: input.name,
       amount: input.amount,
       category_id: input.category_id,
+      payment_method_id: input.payment_method_id,
       date: input.date,
     })
     .eq('id', input.id)

@@ -1,2 +1,2 @@
 export { default as DatePeriodSelector } from './DatePeriodSelector';
-export { default as CategoryFilter } from './CategoryFilter';
+export { default as MultiSelectFilter } from './MultiSelectFilter';

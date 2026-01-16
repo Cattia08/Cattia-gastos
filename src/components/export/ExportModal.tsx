@@ -19,7 +19,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import { cn } from "@/lib/utils";
 
-type Tx = { id: number; name: string; amount: number; date: string; category_id?: number };
+type Tx = { id: number; name: string; amount: number; date: string; category_id?: string | number };
 type Category = { id: number; name: string };
 
 type ExportModalProps = {

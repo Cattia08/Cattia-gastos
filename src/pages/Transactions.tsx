@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { supabase } from "@/lib/supabase";
 import {
   Plus,
@@ -14,7 +15,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -40,6 +42,7 @@ import { cn } from "@/lib/utils";
 const Transactions = () => {
   const { toast } = useToast();
   const { transactions: supabaseTransactions, categories: supabaseCategories, loading, error, refreshData } = useSupabaseData();
+  const { paymentMethods } = usePaymentMethods();
   const location = useLocation();
   
   // Filter states
@@ -47,6 +50,7 @@ const Transactions = () => {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<number[]>([]);
   
   // Period selector states (unified with Dashboard)
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -60,6 +64,7 @@ const Transactions = () => {
     name: "",
     amount: "",
     category_id: "",
+    payment_method_id: undefined as number | undefined,
     date: new Date()
   });
 
@@ -125,9 +130,14 @@ const Transactions = () => {
       result = result.filter(t => selectedCategories.includes(t.categories?.id));
     }
 
+    // Filter by payment methods
+    if (selectedPaymentMethods.length > 0 && selectedPaymentMethods.length < paymentMethods.length) {
+      result = result.filter(t => t.payment_method_id && selectedPaymentMethods.includes(t.payment_method_id));
+    }
+
     // Sort by date descending
     return result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [supabaseTransactions, selectedDate, endDate, dateRange, searchQuery, selectedCategories, supabaseCategories.length]);
+  }, [supabaseTransactions, selectedDate, endDate, dateRange, searchQuery, selectedCategories, supabaseCategories.length, selectedPaymentMethods, paymentMethods.length]);
 
   // Pagination calculations
   const totalRows = filteredTransactions.length;
@@ -144,18 +154,21 @@ const Transactions = () => {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategories, selectedDate, endDate, selectedYear, selectedMonth]);
+  }, [searchQuery, selectedCategories, selectedPaymentMethods, selectedDate, endDate, selectedYear, selectedMonth]);
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [totalPages, currentPage]);
 
-  // Initialize categories selection
+  // Initialize categories and payment methods selection
   useEffect(() => {
     if (supabaseCategories.length > 0 && selectedCategories.length === 0) {
       setSelectedCategories(supabaseCategories.map(c => c.id));
     }
-  }, [supabaseCategories]);
+    if (paymentMethods.length > 0 && selectedPaymentMethods.length === 0) {
+      setSelectedPaymentMethods(paymentMethods.map(m => m.id));
+    }
+  }, [supabaseCategories, paymentMethods]);
 
   // Handle quick filters from navigation
   useEffect(() => {
@@ -182,6 +195,7 @@ const Transactions = () => {
       name: transaction.name,
       amount: transaction.amount.toString(),
       category_id: transaction.category_id,
+      payment_method_id: transaction.payment_method_id,
       date: new Date(transaction.date)
     });
     setIsEditDialogOpen(true);
@@ -213,6 +227,7 @@ const Transactions = () => {
     const now = new Date();
     setSearchQuery("");
     setSelectedCategories(supabaseCategories.map(c => c.id));
+    setSelectedPaymentMethods(paymentMethods.map(m => m.id));
     setSelectedDate(undefined);
     setEndDate(undefined);
     setSelectedYear(now.getFullYear());
@@ -247,7 +262,10 @@ const Transactions = () => {
     currentTransaction.id,
     currentTransaction.name,
     currentTransaction.amount,
+    currentTransaction.name,
+    currentTransaction.amount,
     currentTransaction.category_id,
+    currentTransaction.payment_method_id,
     currentTransaction.date
   ]);
 
@@ -344,8 +362,9 @@ const Transactions = () => {
                 </DialogDescription>
               </DialogHeader>
               <TransactionForm
-                initialData={{ id: 0, name: "", amount: "", category_id: "", date: new Date() }}
+                initialData={{ id: 0, name: "", amount: "", category_id: "", payment_method_id: undefined, date: new Date() }}
                 categories={supabaseCategories}
+                paymentMethods={paymentMethods}
                 onSave={async (form) => {
                   if (!form.name || !form.amount) {
                     toast({ title: "Error", description: "Por favor completa los campos requeridos", variant: "destructive" });
@@ -356,6 +375,7 @@ const Transactions = () => {
                       name: form.name,
                       amount: parseFloat(form.amount),
                       category_id: form.category_id,
+                      payment_method_id: form.payment_method_id,
                       date: form.date
                     }]);
                     if (insertError) throw insertError;
@@ -380,6 +400,9 @@ const Transactions = () => {
         onSelectedCategoriesChange={setSelectedCategories}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
+        paymentMethods={paymentMethods}
+        selectedPaymentMethods={selectedPaymentMethods}
+        onSelectedPaymentMethodsChange={setSelectedPaymentMethods}
         selectedDate={selectedDate}
         endDate={endDate}
         onDateSelect={setSelectedDate}
@@ -424,6 +447,7 @@ const Transactions = () => {
                 <TableRow className="bg-gradient-to-r from-pink-50/80 to-purple-50/50 dark:from-pink-950/30 dark:to-purple-950/20 hover:bg-pink-50/90">
                   <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Comercio</TableHead>
                   <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Categoría</TableHead>
+                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Método</TableHead>
                   <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Fecha</TableHead>
                   <TableHead className="text-right text-pink-600 dark:text-pink-400 font-semibold">Monto</TableHead>
                   <TableHead className="text-pink-600 dark:text-pink-400 font-semibold w-24">Acciones</TableHead>
@@ -481,12 +505,24 @@ const Transactions = () => {
                             </SelectTrigger>
                             <SelectContent>
                               {supabaseCategories.map(category => (
-                                <SelectItem key={category.id} value={category.id}>
+                                <SelectItem key={category.id} value={category.id.toString()}>
                                   {category.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {transaction.payment_methods ? (
+                          <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                            <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+                            {transaction.payment_methods.name}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">
+                            -
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -623,6 +659,7 @@ const Transactions = () => {
           <TransactionForm
             initialData={memoizedCurrentTransaction}
             categories={supabaseCategories}
+            paymentMethods={paymentMethods}
             onSave={async (form) => {
               if (!form.name || !form.amount) {
                 toast({ title: "Error", description: "Por favor completa los campos requeridos", variant: "destructive" });
@@ -635,6 +672,7 @@ const Transactions = () => {
                     name: form.name,
                     amount: parseFloat(form.amount),
                     category_id: form.category_id,
+                    payment_method_id: form.payment_method_id,
                     date: form.date
                   })
                   .eq("id", form.id);
@@ -682,7 +720,7 @@ const Transactions = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {supabaseCategories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

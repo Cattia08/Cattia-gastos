@@ -3,17 +3,21 @@ import { Button } from "@/components/ui/button";
 import { InputWithIcon } from "@/components/ui/InputWithIcon";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
-import { DatePeriodSelector, CategoryFilter } from "@/components/filters";
-import { Search, Calendar as CalendarIcon, X } from "lucide-react";
+import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
+import { Search, Calendar as CalendarIcon, X, CreditCard, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type Category = { id: number; name: string; color?: string };
+type PaymentMethod = { id: number; name: string };
 
 interface FilterBarProps {
   categories: Category[];
   selectedCategories: number[];
   onSelectedCategoriesChange: (ids: number[]) => void;
+  paymentMethods?: PaymentMethod[];
+  selectedPaymentMethods?: number[];
+  onSelectedPaymentMethodsChange?: (ids: number[]) => void;
   searchQuery: string;
   onSearchQueryChange: (q: string) => void;
   selectedDate?: Date;
@@ -36,6 +40,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
   categories,
   selectedCategories,
   onSelectedCategoriesChange,
+  paymentMethods = [],
+  selectedPaymentMethods = [],
+  onSelectedPaymentMethodsChange,
   searchQuery,
   onSearchQueryChange,
   selectedDate,
@@ -55,6 +62,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   const hasActiveFilters = searchQuery || 
     selectedCategories.length !== categories.length || 
+    (paymentMethods.length > 0 && selectedPaymentMethods.length !== paymentMethods.length) ||
     selectedDate !== undefined;
 
   return (
@@ -93,13 +101,30 @@ const FilterBar: React.FC<FilterBarProps> = ({
         )}
 
         {/* Category Filter */}
-        <CategoryFilter
-          categories={categories}
-          selectedCategories={selectedCategories}
+        <MultiSelectFilter
+          label="Categorías"
+          icon={Tag}
+          iconColorClass="text-theme-lavender"
+          items={categories}
+          selectedIds={selectedCategories}
           onSelectionChange={onSelectedCategoriesChange}
           showCount={true}
           compact={compact}
         />
+
+        {/* Payment Method Filter */}
+        {paymentMethods.length > 0 && onSelectedPaymentMethodsChange && (
+          <MultiSelectFilter
+            label="Métodos"
+            icon={CreditCard}
+            iconColorClass="text-theme-blue"
+            items={paymentMethods}
+            selectedIds={selectedPaymentMethods}
+            onSelectionChange={onSelectedPaymentMethodsChange}
+            showCount={true}
+            compact={compact}
+          />
+        )}
 
         {/* Date Range Picker */}
         <DropdownMenu>

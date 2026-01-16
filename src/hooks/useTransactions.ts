@@ -13,6 +13,11 @@ export interface Transaction {
     name: string;
     color: string;
   };
+  payment_method_id?: number;
+  payment_methods?: {
+    id: number;
+    name: string;
+  };
 }
 
 async function fetchTransactions(): Promise<Transaction[]> {
@@ -24,6 +29,10 @@ async function fetchTransactions(): Promise<Transaction[]> {
         id,
         name,
         color
+      ),
+      payment_methods (
+        id,
+        name
       )
     `)
     .order('date', { ascending: false });

@@ -13,12 +13,14 @@ type TxForm = {
   name: string;
   amount: string;
   category_id: string;
+  payment_method_id?: number;
   date: Date;
 };
 
 type Props = {
   initialData: TxForm;
   categories: Category[];
+  paymentMethods?: { id: number; name: string }[];
   onSave: (form: TxForm) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -28,8 +30,10 @@ type Props = {
  * TransactionForm - Reusable form for creating/editing transactions
  * Uses theme tokens for consistent styling
  */
-const TransactionForm = ({ initialData, categories, onSave, onCancel, isLoading = false }: Props) => {
-  const [form, setForm] = useState<TxForm>(initialData);
+const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave, onCancel, isLoading = false }: Props) => {
+  console.log('TransactionForm Render. PaymentMethods:', paymentMethods);
+  const safePaymentMethods = paymentMethods || [];
+  const [form, setForm] = useState<TxForm & { payment_method_id?: number }>(initialData);
 
   useEffect(() => {
     setForm(initialData);
@@ -66,24 +70,45 @@ const TransactionForm = ({ initialData, categories, onSave, onCancel, isLoading 
           disabled={isLoading}
         />
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="category" className="text-sm font-medium">Categoría</Label>
-        <Select
-          value={form.category_id}
-          onValueChange={value => setForm({ ...form, category_id: value })}
-          disabled={isLoading}
-        >
-          <SelectTrigger className={inputClass}>
-            <SelectValue placeholder="Selecciona una categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map(category => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="category" className="text-sm font-medium">Categoría</Label>
+          <Select
+            value={form.category_id}
+            onValueChange={value => setForm({ ...form, category_id: value })}
+            disabled={isLoading}
+          >
+            <SelectTrigger className={inputClass}>
+              <SelectValue placeholder="Categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(category => (
+                <SelectItem key={category.id} value={category.id.toString()}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="payment_method" className="text-sm font-medium">Método de Pago</Label>
+          <Select
+            value={form.payment_method_id?.toString()}
+            onValueChange={value => setForm({ ...form, payment_method_id: parseInt(value) })}
+            disabled={isLoading}
+          >
+            <SelectTrigger className={inputClass}>
+              <SelectValue placeholder="Método" />
+            </SelectTrigger>
+            <SelectContent>
+              {safePaymentMethods.map(method => (
+                <SelectItem key={method.id} value={method.id.toString()}>
+                  {method.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="date" className="text-sm font-medium">Fecha</Label>

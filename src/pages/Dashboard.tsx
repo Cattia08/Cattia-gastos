@@ -8,9 +8,10 @@ import {
   CircleDollarSign,
   CreditCard,
   RefreshCcw,
-  Wallet
+  Wallet,
+  Tag
 } from "lucide-react";
-import { DatePeriodSelector, CategoryFilter } from "@/components/filters";
+import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -482,9 +483,12 @@ const Dashboard = () => {
 
       {/* Barra de filtros de categoría */}
       <div className="mt-4">
-        <CategoryFilter
-          categories={categories}
-          selectedCategories={selectedCategories}
+        <MultiSelectFilter
+          label="Categorías"
+          icon={Tag}
+          iconColorClass="text-theme-lavender"
+          items={categories}
+          selectedIds={selectedCategories}
           onSelectionChange={setSelectedCategories}
           showCount={true}
         />
