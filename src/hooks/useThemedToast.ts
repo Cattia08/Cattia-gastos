@@ -30,12 +30,12 @@ export const useThemedToast = (options?: UseThemedToastOptions) => {
     };
 
     const styles = {
-      success: "border-green-200/50 bg-green-50/95 text-green-900 dark:bg-green-900/20 dark:text-green-100",
-      error: "border-red-200/50 bg-red-50/95 text-red-900",
-      warning: "border-yellow-200/50 bg-yellow-50/95 text-yellow-900",
-      info: "border-blue-200/50 bg-blue-50/95 text-blue-900",
-      delete: "border-pastel-pink/50 bg-pastel-pink/20 text-pink-900",
-      celebrate: "border-theme-green/50 bg-pastel-green/95 text-green-900 dark:bg-green-900/30 dark:text-green-100",
+      success: "border-green-300 bg-green-100 text-green-900 dark:bg-green-900 dark:border-green-700 dark:text-green-100",
+      error: "border-red-300 bg-red-100 text-red-900 dark:bg-red-900 dark:border-red-700 dark:text-red-100",
+      warning: "border-amber-300 bg-amber-100 text-amber-900 dark:bg-amber-900 dark:border-amber-700 dark:text-amber-100",
+      info: "border-blue-300 bg-blue-100 text-blue-900 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-100",
+      delete: "border-pink-300 bg-pink-100 text-pink-900 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-100",
+      celebrate: "border-emerald-300 bg-emerald-100 text-emerald-900 dark:bg-emerald-900 dark:border-emerald-700 dark:text-emerald-100",
     };
 
     const durations = {

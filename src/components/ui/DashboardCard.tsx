@@ -2,9 +2,10 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import Sparkline from "./Sparkline";
 import AnimatedCounter from "./AnimatedCounter";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 type CardVariant = "primary" | "secondary" | "default";
-type CategoryTint = "rose" | "green" | "lavender" | "sage" | "none";
+type CategoryTint = "rose" | "green" | "lavender" | "sage" | "orange" | "blue" | "none";
 
 interface DashboardCardProps {
   title: string;
@@ -14,6 +15,8 @@ interface DashboardCardProps {
   iconColor?: string;
   isCurrency?: boolean;
   subtext?: string;
+  /** Secondary subtext line (e.g., "X días transcurridos") */
+  secondarySubtext?: string;
   interactive?: boolean;
   emphasis?: boolean;
   onClick?: () => void;
@@ -25,6 +28,10 @@ interface DashboardCardProps {
   sparklineData?: number[];
   /** Optional comparison value for sparkline coloring */
   comparisonValue?: number;
+  /** Show trend indicator arrow (↑/↓) based on comparison */
+  showTrendIndicator?: boolean;
+  /** Previous value for trend comparison */
+  previousValue?: number;
 }
 
 const DashboardCard = ({
@@ -35,6 +42,7 @@ const DashboardCard = ({
   iconColor = "bg-pastel-pink",
   isCurrency = true,
   subtext,
+  secondarySubtext,
   interactive = false,
   emphasis = false,
   onClick,
@@ -42,14 +50,26 @@ const DashboardCard = ({
   tint = "none",
   sparklineData,
   comparisonValue,
+  showTrendIndicator = false,
+  previousValue,
 }: DashboardCardProps) => {
   // Format the value - use AnimatedCounter for numbers
   const isNumericValue = typeof value === "number";
   const numericValue = isNumericValue ? value : 0;
 
+  // Calculate trend direction
+  const getTrendDirection = () => {
+    if (!showTrendIndicator || previousValue === undefined || !isNumericValue) return null;
+    if (numericValue > previousValue) return "up";
+    if (numericValue < previousValue) return "down";
+    return null;
+  };
+
+  const trendDirection = getTrendDirection();
+
   // Variant-specific styles
   const variantStyles = {
-    primary: "min-h-[140px] p-5 md:p-6",
+    primary: "min-h-[160px] p-6 md:p-8",
     secondary: "min-h-[100px] p-3 md:p-4",
     default: "min-h-[88px] p-3 md:p-4",
   };
@@ -60,12 +80,14 @@ const DashboardCard = ({
     green: "bg-category-tint-green",
     lavender: "bg-category-tint-lavender",
     sage: "bg-category-tint-sage",
+    orange: "bg-category-tint-orange",
+    blue: "bg-category-tint-blue",
     none: "bg-white dark:bg-card",
   };
 
-  // Text size based on variant
+  // Text size based on variant - ENHANCED for primary
   const valueStyles = {
-    primary: "text-3xl md:text-4xl lg:text-5xl",
+    primary: "text-5xl md:text-6xl lg:text-6xl",
     secondary: "text-xl md:text-2xl",
     default: emphasis ? "text-2xl md:text-3xl" : "text-xl md:text-2xl",
   };
@@ -107,7 +129,7 @@ const DashboardCard = ({
       role={interactive ? "button" : undefined}
     >
       {variant === "primary" ? (
-        // Primary layout: centered content
+        // Primary layout: centered content with larger text
         <div className="flex flex-col items-center text-center gap-3">
           <div className={cn("rounded-full flex items-center justify-center", iconContainerStyles[variant], iconColor)}>
             {icon}
@@ -128,18 +150,35 @@ const DashboardCard = ({
                 value
               )}
             </p>
-            {(subtext || sparklineData) && (
-              <div className="flex items-center justify-center gap-2 mt-2">
+            {/* Comparison with trend indicator */}
+            {subtext && (
+              <div className="flex items-center justify-center gap-2 mt-3">
+                {showTrendIndicator && trendDirection && (
+                  <span className={cn(
+                    "flex items-center gap-1 text-sm font-medium",
+                    trendDirection === "up" ? "text-red-500" : "text-green-500"
+                  )}>
+                    {trendDirection === "up" ? (
+                      <TrendingUp className="w-4 h-4" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4" />
+                    )}
+                  </span>
+                )}
                 {sparklineData && sparklineData.length >= 2 && (
                   <Sparkline
                     data={sparklineData}
                     color={getSparklineColor()}
-                    width={48}
-                    height={20}
+                    width={60}
+                    height={24}
                   />
                 )}
-                {subtext && <p className="text-sm text-text-secondary">{subtext}</p>}
+                <p className="text-sm text-text-secondary">{subtext}</p>
               </div>
+            )}
+            {/* Secondary subtext (e.g., days elapsed) */}
+            {secondarySubtext && (
+              <p className="text-xs text-text-muted mt-1">{secondarySubtext}</p>
             )}
           </div>
         </div>
@@ -175,6 +214,9 @@ const DashboardCard = ({
                 {subtext && <p className="text-xs text-text-secondary">{subtext}</p>}
               </div>
             )}
+            {secondarySubtext && (
+              <p className="text-xs text-text-muted mt-0.5">{secondarySubtext}</p>
+            )}
           </div>
           <div className={cn("shrink-0 rounded-full flex items-center justify-center", iconContainerStyles[variant], iconColor)}>
             {icon}
@@ -186,3 +228,4 @@ const DashboardCard = ({
 };
 
 export default DashboardCard;
+

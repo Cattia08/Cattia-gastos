@@ -62,6 +62,8 @@
     --category-green-tint: 152 42% 97%;
     --category-lavender-tint: 260 45% 97%;
     --category-sage-tint: 152 30% 97%;
+    --category-orange-tint: 25 95% 97%;
+    --category-blue-tint: 210 70% 97%;
 
     /* Interactive States */
     --hover-lift: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
@@ -115,6 +117,8 @@
     --category-green-tint: 152 25% 18%;
     --category-lavender-tint: 260 25% 18%;
     --category-sage-tint: 152 20% 18%;
+    --category-orange-tint: 25 40% 18%;
+    --category-blue-tint: 210 35% 18%;
   }
 }
 
@@ -434,62 +438,195 @@
      TRANSACTION LIST STYLES
      =============================================== */
 
-  /* Date group header - sticky */
+  /* Date group header - sticky with gradient */
   .date-group-header {
     @apply sticky top-0 z-10;
-    @apply px-4 py-2.5 text-sm font-semibold;
-    @apply bg-muted/90 dark:bg-muted/70 backdrop-blur-sm;
-    @apply text-text-secondary capitalize;
-    @apply border-b border-border/50;
+    @apply text-sm font-semibold;
+    background: linear-gradient(135deg,
+        hsl(var(--muted) / 0.95) 0%,
+        hsl(var(--background) / 0.9) 100%);
+    @apply backdrop-blur-md;
+    @apply text-text-primary capitalize;
+    @apply border-b-2 border-pink-200/40 dark:border-pink-800/30;
+    @apply shadow-sm;
   }
 
-  /* Transaction item row */
+  .date-group-header td {
+    @apply py-0 !important;
+  }
+
+  /* Transaction item row - enhanced with better separation */
   .transaction-item {
-    @apply flex items-center gap-4 py-3.5 px-4;
-    @apply border-b border-border/30;
+    @apply flex items-center gap-4 py-4 px-4;
+    @apply border-b border-border/40;
     @apply transition-all duration-150 ease-out;
     @apply bg-white dark:bg-card;
+    position: relative;
+  }
+
+  /* Subtle left accent on hover */
+  .transaction-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    border-radius: 0 4px 4px 0;
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)));
+    transition: height 0.2s ease;
+  }
+
+  .transaction-item:hover::before {
+    height: 60%;
   }
 
   .transaction-item:hover {
-    @apply bg-muted/40 dark:bg-muted/20;
+    @apply bg-muted/50 dark:bg-muted/30;
+    box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.3);
   }
 
   .transaction-item:last-child {
     @apply border-b-0;
   }
 
+  /* Visible separator between groups */
+  .transaction-group-separator {
+    @apply h-2 bg-gradient-to-r from-transparent via-border/50 to-transparent;
+  }
+
   /* Transaction item - mobile card variant */
   @media (max-width: 640px) {
     .transaction-item-mobile {
-      @apply flex flex-col gap-2 p-4;
-      @apply rounded-xl mb-2 mx-2;
+      @apply flex flex-col gap-3 p-4;
+      @apply rounded-2xl mb-3 mx-2;
       @apply bg-white dark:bg-card;
-      @apply border border-border/40;
-      @apply shadow-soft;
+      @apply border border-border/50;
+      @apply shadow-md shadow-black/5;
     }
 
     .transaction-item-mobile:active {
-      @apply scale-[0.99];
+      @apply scale-[0.98];
+      @apply shadow-sm;
+    }
+
+    /* Mobile header row */
+    .transaction-mobile-header {
+      @apply flex items-center justify-between;
+    }
+
+    /* Mobile details row */
+    .transaction-mobile-details {
+      @apply flex items-center justify-between text-sm;
+      @apply pt-2 border-t border-border/30;
+    }
+
+    /* Mobile amount styling */
+    .transaction-mobile-amount {
+      @apply text-lg font-bold text-text-primary;
     }
   }
 
   /* Period summary header */
   .period-summary {
-    @apply flex flex-wrap items-center justify-between gap-4 px-4 py-3;
-    @apply bg-gradient-to-r from-pastel-green/30 to-pastel-mint/20;
-    @apply dark:from-green-950/20 dark:to-teal-950/10;
-    @apply border-b border-border/40;
+    @apply flex flex-wrap items-center justify-between gap-4 px-5 py-4;
+    @apply bg-gradient-to-r from-pastel-green/40 to-pastel-mint/30;
+    @apply dark:from-green-950/30 dark:to-teal-950/20;
+    @apply border-b-2 border-green-200/50 dark:border-green-800/30;
     @apply rounded-t-2xl;
   }
 
-  /* Uncategorized badge */
+  .period-summary-total {
+    @apply text-2xl font-bold;
+    @apply bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent;
+    @apply dark:from-green-400 dark:to-emerald-400;
+  }
+
+  .period-summary-count {
+    @apply text-sm text-text-secondary font-medium;
+  }
+
+  /* Uncategorized badge - more visible */
   .badge-uncategorized {
-    @apply inline-flex items-center gap-1 px-2 py-0.5;
-    @apply text-xs font-medium rounded-full;
-    @apply bg-amber-100/80 text-amber-700;
-    @apply dark:bg-amber-900/30 dark:text-amber-300;
-    @apply border border-amber-200/50 dark:border-amber-800/30;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1;
+    @apply text-xs font-semibold rounded-full;
+    @apply bg-amber-100 text-amber-800;
+    @apply dark:bg-amber-900/40 dark:text-amber-300;
+    @apply border border-amber-300/60 dark:border-amber-700/40;
+    @apply shadow-sm shadow-amber-200/50;
+    animation: gentle-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes gentle-pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.85;
+    }
+  }
+
+  /* Enhanced text contrast classes */
+  .text-high-contrast {
+    @apply text-text-primary font-medium;
+  }
+
+  .text-medium-contrast {
+    @apply text-text-secondary;
+  }
+
+  /* Transaction row hover state enhancement */
+  tr.transaction-row {
+    @apply transition-colors duration-150;
+    position: relative;
+  }
+
+  tr.transaction-row::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)));
+    transition: width 0.15s ease;
+    pointer-events: none;
+  }
+
+  tr.transaction-row:hover {
+    @apply bg-pink-50/60 dark:bg-pink-950/20;
+  }
+
+  tr.transaction-row:hover::after {
+    width: 3px;
+  }
+
+  /* Action buttons hover enhancement */
+  .transaction-actions {
+    @apply flex items-center gap-1;
+    @apply opacity-0 group-hover:opacity-100;
+    @apply transition-opacity duration-150;
+  }
+
+  .transaction-action-btn {
+    @apply h-8 w-8 rounded-lg;
+    @apply transition-all duration-150;
+  }
+
+  .transaction-action-btn:hover {
+    @apply scale-110;
+  }
+
+  .transaction-action-btn.edit:hover {
+    @apply bg-pink-100 dark:bg-pink-900/40;
+  }
+
+  .transaction-action-btn.delete:hover {
+    @apply bg-red-100 dark:bg-red-900/40;
   }
 
   /* ===============================================

@@ -6,9 +6,7 @@ import {
   PieChart,
   Calendar,
   CircleDollarSign,
-  CreditCard,
   RefreshCcw,
-  Wallet,
   Tag,
   TrendingUp
 } from "lucide-react";
@@ -17,11 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import DashboardCard from "@/components/ui/DashboardCard";
+import DashboardStatCard from "@/components/ui/DashboardStatCard";
 
 import { ResponsiveContainer, Tooltip, BarChart, Bar } from "recharts";
 import { XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
-import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
+import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth, differenceInCalendarDays, formatDistanceToNow, getDaysInMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import {
@@ -208,6 +207,136 @@ const Dashboard = () => {
 
   // Calculate category data for pie chart
   const categoryDataForChart = calculateCategoryData(filteredExpenses);
+
+  // =============== NEW CALCULATIONS FOR REDESIGNED CARDS ===============
+
+  // Days elapsed in current period
+  const daysElapsedText = useMemo(() => {
+    if (selectedMonth === null) {
+      const today = new Date();
+      const dayOfYear = Math.floor((today.getTime() - new Date(selectedYear, 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+      return `${dayOfYear} días transcurridos de ${selectedYear}`;
+    }
+    const today = new Date();
+    const monthDate = new Date(selectedYear, selectedMonth, 1);
+    const monthName = format(monthDate, "MMMM", { locale: es });
+    const totalDaysInMonth = getDaysInMonth(monthDate);
+
+    // If viewing current month, show elapsed days
+    if (today.getMonth() === selectedMonth && today.getFullYear() === selectedYear) {
+      const daysElapsed = today.getDate();
+      return `${daysElapsed} días transcurridos de ${monthName}`;
+    }
+    // If viewing past month, show "mes completo"
+    return `${totalDaysInMonth} días de ${monthName}`;
+  }, [selectedMonth, selectedYear]);
+
+  // Highest spending day calculation
+  const highestSpendingDay = useMemo(() => {
+    if (filteredExpenses.length === 0) {
+      return { date: null, amount: 0, transactionCount: 0, formattedDate: "-" };
+    }
+
+    // Group transactions by day
+    const dailyTotals: Record<string, { amount: number; count: number; date: Date }> = {};
+    filteredExpenses.forEach(exp => {
+      const dateKey = format(new Date(exp.date), "yyyy-MM-dd");
+      if (!dailyTotals[dateKey]) {
+        dailyTotals[dateKey] = { amount: 0, count: 0, date: new Date(exp.date) };
+      }
+      dailyTotals[dateKey].amount += exp.amount;
+      dailyTotals[dateKey].count += 1;
+    });
+
+    // Find the day with highest total
+    const entries = Object.entries(dailyTotals);
+    const highest = entries.reduce((max, [key, val]) =>
+      val.amount > max.amount ? val : max, { amount: 0, count: 0, date: new Date() });
+
+    return {
+      date: highest.date,
+      amount: highest.amount,
+      transactionCount: highest.count,
+      formattedDate: format(highest.date, "EEEE d 'de' MMMM", { locale: es })
+    };
+  }, [filteredExpenses]);
+
+  // Enhanced top category with percentage and color
+  const topCategoryDetails = useMemo(() => {
+    if (categoryDataForChart.length === 0) {
+      return { name: "-", amount: 0, percentage: 0, color: "#5DBE8A", emoji: "📊" };
+    }
+
+    const sorted = categoryDataForChart.slice().sort((a, b) => b.value - a.value);
+    const top = sorted[0];
+    const total = sorted.reduce((sum, cat) => sum + cat.value, 0);
+    const percentage = total > 0 ? Math.round((top.value / total) * 100) : 0;
+
+    // Find category from original data to get color
+    const categoryInfo = categories.find(c => c.name === top.name);
+
+    return {
+      name: top.name,
+      amount: top.value,
+      percentage,
+      color: categoryInfo?.color || top.color || "#5DBE8A",
+      emoji: getEmojiForCategory(top.name)
+    };
+  }, [categoryDataForChart, categories]);
+
+  // Activity stats for the month
+  const activityStats = useMemo(() => {
+    const transactionCount = filteredExpenses.length;
+
+    // Find last transaction (most recent)
+    const sortedByDate = [...filteredExpenses].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const lastTransaction = sortedByDate[0];
+    const lastTransactionTime = lastTransaction
+      ? formatDistanceToNow(new Date(lastTransaction.date), { locale: es, addSuffix: false })
+      : null;
+
+    // Count unique days with transactions
+    const uniqueDays = new Set(
+      filteredExpenses.map(exp => format(new Date(exp.date), "yyyy-MM-dd"))
+    ).size;
+
+    // Total days in period
+    const totalDaysInPeriod = selectedMonth !== null
+      ? getDaysInMonth(new Date(selectedYear, selectedMonth, 1))
+      : 365;
+
+    return {
+      transactionCount,
+      lastTransactionTime: lastTransactionTime ? `Última hace ${lastTransactionTime}` : "Sin transacciones",
+      uniqueDays,
+      totalDaysInPeriod,
+      daysText: `${uniqueDays} días con registro de ${totalDaysInPeriod}`
+    };
+  }, [filteredExpenses, selectedMonth, selectedYear]);
+
+  // Helper function to get emoji for category
+  function getEmojiForCategory(categoryName: string): string {
+    const emojiMap: Record<string, string> = {
+      "Businessss": "💼",
+      "Comida": "🍔",
+      "Food": "🍕",
+      "Transporte": "🚗",
+      "Transport": "🚌",
+      "Entretenimiento": "🎮",
+      "Entertainment": "🎬",
+      "Salud": "💊",
+      "Health": "🏥",
+      "Hogar": "🏠",
+      "Home": "🏡",
+      "Sin categoría": "📦",
+      "default": "💳"
+    };
+    return emojiMap[categoryName] || emojiMap["default"];
+  }
+
+  // Original top category calculations (keeping for backward compatibility)
   const topCategory = useMemo(() => {
     return categoryDataForChart.length > 0 ? categoryDataForChart.slice().sort((a, b) => b.value - a.value)[0].name : "-";
   }, [categoryDataForChart]);
@@ -474,59 +603,88 @@ const Dashboard = () => {
 
       {/* Metric Cards - Hierarchical Layout */}
       <div className="space-y-6">
-        {/* Primary Metric: Gasto del Mes/Año */}
+        {/* Primary Metric: Gasto del Mes/Año (HERO CARD) */}
         <div className="flex justify-center">
-          <DashboardCard
-            title={selectedMonth !== null ? "Gasto del Mes" : "Gasto del Año"}
-            value={periodTotal}
-            icon={<CircleDollarSign className="w-10 h-10 text-theme-rose" />}
-            iconColor="bg-pastel-rose"
-            variant="primary"
-            tint="rose"
-            className="shadow-soft-md max-w-lg w-full"
-            subtext={`vs. anterior: S/ ${previousMonthTotal.toFixed(2)}`}
-            sparklineData={sparklineMonthlyData}
-            interactive
-            onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end } } })}
-          />
+          {filteredExpenses.length === 0 ? (
+            // Empty state for hero card
+            <div className="rounded-2xl border border-pink-100 dark:border-border shadow-soft-md bg-category-tint-rose p-8 max-w-lg w-full text-center">
+              <div className="w-16 h-16 rounded-full bg-pastel-rose mx-auto mb-4 flex items-center justify-center">
+                <CircleDollarSign className="w-10 h-10 text-theme-rose" />
+              </div>
+              <h3 className="text-base font-semibold text-text-secondary mb-2">Sin gastos este mes</h3>
+              <p className="text-4xl font-extrabold text-text-emphasis dark:text-foreground">S/ 0.00</p>
+              <p className="text-sm text-text-muted mt-3">¡Comienza a registrar tus gastos! 🌟</p>
+              <p className="text-xs text-text-muted mt-1">{daysElapsedText}</p>
+            </div>
+          ) : (
+            <DashboardCard
+              title={selectedMonth !== null ? "Gasto del Mes" : "Gasto del Año"}
+              value={periodTotal}
+              icon={<CircleDollarSign className="w-10 h-10 text-theme-rose" />}
+              iconColor="bg-pastel-rose"
+              variant="primary"
+              tint="rose"
+              className="shadow-soft-md max-w-lg w-full"
+              subtext={`vs. anterior: S/ ${previousMonthTotal.toFixed(2)}`}
+              secondarySubtext={daysElapsedText}
+              sparklineData={sparklineMonthlyData}
+              showTrendIndicator={true}
+              previousValue={previousMonthTotal}
+              interactive
+              onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end } } })}
+            />
+          )}
         </div>
 
-        {/* Secondary Metrics Row */}
+        {/* Secondary Metrics Row - 3 NEW CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-          <DashboardCard
-            title="Gasto Total"
-            value={periodTotal}
-            icon={<Wallet className="w-6 h-6 text-theme-green" />}
-            iconColor="bg-pastel-green"
-            variant="secondary"
-            tint="green"
-            className="shadow-soft"
+          {/* Card 1: Día con Mayor Gasto */}
+          <DashboardStatCard
+            title="Día con Mayor Gasto"
+            icon="🔥"
+            value={highestSpendingDay.amount}
+            isCurrency={true}
+            subtitle={highestSpendingDay.formattedDate}
+            secondarySubtitle={highestSpendingDay.transactionCount > 0 ? `${highestSpendingDay.transactionCount} transacciones ese día` : undefined}
+            accentColor="orange"
             interactive
-            onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'all' } } })}
+            onClick={() => highestSpendingDay.date && navigate('/transacciones', {
+              state: { quickFilter: { type: 'day', date: highestSpendingDay.date } }
+            })}
           />
-          <DashboardCard
-            title="Gasto Diario Promedio"
-            value={dailyAvg.toFixed(2)}
-            icon={<TrendingUp className="w-6 h-6 text-theme-sage" />}
-            iconColor="bg-pastel-mint"
-            variant="secondary"
-            tint="sage"
-            className="shadow-soft"
-            subtext={`Periodo: ${trendSubtitle}`}
-            interactive
-          />
-          <DashboardCard
-            title="Categoría Top"
-            value={topCategory}
+
+          {/* Card 2: Categoría más gastada */}
+          <DashboardStatCard
+            title="Categoría más gastada"
+            icon={
+              <PieChart
+                className="w-5 h-5"
+                style={{ color: topCategoryDetails.color }}
+              />
+            }
+            value={`${topCategoryDetails.name} ${topCategoryDetails.emoji}`}
             isCurrency={false}
-            icon={<PieChart className="w-6 h-6 text-theme-lavender" />}
-            iconColor="bg-pastel-lavender"
-            variant="secondary"
-            tint="lavender"
-            className="shadow-soft"
-            subtext={monthlyGrowthText}
+            subtitle={`S/ ${topCategoryDetails.amount.toFixed(2)}`}
+            secondarySubtitle={`${topCategoryDetails.percentage}% del total`}
+            accentColor="dynamic"
+            dynamicColor={topCategoryDetails.color}
+            progressPercent={topCategoryDetails.percentage}
+            progressColor={topCategoryDetails.color}
             interactive
             onClick={() => topCategoryId && navigate('/transacciones', { state: { quickFilter: { type: 'category', id: topCategoryId } } })}
+          />
+
+          {/* Card 3: Actividad del Mes */}
+          <DashboardStatCard
+            title="Actividad del Mes"
+            icon="📊"
+            value={`${activityStats.transactionCount} transacciones`}
+            isCurrency={false}
+            subtitle={activityStats.lastTransactionTime}
+            secondarySubtitle={activityStats.daysText}
+            accentColor="blue"
+            interactive
+            onClick={() => navigate('/transacciones')}
           />
         </div>
       </div>

@@ -473,13 +473,13 @@ const Transactions = () => {
                       </TableRow>
 
                       {/* Transactions in this group */}
-                      {group.transactions.map((transaction) => (
+                      {group.transactions.map((transaction, idx) => (
                         <TableRow
                           key={transaction.id}
                           className={cn(
-                            "group transition-all duration-150",
-                            "hover:bg-muted/40 dark:hover:bg-muted/20",
-                            "bg-white dark:bg-card"
+                            "group transaction-row",
+                            "border-b border-border/30 last:border-b-0",
+                            !transaction.category_id && "bg-amber-50/30 dark:bg-amber-950/10"
                           )}
                         >
                           <TableCell className="py-3.5">
@@ -496,11 +496,11 @@ const Transactions = () => {
                                   style={{ backgroundColor: transaction.categories?.color || '#FF7597' }}
                                 />
                               </div>
-                              <div>
-                                <div className="font-medium text-text-primary">
+                              <div className="min-w-0">
+                                <div className="font-semibold text-text-primary truncate">
                                   {transaction.name}
                                 </div>
-                                <div className="text-xs text-text-secondary mt-0.5">
+                                <div className="text-xs text-text-secondary mt-1">
                                   {transaction.categories?.name || (
                                     <span className="badge-uncategorized">
                                       <CircleAlert className="w-3 h-3" />
@@ -552,27 +552,27 @@ const Transactions = () => {
                             </span>
                           </TableCell>
                           <TableCell className="text-right py-3.5">
-                            <span className="font-bold text-text-primary text-base">
+                            <span className="font-bold text-text-emphasis text-base tabular-nums">
                               S/ {transaction.amount.toFixed(2)}
                             </span>
                           </TableCell>
                           <TableCell className="py-3.5">
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            <div className="transaction-actions">
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleEdit(transaction)}
-                                className="h-8 w-8 hover:bg-pink-100 dark:hover:bg-pink-900/40 rounded-lg"
+                                className="transaction-action-btn edit"
                               >
-                                <Edit className="h-4 w-4 text-muted-foreground" />
+                                <Edit className="h-4 w-4 text-muted-foreground group-hover:text-pink-500 transition-colors" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDeleteTransaction(transaction.id)}
-                                className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg"
+                                className="transaction-action-btn delete"
                               >
-                                <Trash2 className="h-4 w-4 text-red-500" />
+                                <Trash2 className="h-4 w-4 text-red-400 group-hover:text-red-500 transition-colors" />
                               </Button>
                             </div>
                           </TableCell>

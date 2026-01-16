@@ -57,22 +57,34 @@ const Navbar = () => {
           <Heart className="w-5 h-5 text-primary" />
           <span className="font-medium">ExpenseTracker</span>
         </Link>
-        <div className="flex items-center gap-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full transition-all",
-                location.pathname === item.path
-                  ? "bg-pastel-pink/20 text-primary"
-                  : "hover:bg-pastel-pink/10 text-muted-foreground hover:text-primary"
-              )}
-            >
-              {item.icon}
-              <span className="text-sm">{item.name}</span>
-            </Link>
-          ))}
+        <div className="flex items-center gap-1">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200",
+                  isActive
+                    ? "bg-gradient-to-r from-pink-100 to-purple-100 text-primary font-medium shadow-sm"
+                    : "hover:bg-pastel-pink/20 text-muted-foreground hover:text-primary"
+                )}
+              >
+                {/* Active indicator dot */}
+                {isActive && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
+                <span className={cn(
+                  "transition-transform duration-200",
+                  isActive && "scale-110"
+                )}>
+                  {item.icon}
+                </span>
+                <span className="text-sm">{item.name}</span>
+              </Link>
+            );
+          })}
         </div>
         <div className="hidden md:flex items-center gap-3">
           {/* Botón toggle del gato */}

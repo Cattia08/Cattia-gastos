@@ -68,6 +68,8 @@ export default {
 					green: 'hsl(var(--category-green-tint))',
 					lavender: 'hsl(var(--category-lavender-tint))',
 					sage: 'hsl(var(--category-sage-tint))',
+					orange: 'hsl(var(--category-orange-tint))',
+					blue: 'hsl(var(--category-blue-tint))',
 				},
 
 				// Status
@@ -87,6 +89,8 @@ export default {
 					sky: '#E0EFF7',
 					peach: '#FAE8E0',
 					cream: '#FDF8F3',
+					orange: '#FEE8DC',
+					blue: '#DEE8F5',
 				},
 
 				// Theme accents
@@ -95,6 +99,8 @@ export default {
 					green: '#5DBE8A',
 					lavender: '#B8A9E8',
 					sage: '#7CB899',
+					orange: '#F59E0B',
+					blue: '#3B82F6',
 				},
 
 				destructive: {
