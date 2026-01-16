@@ -1,0 +1,123 @@
+/* Remi Cat Styles */
+
+.remi-container {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: auto;
+  cursor: pointer;
+  left: -100px;
+  top: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.remi-container.remi-entered {
+  opacity: 1;
+}
+
+.remi-container:hover {
+  transform: scale(1.05);
+}
+
+.remi-image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.25));
+  animation: remi-walk 0.3s ease-in-out infinite alternate;
+}
+
+.remi-flip .remi-image {
+  transform: scaleX(-1);
+}
+
+/* Animación de caminar */
+@keyframes remi-walk {
+  0% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  100% {
+    transform: translateY(-3px) rotate(2deg);
+  }
+}
+
+.remi-flip .remi-image {
+  animation: remi-walk-flip 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes remi-walk-flip {
+  0% {
+    transform: scaleX(-1) translateY(0) rotate(2deg);
+  }
+  100% {
+    transform: scaleX(-1) translateY(-3px) rotate(-2deg);
+  }
+}
+
+/* Tooltip con el nombre - mejorado para mejor visibilidad */
+.remi-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(236, 72, 153, 0.5);
+  animation: tooltip-pop 0.2s ease-out;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.remi-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #f472b6;
+}
+
+@keyframes tooltip-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* Animación de huida - corre hacia la izquierda */
+.remi-hiding {
+  animation: remi-run-away 0.8s ease-in forwards !important;
+}
+
+.remi-hiding .remi-image {
+  animation: remi-run 0.1s linear infinite !important;
+}
+
+@keyframes remi-run-away {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-200px);
+  }
+}
+
+@keyframes remi-run {
+  0%, 100% {
+    transform: scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-5px);
+  }
+}

@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import AddTransactionDialog from "@/components/transactions/AddTransactionDialog";
+import { Remi, useOneko } from "@/addons/oneko";
 
 const AppLayout = () => {
   const { categories, refreshData } = useSupabaseData();
   const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
+  const { shouldRender, isHiding, onHideComplete } = useOneko();
+  
   return (
     <div className="min-h-screen bg-background">
+      {shouldRender && <Remi isHiding={isHiding} onHidden={onHideComplete} />}
       <Navbar />
       <main className="overflow-auto">
         <div className="container mx-auto p-4 md:p-6">

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart, PieChart, List, Settings, Sun, Moon } from "lucide-react";
+import { Heart, PieChart, List, Settings, Sun, Moon, Cat } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useOneko } from "@/addons/oneko";
 
 const Navbar = () => {
   const location = useLocation();
+  const { isEnabled: isCatEnabled, toggle: toggleCat } = useOneko();
 
   // Leer el nombre del sidebar desde localStorage y actualizar en tiempo real
   const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
@@ -73,6 +75,21 @@ const Navbar = () => {
           ))}
         </div>
         <div className="hidden md:flex items-center gap-3">
+          {/* Botón toggle del gato */}
+          <button
+            aria-label="Toggle cat"
+            className={cn(
+              "rounded-full border p-2 transition-all",
+              isCatEnabled
+                ? "border-pink-400 bg-pink-100 hover:bg-pink-200"
+                : "border-pink-200 bg-white hover:bg-pink-50 hover:border-pink-300"
+            )}
+            onClick={toggleCat}
+            title={isCatEnabled ? "Dormir a Remi 🐱" : "Llamar a Remi 🐱"}
+          >
+            <Cat className={cn("w-4 h-4", isCatEnabled ? "text-pink-600" : "text-pink-500")} />
+          </button>
+          {/* Botón toggle del tema */}
           <button
             aria-label="Toggle theme"
             className="rounded-full border border-pink-200 bg-white p-2 hover:bg-pink-50 hover:border-pink-300"
