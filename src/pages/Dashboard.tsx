@@ -8,22 +8,14 @@ import {
   CircleDollarSign,
   CreditCard,
   RefreshCcw,
-  Wallet,
-  Search,
-  Tag as TagIcon
+  Wallet
 } from "lucide-react";
+import { DatePeriodSelector, CategoryFilter } from "@/components/filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuCheckboxItem
-} from "@/components/ui/dropdown-menu";
+
 import DashboardCard from "@/components/ui/DashboardCard";
-import { InputWithIcon } from "@/components/ui/InputWithIcon";
+
 import { ResponsiveContainer, Tooltip, BarChart, Bar } from "recharts";
 import { XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
@@ -41,7 +33,7 @@ import ExportButton from "@/components/export/ExportButton";
 import InsightsModal from "@/components/InsightsModal";
 import WeeklyHeatmap from "@/components/WeeklyHeatmap";
 
-const COLORS = ["#FF7597", "#A594F9", "#6BCB77", "#FFD93D", "#FF6B6B"];
+const COLORS = ["#5DBE8A", "#E879A8", "#B8A9E8", "#F5C869", "#7CB899"];
 
 interface Expense {
   id: number;
@@ -398,43 +390,21 @@ const Dashboard = () => {
           <div>
             <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
               Hola, Catt!
-              <Heart className="inline ml-2 w-6 h-6 text-pastel-pink" />
+              <Heart className="inline ml-2 w-6 h-6 text-theme-green" />
             </h1>
             <div className="mt-2 flex items-center text-muted-foreground">
-              <Calendar className="w-4 h-4 mr-2 text-pastel-blue" />
+              <Calendar className="w-4 h-4 mr-2 text-theme-green" />
               {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
             </div>
             {/* Year/Month selectors */}
-            <div className="mt-3 flex items-center gap-2">
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="px-3 py-1.5 text-sm rounded-full border border-pastel-pink/40 bg-pastel-pink/10 hover:bg-pastel-pink/20 focus:outline-none focus:ring-2 focus:ring-pastel-pink/40 cursor-pointer"
-              >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <select
-                value={selectedMonth ?? 'all'}
-                onChange={(e) => setSelectedMonth(e.target.value === 'all' ? null : Number(e.target.value))}
-                className="px-3 py-1.5 text-sm rounded-full border border-pastel-pink/40 bg-pastel-pink/10 hover:bg-pastel-pink/20 focus:outline-none focus:ring-2 focus:ring-pastel-pink/40 cursor-pointer"
-              >
-                <option value="all">Todo el año</option>
-                <option value="0">Enero</option>
-                <option value="1">Febrero</option>
-                <option value="2">Marzo</option>
-                <option value="3">Abril</option>
-                <option value="4">Mayo</option>
-                <option value="5">Junio</option>
-                <option value="6">Julio</option>
-                <option value="7">Agosto</option>
-                <option value="8">Septiembre</option>
-                <option value="9">Octubre</option>
-                <option value="10">Noviembre</option>
-                <option value="11">Diciembre</option>
-              </select>
-            </div>
+            <DatePeriodSelector
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              onYearChange={setSelectedYear}
+              onMonthChange={setSelectedMonth}
+              availableYears={availableYears}
+              className="mt-3"
+            />
           </div>
         </div>
         <div className="flex space-x-2">
@@ -443,13 +413,13 @@ const Dashboard = () => {
           <Button
             variant="outline"
             onClick={handleResetFilters}
-            className="rounded-full px-3 text-sm border-pastel-pink/30"
+            className="rounded-xl px-4 text-sm border-gray-200 hover:bg-pastel-mint/30"
           >
             <RefreshCcw className="w-3 h-3 mr-1" /> Restablecer
           </Button>
           <Button
             variant="outline"
-            className="rounded-full px-3 text-sm border-pastel-pink/30"
+            className="rounded-xl px-4 text-sm border-gray-200 hover:bg-pastel-lavender/30"
             onClick={() => setIsInsightsOpen(true)}
           >
             ✨ Insights
@@ -465,9 +435,9 @@ const Dashboard = () => {
         <DashboardCard
           title="Gasto Total"
           value={periodTotal}
-          icon={<Wallet className="w-7 h-7 text-pastel-blue" />}
-          iconColor="bg-pastel-blue/10"
-          className="shadow-soft-glow"
+          icon={<Wallet className="w-7 h-7 text-theme-green" />}
+          iconColor="bg-pastel-green"
+          className="shadow-soft"
           interactive
           emphasis
           onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'all' } } })}
@@ -475,9 +445,9 @@ const Dashboard = () => {
         <DashboardCard
           title={selectedMonth !== null ? "Gasto del Mes" : "Gasto del Año"}
           value={periodTotal}
-          icon={<CircleDollarSign className="w-7 h-7 text-pastel-pink" />}
-          iconColor="bg-pastel-pink/10"
-          className="shadow-soft-glow"
+          icon={<CircleDollarSign className="w-7 h-7 text-theme-rose" />}
+          iconColor="bg-pastel-rose"
+          className="shadow-soft"
           subtext={`vs. anterior: S/ ${previousMonthTotal.toFixed(2)}`}
           interactive
           emphasis
@@ -486,9 +456,9 @@ const Dashboard = () => {
         <DashboardCard
           title="Gasto Diario Promedio"
           value={dailyAvg.toFixed(2)}
-          icon={<CreditCard className="w-7 h-7 text-pastel-green" />}
-          iconColor="bg-pastel-green/10"
-          className="shadow-soft-glow"
+          icon={<CreditCard className="w-7 h-7 text-theme-sage" />}
+          iconColor="bg-pastel-mint"
+          className="shadow-soft"
           subtext={`Periodo: ${trendSubtitle}`}
           interactive
         />
@@ -496,9 +466,9 @@ const Dashboard = () => {
           title="Categoría Top"
           value={topCategory}
           isCurrency={false}
-          icon={<PieChart className="w-7 h-7 text-pastel-purple" />}
-          iconColor="bg-pastel-purple/10"
-          className="shadow-soft-glow"
+          icon={<PieChart className="w-7 h-7 text-theme-lavender" />}
+          iconColor="bg-pastel-lavender"
+          className="shadow-soft"
           subtext={monthlyGrowthText}
           interactive
           emphasis
@@ -510,54 +480,14 @@ const Dashboard = () => {
 
       </div>
 
-      {/* Barra de búsqueda y filtros de categoría */}
-      <div className="mt-4 bg-white rounded-2xl shadow-sm p-4 flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex-1 min-w-[180px] max-w-[280px]">
-          <InputWithIcon
-            placeholder="Buscar gastos..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent rounded-full"
-            icon={<Search className="w-4 h-4 text-pink-400" />}
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="rounded-full px-4 border-pastel-pink/40 bg-pastel-pink/10 hover:bg-pastel-pink/20">
-              <TagIcon className="w-4 h-4 mr-2 text-pink-400" />
-              Categorías ({selectedCategories.length}/{categories.length})
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 max-h-64 overflow-y-auto">
-            <DropdownMenuLabel>Filtrar por categoría</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {categories.map(cat => (
-              <DropdownMenuCheckboxItem
-                key={cat.id}
-                checked={selectedCategories.includes(cat.id)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setSelectedCategories([...selectedCategories, cat.id]);
-                  } else {
-                    setSelectedCategories(selectedCategories.filter(id => id !== cat.id));
-                  }
-                }}
-              >
-                <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: cat.color }} />
-                {cat.name}
-              </DropdownMenuCheckboxItem>
-            ))}
-            <DropdownMenuSeparator />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full"
-              onClick={() => setSelectedCategories(categories.map(c => c.id))}
-            >
-              Seleccionar todas
-            </Button>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {/* Barra de filtros de categoría */}
+      <div className="mt-4">
+        <CategoryFilter
+          categories={categories}
+          selectedCategories={selectedCategories}
+          onSelectionChange={setSelectedCategories}
+          showCount={true}
+        />
       </div>
 
       {/* Grid de gráficos */}
@@ -673,7 +603,7 @@ const Dashboard = () => {
           className="md:col-span-1"
         />
         <Dialog open={isRadarOpen} onOpenChange={setIsRadarOpen}>
-          <DialogContent className="max-w-4xl bg-white rounded-2xl border-pink-200">
+          <DialogContent className="max-w-4xl bg-white rounded-2xl border-gray-200 shadow-soft-lg">
             <DialogHeader>
               <DialogTitle>Estrella de Gastos</DialogTitle>
               <DialogDescription>Explora tus gastos por categoría con detalle.</DialogDescription>
@@ -681,12 +611,12 @@ const Dashboard = () => {
             <div className="h-[480px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={categoryDataForChart.map(d => ({ category: d.name, value: d.value }))}>
-                  <PolarGrid gridType="circle" stroke={isDark ? "rgba(233,225,239,0.25)" : "#f5f5f5"} />
+                  <PolarGrid gridType="circle" stroke={isDark ? "rgba(233,225,239,0.25)" : "#e5e7eb"} />
                   <PolarAngleAxis dataKey="category" tick={{ fontSize: 12, fill: isDark ? "#E9E1EF" : "#4A404E" }} />
                   <PolarRadiusAxis angle={45} tick={{ fill: isDark ? "#E9E1EF" : "#4A404E" }} />
                   <Tooltip content={renderRadarTooltip} />
                   <Legend />
-                  <Radar dataKey="value" stroke="#FF7597" fill="#FF7597" fillOpacity={0.4} />
+                  <Radar dataKey="value" stroke="#5DBE8A" fill="#5DBE8A" fillOpacity={0.4} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>

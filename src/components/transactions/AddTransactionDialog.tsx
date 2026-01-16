@@ -1,9 +1,14 @@
 import React from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  ThemedDialog,
+  ThemedDialogContent,
+  ThemedDialogHeader,
+  ThemedDialogTitle,
+  ThemedDialogDescription,
+} from "@/components/ui/ThemedDialog";
 import TransactionForm from "@/components/transactions/TransactionForm";
-import { Heart } from "lucide-react";
+import { useTransactionMutations } from "@/hooks/useTransactionMutations";
+import { Sparkles } from "lucide-react";
 
 type Category = { id: number; name: string };
 
@@ -14,43 +19,47 @@ type Props = {
   onCreated?: () => Promise<void> | void;
 };
 
+/**
+ * AddTransactionDialog - Reusable dialog for adding new transactions
+ * Uses centralized mutation hook for CRUD operations
+ */
 const AddTransactionDialog = ({ open, onOpenChange, categories, onCreated }: Props) => {
-  const { toast } = useToast();
+  const { create, isCreating } = useTransactionMutations();
+
+  const handleSave = async (form: { name: string; amount: string; category_id: string; date: Date }) => {
+    if (!form.name || !form.amount) return;
+    
+    await create({
+      name: form.name,
+      amount: parseFloat(form.amount),
+      category_id: form.category_id,
+      date: form.date,
+    });
+    
+    onOpenChange(false);
+    await onCreated?.();
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30 dark:bg-gray-800 dark:border-pastel-pink/20">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary" />
+    <ThemedDialog open={open} onOpenChange={onOpenChange}>
+      <ThemedDialogContent>
+        <ThemedDialogHeader>
+          <ThemedDialogTitle icon={<Sparkles className="w-5 h-5" />}>
             Nueva Transacción
-          </DialogTitle>
-          <DialogDescription>Completa los detalles de tu nueva transacción aquí.</DialogDescription>
-        </DialogHeader>
+          </ThemedDialogTitle>
+          <ThemedDialogDescription>
+            Completa los detalles de tu nueva transacción.
+          </ThemedDialogDescription>
+        </ThemedDialogHeader>
         <TransactionForm
           initialData={{ id: 0, name: "", amount: "", category_id: "", date: new Date() }}
           categories={categories}
-          onSave={async (form) => {
-            if (!form.name || !form.amount) {
-              toast({ title: "Error", description: "Por favor completa los campos requeridos", variant: "destructive" });
-              return;
-            }
-            try {
-              const { error } = await supabase.from("transactions").insert([
-                { name: form.name, amount: parseFloat(form.amount), category_id: form.category_id, date: form.date }
-              ]);
-              if (error) throw error;
-              toast({ title: "Transacción añadida", description: "La transacción ha sido añadida con éxito" });
-              onOpenChange(false);
-              await onCreated?.();
-            } catch (err) {
-              toast({ title: "Error", description: "Hubo un error al procesar la transacción", variant: "destructive" });
-            }
-          }}
+          onSave={handleSave}
           onCancel={() => onOpenChange(false)}
+          isLoading={isCreating}
         />
-      </DialogContent>
-    </Dialog>
+      </ThemedDialogContent>
+    </ThemedDialog>
   );
 };
 

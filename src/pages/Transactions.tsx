@@ -11,7 +11,10 @@ import {
   RefreshCcw,
   Calendar,
   Edit,
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -26,27 +29,28 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
-import MonthSelector from "@/components/ui/MonthSelector";
 import { es } from "date-fns/locale";
 import ExportButton from "@/components/export/ExportButton";
 import FilterBar from "@/components/FilterBar";
 import TransactionForm from "@/components/transactions/TransactionForm";
+import { cn } from "@/lib/utils";
 
 const Transactions = () => {
   const { toast } = useToast();
   const { transactions: supabaseTransactions, categories: supabaseCategories, loading, error, refreshData } = useSupabaseData();
   const location = useLocation();
+  
+  // Filter states
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending";
-  } | null>(null);
+  
+  // Period selector states (unified with Dashboard)
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(new Date().getMonth());
 
   // Transaction form state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -59,80 +63,120 @@ const Transactions = () => {
     date: new Date()
   });
 
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
   const [showNoCategoryDialog, setShowNoCategoryDialog] = useState(false);
-  const [noCategoryEdits, setNoCategoryEdits] = useState([]);
+  const [noCategoryEdits, setNoCategoryEdits] = useState<any[]>([]);
   const [savingNoCategory, setSavingNoCategory] = useState(false);
 
-  // Estado para paginación
+  // Pagination state
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // removed local export state (migrated to ExportModal)
+  // Compute available years from transactions
+  const availableYears = useMemo(() => {
+    const years = new Set(supabaseTransactions.map(t => new Date(t.date).getFullYear()));
+    const currentYear = new Date().getFullYear();
+    years.add(currentYear);
+    return Array.from(years).sort((a, b) => b - a);
+  }, [supabaseTransactions]);
 
-  const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" = "ascending";
-
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
+  // Compute date range based on selected year/month
+  const dateRange = useMemo(() => {
+    if (selectedMonth !== null) {
+      const monthDate = new Date(selectedYear, selectedMonth, 1);
+      return {
+        start: startOfMonth(monthDate),
+        end: endOfMonth(monthDate)
+      };
     }
+    return {
+      start: new Date(selectedYear, 0, 1),
+      end: new Date(selectedYear, 11, 31, 23, 59, 59)
+    };
+  }, [selectedYear, selectedMonth]);
 
-    setSortConfig({ key, direction });
-  };
+  // Get filtered and sorted transactions
+  const filteredTransactions = useMemo(() => {
+    let result = [...supabaseTransactions];
 
-  const getSortedTransactions = () => {
-    let sortableTransactions = [...supabaseTransactions];
-
-    // Apply search filter
-    if (searchQuery) {
-      sortableTransactions = sortableTransactions.filter(transaction =>
-        transaction.name.toLowerCase().includes(searchQuery.toLowerCase())
+    // Filter by period (year/month) or custom date range
+    if (selectedDate) {
+      if (endDate) {
+        result = result.filter(t =>
+          isWithinInterval(new Date(t.date), { start: selectedDate, end: endDate })
+        );
+      } else {
+        result = result.filter(t => isSameDay(new Date(t.date), selectedDate));
+      }
+    } else {
+      result = result.filter(t =>
+        isWithinInterval(new Date(t.date), { start: dateRange.start, end: dateRange.end })
       );
     }
 
-    if (selectedCategories.length > 0) {
-      sortableTransactions = sortableTransactions.filter(transaction => selectedCategories.includes(transaction.categories?.id));
+    // Filter by search query
+    if (searchQuery) {
+      result = result.filter(t =>
+        t.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
-    // Apply date filter
-    if (selectedDate) {
-      if (endDate) {
-        // Range selection
-        sortableTransactions = sortableTransactions.filter(transaction =>
-          isWithinInterval(new Date(transaction.date), {
-            start: selectedDate,
-            end: endDate
-          })
-        );
-      } else {
-        // Single date selection
-        sortableTransactions = sortableTransactions.filter(transaction =>
-          isSameDay(new Date(transaction.date), selectedDate)
-        );
-      }
+    // Filter by categories
+    if (selectedCategories.length > 0 && selectedCategories.length < supabaseCategories.length) {
+      result = result.filter(t => selectedCategories.includes(t.categories?.id));
     }
 
-    // Sort by date descending (reciente a antiguo)
-    sortableTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by date descending
+    return result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [supabaseTransactions, selectedDate, endDate, dateRange, searchQuery, selectedCategories, supabaseCategories.length]);
 
-    // Sort by other config if set
-    if (sortConfig !== null && sortConfig.key !== 'date') {
-      sortableTransactions.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
+  // Pagination calculations
+  const totalRows = filteredTransactions.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  // Calculate totals for the period
+  const periodTotal = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const transactionCount = filteredTransactions.length;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategories, selectedDate, endDate, selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
+  // Initialize categories selection
+  useEffect(() => {
+    if (supabaseCategories.length > 0 && selectedCategories.length === 0) {
+      setSelectedCategories(supabaseCategories.map(c => c.id));
     }
+  }, [supabaseCategories]);
 
-    return sortableTransactions;
-  };
+  // Handle quick filters from navigation
+  useEffect(() => {
+    const state = location.state as any;
+    const quick = state?.quickFilter;
+    if (!quick) return;
+    
+    if (quick.type === 'all') {
+      setSearchQuery("");
+      setSelectedCategories(supabaseCategories.map(c => c.id));
+      setSelectedDate(undefined);
+      setEndDate(undefined);
+    } else if (quick.type === 'month' && quick.start && quick.end) {
+      setSelectedDate(new Date(quick.start));
+      setEndDate(new Date(quick.end));
+    } else if (quick.type === 'category' && typeof quick.id === 'number') {
+      setSelectedCategories([quick.id]);
+    }
+  }, [location.state, supabaseCategories]);
 
-  const handleEdit = transaction => {
+  const handleEdit = (transaction: any) => {
     setCurrentTransaction({
       id: transaction.id,
       name: transaction.name,
@@ -143,84 +187,40 @@ const Transactions = () => {
     setIsEditDialogOpen(true);
   };
 
-  const resetTransactionForm = () => {
-    setCurrentTransaction({
-      id: 0,
-      name: "",
-      amount: "",
-      category_id: "",
-      date: new Date()
-    });
+  const handleDeleteTransaction = async (id: number) => {
+    try {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Transacción eliminada", description: "La transacción ha sido eliminada con éxito" });
+      await refreshData();
+    } catch {
+      toast({ title: "Error", description: "No se pudo eliminar la transacción", variant: "destructive" });
+    }
   };
 
   const handleCategoryUpdate = async (id: number, category_id: string) => {
     try {
       const { error } = await supabase.from("transactions").update({ category_id }).eq("id", id);
       if (error) throw error;
-      toast({
-        title: "Categoría actualizada",
-        description: "La categoría ha sido actualizada con éxito"
-      });
+      toast({ title: "Categoría actualizada", description: "La categoría ha sido actualizada con éxito" });
       await refreshData();
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Hubo un error al actualizar la categoría",
-        variant: "destructive"
-      });
+    } catch {
+      toast({ title: "Error", description: "Hubo un error al actualizar la categoría", variant: "destructive" });
     }
   };
-
 
   const handleResetFilters = () => {
+    const now = new Date();
     setSearchQuery("");
-    setSelectedCategories([]);
+    setSelectedCategories(supabaseCategories.map(c => c.id));
     setSelectedDate(undefined);
     setEndDate(undefined);
-    setSortConfig(null);
-    setCurrentMonth(new Date());
-    toast({
-      title: "Filtros restablecidos",
-      description: "Se ha vuelto a la vista general"
-    });
+    setSelectedYear(now.getFullYear());
+    setSelectedMonth(now.getMonth());
+    toast({ title: "Filtros restablecidos", description: "Se ha vuelto a la vista del mes actual" });
   };
 
-  // Calculate if there are selected dates to show
-  const hasDateFilter = selectedDate !== undefined;
-  const displayDateFilter = () => {
-    if (!selectedDate) return "";
-    if (endDate) {
-      return `${format(selectedDate, "dd 'de' MMMM, yyyy")} al ${format(endDate, "dd 'de' MMMM, yyyy")}`;
-    }
-    return format(selectedDate, "dd 'de' MMMM, yyyy");
-  };
-
-  const memoizedCurrentTransaction = useMemo(() => currentTransaction, [
-    currentTransaction.id,
-    currentTransaction.name,
-    currentTransaction.amount,
-    currentTransaction.category_id,
-    currentTransaction.date
-  ]);
-
-  const handleDeleteTransaction = async (id) => {
-    try {
-      const { error } = await supabase.from("transactions").delete().eq("id", id);
-      if (error) throw error;
-      toast({
-        title: "Transacción eliminada",
-        description: "La transacción ha sido eliminada con éxito"
-      });
-      await refreshData();
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la transacción",
-        variant: "destructive"
-      });
-    }
-  };
-
+  // No category transactions handling
   const noCategoryTransactions = supabaseTransactions.filter(t => !t.category_id);
 
   const handleOpenNoCategoryDialog = () => {
@@ -228,7 +228,7 @@ const Transactions = () => {
     setShowNoCategoryDialog(true);
   };
 
-  const handleNoCategoryChange = (id, value) => {
+  const handleNoCategoryChange = (id: number, value: string) => {
     setNoCategoryEdits(edits => edits.map(t => t.id === id ? { ...t, newCategory: value } : t));
   };
 
@@ -243,121 +243,105 @@ const Transactions = () => {
     await refreshData();
   };
 
-  // Nueva función para saber si hay filtros activos
-  const hasActiveFilters = searchQuery || selectedCategories.length > 0 || selectedDate;
+  const memoizedCurrentTransaction = useMemo(() => currentTransaction, [
+    currentTransaction.id,
+    currentTransaction.name,
+    currentTransaction.amount,
+    currentTransaction.category_id,
+    currentTransaction.date
+  ]);
 
-  // Filtrado por mes seleccionado
-  const transactionsByMonth = useMemo(() => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    return supabaseTransactions.filter(transaction => {
-      const date = new Date(transaction.date);
-      return date >= start && date <= end;
-    });
-  }, [supabaseTransactions, currentMonth]);
-
-  // Decide qué transacciones mostrar
-  const transactionsToShow = hasActiveFilters ? getSortedTransactions() : transactionsByMonth;
-
-  const totalRows = transactionsToShow.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-  const indexOfFirstItem = (currentPage - 1) * rowsPerPage;
-  const indexOfLastItem = currentPage * rowsPerPage;
-  const paginatedTransactions = transactionsToShow.slice(indexOfFirstItem, indexOfLastItem);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategories, selectedDate, endDate, currentMonth]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [rowsPerPage]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
+  // Subtitle for current period
+  const periodSubtitle = useMemo(() => {
+    if (selectedDate && endDate) {
+      return `${format(selectedDate, "d MMM", { locale: es })} - ${format(endDate, "d MMM yyyy", { locale: es })}`;
     }
-  }, [totalPages, currentPage]);
-
-  const groupedFeed = React.useMemo(() => {
-    const groups: { label: string; items: typeof transactionsToShow }[] = [];
-    const byDate: Record<string, typeof transactionsToShow> = {};
-    transactionsToShow.forEach(t => {
-      const d = new Date(t.date);
-      const key = d.toDateString();
-      byDate[key] = byDate[key] || [];
-      byDate[key].push(t);
-    });
-    const entries = Object.entries(byDate).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    entries.forEach(([key, items]) => {
-      const d = new Date(key);
-      let label = d.toLocaleDateString();
-      if (isSameDay(d, today)) label = "Hoy";
-      else if (isSameDay(d, yesterday)) label = "Ayer";
-      groups.push({ label, items });
-    });
-    return groups;
-  }, [transactionsToShow]);
-
-  useEffect(() => {
-    const state = location.state as any;
-    const quick = state?.quickFilter;
-    if (!quick) return;
-    if (quick.type === 'all') {
-      setSearchQuery("");
-      setSelectedCategories(supabaseCategories.map(c => c.id));
-      setSelectedDate(undefined);
-      setEndDate(undefined);
-    } else if (quick.type === 'month' && quick.start && quick.end) {
-      setSelectedDate(new Date(quick.start));
-      setEndDate(new Date(quick.end));
-      setSearchQuery("");
-      if (supabaseCategories.length > 0) setSelectedCategories(supabaseCategories.map(c => c.id));
-    } else if (quick.type === 'category' && typeof quick.id === 'number') {
-      setSelectedCategories([quick.id]);
-      setSearchQuery("");
+    if (selectedDate) {
+      return format(selectedDate, "d 'de' MMMM, yyyy", { locale: es });
     }
-  }, [location.state, supabaseCategories]);
-
-  useEffect(() => {
-    if (supabaseCategories.length > 0 && selectedCategories.length === 0) {
-      setSelectedCategories(supabaseCategories.map(c => c.id));
+    if (selectedMonth !== null) {
+      const monthDate = new Date(selectedYear, selectedMonth, 1);
+      return format(monthDate, "MMMM yyyy", { locale: es });
     }
-  }, [supabaseCategories]);
+    return `Año ${selectedYear}`;
+  }, [selectedDate, endDate, selectedMonth, selectedYear]);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-pastel-green border-t-theme-green" />
+      </div>
+    );
+  }
 
-
-  if (loading) return <div>Cargando...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) {
+    return (
+      <div className="text-center text-red-500 py-8">
+        Error al cargar los datos: {error.message}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          <span className="text-primary">Transacciones</span>
-          <Heart className="inline ml-2 w-5 h-5 text-primary" />
-        </h1>
-        <div className="flex space-x-2">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-theme-green to-theme-sage bg-clip-text text-transparent">
+              Transacciones
+            </span>
+            <Heart className="inline ml-2 w-6 h-6 text-theme-green" />
+          </h1>
+          <p className="mt-1 text-muted-foreground text-sm">
+            {periodSubtitle} • {transactionCount} transacciones • S/ {periodTotal.toFixed(2)}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2 flex-wrap">
           <ExportButton transactions={supabaseTransactions} categories={supabaseCategories} />
-          <Button variant="outline" className="rounded-full px-3 text-sm border-pastel-pink/30" onClick={handleResetFilters}>
-            <RefreshCcw className="w-3 h-3 mr-1" /> Restablecer
+          
+          <Button
+            variant="outline"
+            onClick={handleResetFilters}
+            className={cn(
+              "rounded-xl px-4 text-sm",
+              "border-gray-200",
+              "hover:bg-pastel-mint/50",
+              "transition-all duration-200"
+            )}
+          >
+            <RefreshCcw className="w-3.5 h-3.5 mr-1.5" />
+            Restablecer
           </Button>
+          
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" /> Añadir Transacción
+              <Button className={cn(
+                "rounded-xl px-5",
+                "bg-gradient-to-r from-theme-green to-theme-sage",
+                "hover:shadow-glow-green",
+                "shadow-soft",
+                "transition-all duration-200"
+              )}>
+                <Plus className="w-4 h-4 mr-1.5" />
+                Nueva
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30 dark:bg-gray-800 dark:border-pastel-pink/20">
+            <DialogContent className={cn(
+              "sm:max-w-[425px]",
+              "bg-white/95 backdrop-blur-xl",
+              "border-gray-200",
+              "rounded-2xl shadow-soft-lg"
+            )}>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-primary" />
+                  <Sparkles className="w-5 h-5 text-theme-green" />
                   Nueva Transacción
                 </DialogTitle>
-                <DialogDescription>Completa los detalles de tu nueva transacción aquí.</DialogDescription>
+                <DialogDescription>
+                  Completa los detalles de tu nueva transacción.
+                </DialogDescription>
               </DialogHeader>
               <TransactionForm
                 initialData={{ id: 0, name: "", amount: "", category_id: "", date: new Date() }}
@@ -368,40 +352,273 @@ const Transactions = () => {
                     return;
                   }
                   try {
-                    const { error: insertError } = await supabase.from("transactions").insert([
-                      {
-                        name: form.name,
-                        amount: parseFloat(form.amount),
-                        category_id: form.category_id,
-                        date: form.date
-                      }
-                    ]);
+                    const { error: insertError } = await supabase.from("transactions").insert([{
+                      name: form.name,
+                      amount: parseFloat(form.amount),
+                      category_id: form.category_id,
+                      date: form.date
+                    }]);
                     if (insertError) throw insertError;
                     toast({ title: "Transacción añadida", description: "La transacción ha sido añadida con éxito" });
                     setIsAddDialogOpen(false);
                     await refreshData();
-                  } catch (err) {
+                  } catch {
                     toast({ title: "Error", description: "Hubo un error al procesar la transacción", variant: "destructive" });
                   }
                 }}
-                onCancel={() => {
-                  setIsAddDialogOpen(false);
-                }}
+                onCancel={() => setIsAddDialogOpen(false)}
               />
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
+      {/* Filter Bar */}
+      <FilterBar
+        categories={supabaseCategories}
+        selectedCategories={selectedCategories}
+        onSelectedCategoriesChange={setSelectedCategories}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        selectedDate={selectedDate}
+        endDate={endDate}
+        onDateSelect={setSelectedDate}
+        onRangeSelect={setEndDate}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onYearChange={setSelectedYear}
+        onMonthChange={setSelectedMonth}
+        availableYears={availableYears}
+        showPeriodSelector={true}
+        onReset={handleResetFilters}
+        expenses={supabaseTransactions.map(t => ({ date: new Date(t.date), amount: t.amount }))}
+      />
+
+      {/* Transactions Table */}
+      <Card className={cn(
+        "overflow-hidden",
+        "bg-white/80 dark:bg-gray-900/60 backdrop-blur-md",
+        "border-pink-100/30 dark:border-pink-900/20",
+        "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
+        "rounded-2xl transition-all duration-300"
+      )}>
+        <CardHeader className={cn(
+          "p-4 border-b",
+          "border-pink-100/30 dark:border-pink-900/20",
+          "bg-gradient-to-r from-pink-50/50 to-purple-50/30 dark:from-pink-950/20 dark:to-purple-950/10"
+        )}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-pink-500" />
+              <span className="text-sm font-medium text-muted-foreground">
+                Mostrando {paginatedTransactions.length} de {totalRows} transacciones
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gradient-to-r from-pink-50/80 to-purple-50/50 dark:from-pink-950/30 dark:to-purple-950/20 hover:bg-pink-50/90">
+                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Comercio</TableHead>
+                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Categoría</TableHead>
+                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Fecha</TableHead>
+                  <TableHead className="text-right text-pink-600 dark:text-pink-400 font-semibold">Monto</TableHead>
+                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold w-24">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedTransactions.length > 0 ? (
+                  paginatedTransactions.map((transaction, index) => (
+                    <TableRow
+                      key={transaction.id}
+                      className={cn(
+                        "group transition-all duration-200",
+                        "hover:bg-pink-50/60 dark:hover:bg-pink-950/20",
+                        index % 2 === 0 ? "bg-white/60 dark:bg-gray-900/40" : "bg-pink-50/20 dark:bg-pink-950/10"
+                      )}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center",
+                              "transition-transform duration-200 group-hover:scale-110"
+                            )}
+                            style={{ backgroundColor: `${transaction.categories?.color || '#FF7597'}15` }}
+                          >
+                            <span 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: transaction.categories?.color || '#FF7597' }}
+                            />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-800 dark:text-gray-200">
+                              {transaction.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {transaction.categories?.name || 'Sin categoría'}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {transaction.categories ? (
+                          <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
+                        ) : (
+                          <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
+                            <SelectTrigger className={cn(
+                              "h-8 max-w-[150px]",
+                              "bg-amber-50/80 dark:bg-amber-950/40",
+                              "border-amber-200 dark:border-amber-800"
+                            )}>
+                              <div className="flex items-center gap-1">
+                                <CircleAlert className="w-3.5 h-3.5 text-amber-500" />
+                                <span className="text-xs">Sin categoría</span>
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {supabaseCategories.map(category => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {format(new Date(transaction.date), "d MMM, yyyy", { locale: es })}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="font-bold text-gray-800 dark:text-gray-200">
+                          S/ {transaction.amount.toFixed(2)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(transaction)}
+                            className="h-8 w-8 hover:bg-pink-100 dark:hover:bg-pink-900/40 rounded-lg"
+                          >
+                            <Edit className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteTransaction(transaction.id)}
+                            className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-48">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                          <Star className="w-8 h-8 text-pink-400 animate-pulse" />
+                        </div>
+                        <p className="text-muted-foreground font-medium">No hay transacciones que mostrar</p>
+                        <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva transacción</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+
+        {/* Pagination Footer */}
+        <div className={cn(
+          "flex flex-col sm:flex-row items-center justify-between gap-4 p-4",
+          "border-t border-pink-100/30 dark:border-pink-900/20",
+          "bg-gradient-to-r from-pink-50/30 to-purple-50/20 dark:from-pink-950/10 dark:to-purple-950/5"
+        )}>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Filas:</span>
+            <Select value={rowsPerPage.toString()} onValueChange={val => setRowsPerPage(Number(val))}>
+              <SelectTrigger className="w-16 h-8 rounded-lg border-pink-200/50 dark:border-pink-800/30">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm px-3 py-1 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-pink-100/30 dark:border-pink-900/20">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* No Category Transactions Alert */}
+      {noCategoryTransactions.length > 0 && (
+        <Button
+          onClick={handleOpenNoCategoryDialog}
+          className={cn(
+            "w-full sm:w-auto rounded-full px-6 py-3",
+            "bg-gradient-to-r from-amber-400 to-orange-400",
+            "hover:from-amber-500 hover:to-orange-500",
+            "text-white font-medium shadow-lg shadow-amber-500/25",
+            "transition-all duration-200"
+          )}
+        >
+          <CircleAlert className="w-4 h-4 mr-2" />
+          {noCategoryTransactions.length} gasto{noCategoryTransactions.length > 1 ? 's' : ''} sin categoría
+        </Button>
+      )}
+
       {/* Edit Transaction Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30 dark:bg-gray-800 dark:border-pastel-pink/20">
+        <DialogContent className={cn(
+          "sm:max-w-[425px]",
+          "bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl",
+          "border-pink-100/50 dark:border-pink-900/30",
+          "rounded-2xl shadow-2xl"
+        )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5 text-primary" />
+              <Edit className="w-5 h-5 text-pink-500" />
               Editar Transacción
             </DialogTitle>
-            <DialogDescription>Modifica los detalles de esta transacción.</DialogDescription>
+            <DialogDescription>
+              Modifica los detalles de esta transacción.
+            </DialogDescription>
           </DialogHeader>
           <TransactionForm
             initialData={memoizedCurrentTransaction}
@@ -425,156 +642,43 @@ const Transactions = () => {
                 toast({ title: "Transacción actualizada", description: "La transacción ha sido actualizada con éxito" });
                 setIsEditDialogOpen(false);
                 await refreshData();
-              } catch (err) {
+              } catch {
                 toast({ title: "Error", description: "Hubo un error al procesar la transacción", variant: "destructive" });
               }
             }}
-            onCancel={() => {
-              setIsEditDialogOpen(false);
-              resetTransactionForm();
-            }}
+            onCancel={() => setIsEditDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>
 
-
-
-      {/* Date filter display */}
-      {hasDateFilter && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center text-sm text-gray-500">
-            <Calendar className="w-4 h-4 mr-1" />
-            Mostrando transacciones del: {displayDateFilter()}
-          </div>
-        </div>
-      )}
-
-      {/* Month selector */}
-      <div className="flex items-center justify-end mb-6">
-        <MonthSelector currentMonth={currentMonth} onChange={setCurrentMonth} />
-      </div>
-
-      {/* Tabla estilizada */}
-      <Card className="p-0 rounded-3xl shadow-card bg-white">
-        <CardHeader className="p-4 border-b border-pink-100/50">
-          <div className="flex items-center flex-wrap gap-4">
-            <FilterBar
-              categories={supabaseCategories}
-              selectedCategories={selectedCategories}
-              onSelectedCategoriesChange={setSelectedCategories}
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              selectedDate={selectedDate}
-              endDate={endDate}
-              onDateSelect={setSelectedDate}
-              onRangeSelect={setEndDate}
-              onReset={() => { setSearchQuery(''); setSelectedDate(undefined); setEndDate(undefined); setSelectedCategories(supabaseCategories.map(c => c.id)); }}
-              expenses={supabaseTransactions.map(t => ({ date: new Date(t.date), amount: t.amount }))}
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto md:overflow-visible scroll-smooth" style={{ scrollbarWidth: 'thin' }}>
-            <Table className="min-w-[800px]">
-              <TableHeader className="bg-primary/5">
-                <TableRow>
-                  <TableHead className="text-primary-hover font-bold">Comercio</TableHead>
-                  <TableHead className="text-primary-hover font-bold">Categoría</TableHead>
-                  <TableHead className="text-primary-hover font-bold">Fecha</TableHead>
-                  <TableHead className="text-right text-primary-hover font-bold">Monto</TableHead>
-                  <TableHead className="text-primary-hover font-bold">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedTransactions.length > 0 ? (
-                  paginatedTransactions.map(transaction => (
-                    <TableRow key={transaction.id} className="hover:bg-pink-50/50 [&>td]:py-3">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-8 h-8 rounded-full"
-                            style={{ backgroundColor: `${transaction.categories?.color || '#FFB7B2'}1A` }}
-                          />
-                          <div className="leading-tight">
-                            <div className="text-gray-700 font-medium">{transaction.name}</div>
-                            <div className="text-xs text-muted-foreground">{transaction.categories?.name || 'Sin categoría'}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {transaction.categories ? (
-                          <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
-                        ) : (
-                          <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
-                            <SelectTrigger className="h-8 border-pastel-pink/30 pr-2 mr-2 max-w-[160px] bg-amber-50/80 dark:bg-amber-950/40">
-                              <div className="flex items-center">
-                                <CircleAlert className="w-4 h-4 text-amber-500 mr-1" />
-                                <span>Sin categoría</span>
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {supabaseCategories.map(category => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-gray-500">{new Date(transaction.date).toLocaleDateString()}</span>
-                      </TableCell>
-                      <TableCell className="text-right font-bold">S/ {transaction.amount.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(transaction)} className="h-8 w-8 p-0">
-                          <Edit className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteTransaction(transaction.id)} className="h-8 w-8 p-0">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      <div className="flex flex-col items-center justify-center">
-                        <Star className="w-10 h-10 text-pastel-yellow mb-2 animate-pulse" />
-                        <p className="text-muted-foreground">No hay transacciones que mostrar</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* No Category Transactions Button */}
-      {noCategoryTransactions.length > 0 && (
-        <Button
-          className="mb-4 bg-pastel-yellow hover:bg-pastel-pink/80 text-pastel-foreground font-bold rounded-full px-6 py-2 shadow transition-all duration-200"
-          onClick={handleOpenNoCategoryDialog}
-        >
-          {noCategoryTransactions.length} gasto{noCategoryTransactions.length > 1 ? 's' : ''} sin categoría
-        </Button>
-      )}
-
-      {/* Dialog para asignar categorías */}
+      {/* No Category Assignment Dialog */}
       <Dialog open={showNoCategoryDialog} onOpenChange={setShowNoCategoryDialog}>
-        <DialogContent className="max-w-lg bg-white rounded-2xl border-pastel-yellow/30">
+        <DialogContent className={cn(
+          "max-w-lg",
+          "bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl",
+          "border-amber-200/50 dark:border-amber-900/30",
+          "rounded-2xl shadow-2xl"
+        )}>
           <DialogHeader>
-            <DialogTitle>Asignar categorías a gastos sin categoría</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <CircleAlert className="w-5 h-5 text-amber-500" />
+              Asignar categorías
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="space-y-3 max-h-80 overflow-y-auto">
             {noCategoryEdits.map(t => (
-              <div key={t.id} className="flex items-center gap-2 p-2 border-b">
-                <span className="flex-1 text-sm">{t.name}</span>
+              <div
+                key={t.id}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-xl",
+                  "bg-gray-50/80 dark:bg-gray-800/60",
+                  "border border-gray-100 dark:border-gray-700/50"
+                )}
+              >
+                <span className="flex-1 text-sm font-medium truncate">{t.name}</span>
                 <Select value={t.newCategory} onValueChange={val => handleNoCategoryChange(t.id, val)}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Seleccionar categoría" />
+                  <SelectTrigger className="w-36 h-8 rounded-lg">
+                    <SelectValue placeholder="Seleccionar" />
                   </SelectTrigger>
                   <SelectContent>
                     {supabaseCategories.map(cat => (
@@ -586,40 +690,20 @@ const Transactions = () => {
             ))}
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveNoCategory} disabled={savingNoCategory} className="bg-pastel-green hover:bg-pastel-pink/80 text-white font-bold rounded-full px-6 py-2 shadow">
+            <Button
+              onClick={handleSaveNoCategory}
+              disabled={savingNoCategory}
+              className={cn(
+                "rounded-full px-6",
+                "bg-gradient-to-r from-green-500 to-emerald-500",
+                "hover:from-green-600 hover:to-emerald-600"
+              )}
+            >
               Guardar cambios
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Controles de paginación */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm">Filas por página:</span>
-          <Select value={rowsPerPage.toString()} onValueChange={val => setRowsPerPage(Number(val))}>
-            <SelectTrigger className="w-20 border-pastel-pink/30">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
-            &lt;
-          </Button>
-          <span className="text-sm">Página {currentPage} de {totalPages}</span>
-          <Button variant="ghost" size="icon" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
-            &gt;
-          </Button>
-        </div>
-      </div>
-
     </div>
   );
 };

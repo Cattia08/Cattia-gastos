@@ -1,32 +1,66 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ===============================================
+   CATTIA THEME - Pastel Moderno Equilibrado
+   Para: Tu enamorado 💚
+   =============================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Outfit:wght@400;500;600&display=swap');
+
 @layer base {
   :root {
-    --background: 340 100% 98%;
-    --foreground: 270 18% 20%;
+    /* Background & Foreground */
+    --background: 0 0% 98.5%;
+    --foreground: 0 0% 24%;
+    
+    /* Cards & Popovers */
     --card: 0 0% 100%;
-    --card-foreground: 270 18% 20%;
+    --card-foreground: 0 0% 24%;
     --popover: 0 0% 100%;
-    --popover-foreground: 270 18% 20%;
-    --primary: 340 82% 66%;
+    --popover-foreground: 0 0% 24%;
+    
+    /* Primary - Rose equilibrado */
+    --primary: 338 60% 65%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 260 60% 70%;
-    --secondary-foreground: 270 18% 20%;
-    --muted: 330 25% 96%;
-    --muted-foreground: 270 14% 45%;
-    --accent: 340 82% 66%;
+    
+    /* Secondary - Lavender */
+    --secondary: 260 45% 78%;
+    --secondary-foreground: 0 0% 24%;
+    
+    /* Accent - Verde sage (favorito!) */
+    --accent: 152 42% 55%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 70% 50%;
+    
+    /* Muted */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    
+    /* Destructive */
+    --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 330 20% 90%;
-    --input: 330 20% 90%;
-    --ring: 340 82% 66%;
-    --radius: 1rem;
+    
+    /* Borders & Inputs */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 152 42% 55%;
+    
+    /* Radius */
+    --radius: 0.875rem;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 0 0% 24%;
+    --sidebar-primary: 152 42% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 152 30% 95%;
+    --sidebar-accent-foreground: 0 0% 24%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 152 42% 55%;
   }
 
+  /* Dark mode - NO TOCAR */
   .dark {
     --background: 276 36% 11%;
     --foreground: 276 25% 92%;
@@ -38,10 +72,10 @@
     --primary-foreground: 276 25% 92%;
     --secondary: 260 40% 60%;
     --secondary-foreground: 276 25% 92%;
+    --accent: 152 42% 55%;
+    --accent-foreground: 276 25% 92%;
     --muted: 276 20% 20%;
     --muted-foreground: 276 25% 80%;
-    --accent: 340 82% 66%;
-    --accent-foreground: 276 25% 92%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 276 25% 92%;
     --border: 330 20% 35%;
@@ -55,53 +89,209 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-tight;
   }
 }
 
 @layer components {
-  .card-pastel {
-    @apply bg-white/70 backdrop-blur-sm border border-white/20 shadow-md rounded-2xl transition-all hover:shadow-lg dark:bg-gray-800/70 dark:border-gray-700/30 dark:text-gray-100;
-  }
-  
-  .btn-pastel {
-    @apply rounded-full shadow-sm transition-all hover:shadow px-4 py-2 font-medium;
-  }
-  
-  .icon-container {
-    @apply flex items-center justify-center w-10 h-10 rounded-full;
+  /* ===============================================
+     CARD SYSTEM
+     =============================================== */
+  .card-theme {
+    @apply bg-white rounded-2xl shadow-soft border border-gray-100/80;
+    @apply transition-all duration-300;
   }
 
+  .card-theme:hover {
+    @apply shadow-soft-md;
+  }
+
+  .card-glass {
+    @apply bg-white/80 backdrop-blur-md rounded-2xl;
+    @apply border border-white/50 shadow-soft;
+  }
+
+  /* ===============================================
+     BUTTON SYSTEM
+     =============================================== */
+  .btn-theme {
+    @apply rounded-xl font-medium transition-all duration-200;
+    @apply px-4 py-2 shadow-soft;
+  }
+
+  .btn-theme:hover {
+    @apply shadow-soft-md transform -translate-y-0.5;
+  }
+
+  .btn-primary {
+    @apply btn-theme bg-theme-rose text-white;
+  }
+
+  .btn-primary:hover {
+    @apply bg-primary-hover shadow-glow-rose;
+  }
+
+  .btn-accent {
+    @apply btn-theme bg-theme-green text-white;
+  }
+
+  .btn-accent:hover {
+    @apply shadow-glow-green;
+  }
+
+  .btn-soft {
+    @apply btn-theme bg-pastel-cream text-foreground;
+  }
+
+  /* ===============================================
+     INPUT SYSTEM
+     =============================================== */
+  .input-theme {
+    @apply rounded-xl border border-gray-200 bg-white;
+    @apply px-4 py-2.5 transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-theme-green/30 focus:border-theme-green;
+  }
+
+  .input-theme::placeholder {
+    @apply text-muted-foreground;
+  }
+
+  /* ===============================================
+     ICON CONTAINERS
+     =============================================== */
+  .icon-container {
+    @apply flex items-center justify-center rounded-xl transition-all duration-200;
+  }
+
+  .icon-sm { @apply w-8 h-8; }
+  .icon-md { @apply w-10 h-10; }
+  .icon-lg { @apply w-12 h-12; }
+
+  .icon-rose { @apply bg-pastel-rose text-theme-rose; }
+  .icon-green { @apply bg-pastel-green text-theme-green; }
+  .icon-lavender { @apply bg-pastel-lavender text-theme-lavender; }
+  .icon-sky { @apply bg-pastel-sky text-blue-500; }
+
+  /* ===============================================
+     BADGE SYSTEM
+     =============================================== */
+  .badge-theme {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-rose { @apply bg-pastel-rose text-theme-rose; }
+  .badge-green { @apply bg-pastel-green text-theme-green; }
+  .badge-lavender { @apply bg-pastel-lavender text-theme-lavender; }
+
+  /* ===============================================
+     ANIMATIONS
+     =============================================== */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
   }
   
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===============================================
+     TABLE STYLES
+     =============================================== */
+  .table-theme {
+    @apply w-full;
+  }
+
+  .table-theme thead {
+    @apply bg-pastel-cream;
+  }
+
+  .table-theme th {
+    @apply text-sm font-semibold text-muted-foreground px-4 py-3 text-left;
+  }
+
+  .table-theme tbody tr {
+    @apply border-b border-gray-100 transition-colors duration-150;
+  }
+
+  .table-theme tbody tr:hover {
+    @apply bg-pastel-mint/30;
+  }
+
+  .table-theme td {
+    @apply px-4 py-3;
+  }
+
+  /* ===============================================
+     SCROLLBAR
+     =============================================== */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Outfit:wght@400;500&display=swap');
+/* ===============================================
+   CHART STYLES
+   =============================================== */
+.recharts-cartesian-axis-tick-value {
+  fill: #6b7280;
+  font-size: 12px;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dark mode chart adjustments */
 html.dark { color-scheme: dark; }
 
-/* Pastel Colors for charts and UI */
-:root {
-  --pastel-pink: #FFB7B2;
-  --pastel-green: #A8E6CF;
-  --pastel-yellow: #FDFFAB;
-  --pastel-blue: #B5D8EB;
-  --pastel-purple: #E5C5F1;
-}
-
-/* Additional dark mode adjustments */
 .dark .recharts-cartesian-grid-bg { fill: hsl(276 28% 16%); }
 .dark .recharts-cartesian-axis-line { stroke: #372f45; }
 .dark .recharts-cartesian-axis-tick-line { stroke: #372f45; }
@@ -111,7 +301,10 @@ html.dark { color-scheme: dark; }
   color: #E9E1EF !important;
 }
 
-.dark .recharts-tooltip-wrapper .recharts-default-tooltip { background-color: rgba(30,18,38,0.92) !important; border-color: rgba(255, 117, 151, 0.3) !important; }
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip { 
+  background-color: rgba(30,18,38,0.92) !important; 
+  border-color: rgba(255, 117, 151, 0.3) !important; 
+}
 
 .dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item {
   color: #E9E1EF !important;
@@ -120,4 +313,3 @@ html.dark { color-scheme: dark; }
 .dark .recharts-polar-grid line {
   stroke: rgba(233, 225, 239, 0.25);
 }
-/* Los estilos principales se derivan de variables Tailwind; no forzar body */
