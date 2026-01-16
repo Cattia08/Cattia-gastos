@@ -12,7 +12,6 @@ const Card = React.forwardRef<
       "rounded-2xl border bg-card text-card-foreground shadow-card",
       className
     )}
-    data-catwalker="card"
     {...props}
   />
 ))
