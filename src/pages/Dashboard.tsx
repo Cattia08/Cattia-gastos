@@ -2,14 +2,16 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Heart,
-  PieChart,
-  Calendar,
-  CircleDollarSign,
-  RefreshCcw,
-  Tag,
-  TrendingUp
-} from "lucide-react";
+  FaHeart,
+  FaChartPie,
+  FaCalendarAlt,
+  FaDollarSign,
+  FaSyncAlt,
+  FaTag,
+  FaChartLine,
+  FaFire,
+  FaChartBar
+} from "react-icons/fa";
 import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +25,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "r
 import { format, isSameDay, isWithinInterval, startOfMonth, endOfMonth, differenceInCalendarDays, formatDistanceToNow, getDaysInMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { usePersistedFilters } from "@/hooks/usePersistedFilters";
 import {
   Dialog,
   DialogContent,
@@ -50,12 +53,22 @@ interface Expense {
 
 const Dashboard = () => {
   const { toast } = useToast();
-  const { transactions, income, categories, loading, error } = useSupabaseData();
+  const { transactions, income, categories, paymentMethods, loading, error } = useSupabaseData();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(new Date().getMonth());
+  
+  // Persisted filter state
+  const {
+    filters,
+    setSelectedYear,
+    setSelectedMonth,
+    setSelectedCategories,
+    setSearchQuery,
+    resetFilters: resetPersistedFilters,
+    initializeSelections,
+  } = usePersistedFilters();
+  
+  const { selectedYear, selectedMonth, selectedCategories, searchQuery } = filters;
+  
   const [filteredExpenses, setFilteredExpenses] = useState([]);
   const [expenseData, setExpenseData] = useState([]);
   const [isDark, setIsDark] = useState<boolean>(() => document.documentElement.classList.contains('dark'));
@@ -483,22 +496,19 @@ const Dashboard = () => {
 
   // Reset all filters
   const handleResetFilters = () => {
-    const now = new Date();
-    setSearchQuery("");
-    setSelectedYear(now.getFullYear());
-    setSelectedMonth(now.getMonth());
-    setSelectedCategories(categories.map(cat => cat.id));
+    resetPersistedFilters();
     toast({
       title: "Filtros restablecidos",
       description: "Se ha vuelto a la vista del mes actual"
     });
   };
 
+  // Initialize categories when data loads
   useEffect(() => {
-    if (categories.length > 0 && selectedCategories.length === 0) {
-      setSelectedCategories(categories.map(cat => cat.id));
+    if (categories.length > 0) {
+      initializeSelections(categories, []);
     }
-  }, [categories]);
+  }, [categories, initializeSelections]);
 
   // Generate sparkline data from historical months
   const sparklineMonthlyData = useMemo(() => {
@@ -565,31 +575,23 @@ const Dashboard = () => {
           <div>
             <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-text-emphasis dark:text-foreground">
               Hola, Catt!
-              <Heart className="inline ml-3 w-8 h-8 text-theme-green animate-pulse" />
+              <FaHeart className="inline ml-3 w-8 h-8 text-theme-green animate-pulse" />
             </h1>
             <div className="mt-3 flex items-center text-text-secondary">
-              <Calendar className="w-5 h-5 mr-2 text-theme-green" />
+              <FaCalendarAlt className="w-5 h-5 mr-2 text-theme-green" />
               <span className="text-base">{format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}</span>
             </div>
-            {/* Year/Month selectors */}
-            <DatePeriodSelector
-              selectedYear={selectedYear}
-              selectedMonth={selectedMonth}
-              onYearChange={setSelectedYear}
-              onMonthChange={setSelectedMonth}
-              availableYears={availableYears}
-              className="mt-4"
-            />
+
           </div>
         </div>
         <div className="flex gap-3">
-          <ExportButton transactions={transactions} categories={categories} />
+          <ExportButton transactions={transactions} categories={categories} paymentMethods={paymentMethods} />
           <Button
             variant="outline"
             onClick={handleResetFilters}
             className="rounded-xl px-4 text-sm border-border hover:bg-pastel-mint/30 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-all"
           >
-            <RefreshCcw className="w-3.5 h-3.5 mr-1.5" /> Restablecer
+            <FaSyncAlt className="w-3.5 h-3.5 mr-1.5" /> Restablecer
           </Button>
           <Button
             variant="outline"
@@ -609,7 +611,7 @@ const Dashboard = () => {
             // Empty state for hero card
             <div className="rounded-2xl border border-pink-100 dark:border-border shadow-soft-md bg-category-tint-rose p-8 max-w-lg w-full text-center">
               <div className="w-16 h-16 rounded-full bg-pastel-rose mx-auto mb-4 flex items-center justify-center">
-                <CircleDollarSign className="w-10 h-10 text-theme-rose" />
+                <FaDollarSign className="w-10 h-10 text-theme-rose" />
               </div>
               <h3 className="text-base font-semibold text-text-secondary mb-2">Sin gastos este mes</h3>
               <p className="text-4xl font-extrabold text-text-emphasis dark:text-foreground">S/ 0.00</p>
@@ -620,7 +622,7 @@ const Dashboard = () => {
             <DashboardCard
               title={selectedMonth !== null ? "Gasto del Mes" : "Gasto del Año"}
               value={periodTotal}
-              icon={<CircleDollarSign className="w-10 h-10 text-theme-rose" />}
+              icon={<FaDollarSign className="w-10 h-10 text-theme-rose" />}
               iconColor="bg-pastel-rose"
               variant="primary"
               tint="rose"
@@ -631,7 +633,7 @@ const Dashboard = () => {
               showTrendIndicator={true}
               previousValue={previousMonthTotal}
               interactive
-              onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end } } })}
+              onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end, categories: selectedCategories, year: selectedYear, month: selectedMonth } } })}
             />
           )}
         </div>
@@ -641,7 +643,7 @@ const Dashboard = () => {
           {/* Card 1: Día con Mayor Gasto */}
           <DashboardStatCard
             title="Día con Mayor Gasto"
-            icon="🔥"
+            icon={<FaFire className="w-5 h-5 text-orange-500" />}
             value={highestSpendingDay.amount}
             isCurrency={true}
             subtitle={highestSpendingDay.formattedDate}
@@ -649,7 +651,7 @@ const Dashboard = () => {
             accentColor="orange"
             interactive
             onClick={() => highestSpendingDay.date && navigate('/transacciones', {
-              state: { quickFilter: { type: 'day', date: highestSpendingDay.date } }
+              state: { quickFilter: { type: 'day', date: highestSpendingDay.date, categories: selectedCategories, year: selectedYear, month: selectedMonth } }
             })}
           />
 
@@ -657,7 +659,7 @@ const Dashboard = () => {
           <DashboardStatCard
             title="Categoría más gastada"
             icon={
-              <PieChart
+              <FaChartPie
                 className="w-5 h-5"
                 style={{ color: topCategoryDetails.color }}
               />
@@ -671,34 +673,43 @@ const Dashboard = () => {
             progressPercent={topCategoryDetails.percentage}
             progressColor={topCategoryDetails.color}
             interactive
-            onClick={() => topCategoryId && navigate('/transacciones', { state: { quickFilter: { type: 'category', id: topCategoryId } } })}
+            onClick={() => topCategoryId && navigate('/transacciones', { state: { quickFilter: { type: 'category', id: topCategoryId, year: selectedYear, month: selectedMonth } } })}
           />
 
-          {/* Card 3: Actividad del Mes */}
+          {/* Card 3: Actividad del Mes/Año */}
           <DashboardStatCard
-            title="Actividad del Mes"
-            icon="📊"
+            title={selectedMonth !== null ? "Actividad del Mes" : "Actividad del Año"}
+            icon={<FaChartBar className="w-5 h-5 text-blue-500" />}
             value={`${activityStats.transactionCount} transacciones`}
             isCurrency={false}
             subtitle={activityStats.lastTransactionTime}
             secondarySubtitle={activityStats.daysText}
             accentColor="blue"
             interactive
-            onClick={() => navigate('/transacciones')}
+            onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end, categories: selectedCategories, year: selectedYear, month: selectedMonth } } })}
           />
         </div>
       </div>
 
-      {/* Barra de filtros de categoría */}
-      <div className="mt-2">
+      {/* Barra de filtros de categoría - movida junto a los otros filtros */}
+      <div className="mt-2 flex items-center gap-3 flex-wrap">
+        <DatePeriodSelector
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          onYearChange={setSelectedYear}
+          onMonthChange={setSelectedMonth}
+          availableYears={availableYears}
+          compact
+        />
         <MultiSelectFilter
           label="Categorías"
-          icon={Tag}
+          icon={FaTag}
           iconColorClass="text-theme-lavender"
           items={categories}
           selectedIds={selectedCategories}
           onSelectionChange={setSelectedCategories}
           showCount={true}
+          compact
         />
       </div>
 

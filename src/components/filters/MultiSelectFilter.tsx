@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, LucideIcon, Filter } from "lucide-react";
+import { Check, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ export interface FilterItem {
 
 interface MultiSelectFilterProps {
   label: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   iconColorClass?: string;
   items: FilterItem[];
   selectedIds: number[];
@@ -139,7 +139,7 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
                   : "border-gray-300"
               )}
               style={{ 
-                backgroundColor: isSelected ? (item.color || '#5DBE8A') : 'transparent',
+                backgroundColor: isSelected ? (item.color || 'var(--color-theme-green)') : 'transparent',
                 borderColor: isSelected ? 'transparent' : undefined
               }}
               >

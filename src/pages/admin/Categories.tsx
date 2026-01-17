@@ -294,7 +294,7 @@ const Categories = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className={cn(
           "sm:max-w-[420px]",
-          "bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl",
+          \"bg-white dark:bg-gray-900\",
           "border-pink-100/50 dark:border-pink-900/30",
           "rounded-2xl shadow-2xl"
         )}>

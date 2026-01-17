@@ -4,7 +4,7 @@ import { InputWithIcon } from "@/components/ui/InputWithIcon";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
 import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
-import { Search, Calendar as CalendarIcon, X, CreditCard, Tag } from "lucide-react";
+import { FaSearch, FaCalendarAlt, FaTimes, FaCreditCard, FaTag } from "react-icons/fa";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Category, PaymentMethod } from "@/types";
@@ -80,7 +80,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             "focus:ring-2 focus:ring-theme-green/30 focus:border-theme-green",
             "transition-all duration-200"
           )}
-          icon={<Search className="w-4 h-4 text-theme-green" />}
+          icon={<FaSearch className="w-4 h-4 text-theme-green" />}
         />
       </div>
 
@@ -101,7 +101,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {/* Category Filter */}
         <MultiSelectFilter
           label="Categorías"
-          icon={Tag}
+          icon={FaTag}
           iconColorClass="text-theme-lavender"
           items={categories}
           selectedIds={selectedCategories}
@@ -114,7 +114,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {paymentMethods.length > 0 && onSelectedPaymentMethodsChange && (
           <MultiSelectFilter
             label="Métodos"
-            icon={CreditCard}
+            icon={FaCreditCard}
             iconColorClass="text-theme-blue"
             items={paymentMethods}
             selectedIds={selectedPaymentMethods}
@@ -138,7 +138,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 selectedDate && "ring-2 ring-theme-rose/30 border-theme-rose"
               )}
             >
-              <CalendarIcon className={cn("mr-2 text-theme-rose", compact ? "w-3.5 h-3.5" : "w-4 h-4")} />
+              <FaCalendarAlt className={cn("mr-2 text-theme-rose", compact ? "w-3.5 h-3.5" : "w-4 h-4")} />
               {selectedDate && endDate
                 ? `${format(selectedDate, "dd MMM")} - ${format(endDate, "dd MMM")}`
                 : selectedDate
@@ -179,7 +179,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             !hasActiveFilters && "opacity-40 pointer-events-none"
           )}
         >
-          <X className={cn("mr-1", compact ? "w-3 h-3" : "w-3.5 h-3.5")} />
+          <FaTimes className={cn("mr-1", compact ? "w-3 h-3" : "w-3.5 h-3.5")} />
           Limpiar
         </Button>
       </div>

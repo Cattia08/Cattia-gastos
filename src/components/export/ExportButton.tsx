@@ -1,27 +1,53 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { FaFileExport } from "react-icons/fa";
 import ExportModal from "@/components/export/ExportModal";
+import { cn } from "@/lib/utils";
+import type { ExportTransaction } from "@/lib/export";
 
-type Tx = { id: number; name: string; amount: number; date: string; category_id?: string | number };
-type Category = { id: number; name: string };
+type Category = { id: number; name: string; color?: string };
+type PaymentMethod = { id: number; name: string };
 
 type ExportButtonProps = {
-  transactions: Tx[];
+  transactions: ExportTransaction[];
   categories: Category[];
+  paymentMethods?: PaymentMethod[];
   className?: string;
 };
 
-const ExportButton: React.FC<ExportButtonProps> = ({ transactions, categories, className }) => {
+const ExportButton: React.FC<ExportButtonProps> = ({ 
+  transactions, 
+  categories, 
+  paymentMethods = [],
+  className 
+}) => {
   const [open, setOpen] = useState(false);
+  
   return (
     <>
-      <Button variant="outline" className={className || "rounded-full px-3 text-sm border-pastel-pink/30"} onClick={() => setOpen(true)}>
+      <Button 
+        variant="outline" 
+        className={cn(
+          "rounded-xl px-4 text-sm",
+          "border-gray-200 hover:border-theme-green/40",
+          "hover:bg-pastel-mint/30",
+          "transition-all duration-200",
+          className
+        )} 
+        onClick={() => setOpen(true)}
+      >
+        <FaFileExport className="w-4 h-4 mr-2 text-theme-green" />
         Exportar
       </Button>
-      <ExportModal open={open} onOpenChange={setOpen} transactions={transactions} categories={categories} />
+      <ExportModal 
+        open={open} 
+        onOpenChange={setOpen} 
+        transactions={transactions} 
+        categories={categories}
+        paymentMethods={paymentMethods}
+      />
     </>
   );
 };
 
 export default ExportButton;
-

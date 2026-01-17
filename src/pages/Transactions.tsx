@@ -4,19 +4,19 @@ import { useThemedToast } from "@/hooks/useThemedToast";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { supabase } from "@/lib/supabase";
 import {
-  Plus,
-  Star,
-  Heart,
-  CircleAlert,
-  RefreshCcw,
-  Calendar,
-  Edit,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Sparkles,
-  CreditCard
-} from "lucide-react";
+  FaPlus,
+  FaStar,
+  FaHeart,
+  FaExclamationCircle,
+  FaSyncAlt,
+  FaCalendarAlt,
+  FaEdit,
+  FaTrash,
+  FaChevronLeft,
+  FaChevronRight,
+  FaMagic,
+  FaCreditCard
+} from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -38,23 +38,30 @@ import FilterBar from "@/components/FilterBar";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import { cn } from "@/lib/utils";
 import { groupTransactionsByDate } from "@/lib/dateGrouping";
+import { usePersistedFilters } from "@/hooks/usePersistedFilters";
 
 const Transactions = () => {
   const toast = useThemedToast();
   const { transactions: supabaseTransactions, categories: supabaseCategories, paymentMethods, loading, error, refreshData } = useSupabaseData();
   const location = useLocation();
 
+  // Persisted filter state (shared with Dashboard)
+  const {
+    filters,
+    setSelectedYear,
+    setSelectedMonth,
+    setSelectedCategories,
+    setSelectedPaymentMethods,
+    setSearchQuery,
+    resetFilters: resetPersistedFilters,
+    initializeSelections,
+  } = usePersistedFilters();
+  
+  const { selectedYear, selectedMonth, selectedCategories, selectedPaymentMethods, searchQuery } = filters;
 
-  // Filter states
+  // Local date range state (not persisted - specific to transactions view)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<number[]>([]);
-
-  // Period selector states (unified with Dashboard)
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(new Date().getMonth());
 
   // Transaction form state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -165,21 +172,30 @@ const Transactions = () => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [totalPages, currentPage]);
 
-  // Initialize categories and payment methods selection
+  // Initialize categories and payment methods when data loads
   useEffect(() => {
-    if (supabaseCategories.length > 0 && selectedCategories.length === 0) {
-      setSelectedCategories(supabaseCategories.map(c => c.id));
+    if (supabaseCategories.length > 0 || paymentMethods.length > 0) {
+      initializeSelections(supabaseCategories, paymentMethods);
     }
-    if (paymentMethods.length > 0 && selectedPaymentMethods.length === 0) {
-      setSelectedPaymentMethods(paymentMethods.map(m => m.id));
-    }
-  }, [supabaseCategories, paymentMethods]);
+  }, [supabaseCategories, paymentMethods, initializeSelections]);
 
   // Handle quick filters from navigation
   useEffect(() => {
     const state = location.state as any;
     const quick = state?.quickFilter;
     if (!quick) return;
+
+    // Apply preserved year/month filters if available
+    if (quick.year !== undefined) {
+      setSelectedYear(quick.year);
+    }
+    if (quick.month !== undefined) {
+      setSelectedMonth(quick.month);
+    }
+    // Apply preserved categories if available
+    if (quick.categories && Array.isArray(quick.categories)) {
+      setSelectedCategories(quick.categories);
+    }
 
     if (quick.type === 'all') {
       setSearchQuery("");
@@ -191,6 +207,14 @@ const Transactions = () => {
       setEndDate(new Date(quick.end));
     } else if (quick.type === 'category' && typeof quick.id === 'number') {
       setSelectedCategories([quick.id]);
+    } else if (quick.type === 'day' && quick.date) {
+      setSelectedDate(new Date(quick.date));
+      setEndDate(undefined);
+    } else if (quick.type === 'period' && quick.start && quick.end) {
+      // For period filter, use the year/month selectors instead of date range
+      // This way the period selector shows the correct period
+      setSelectedDate(undefined);
+      setEndDate(undefined);
     }
   }, [location.state, supabaseCategories]);
 
@@ -229,14 +253,9 @@ const Transactions = () => {
   };
 
   const handleResetFilters = () => {
-    const now = new Date();
-    setSearchQuery("");
-    setSelectedCategories(supabaseCategories.map(c => c.id));
-    setSelectedPaymentMethods(paymentMethods.map(m => m.id));
+    resetPersistedFilters();
     setSelectedDate(undefined);
     setEndDate(undefined);
-    setSelectedYear(now.getFullYear());
-    setSelectedMonth(now.getMonth());
     toast.info({ title: "Filtros restablecidos", description: "Se ha vuelto a la vista del mes actual" });
   };
 
@@ -314,7 +333,7 @@ const Transactions = () => {
             <span className="bg-gradient-to-r from-theme-green to-theme-sage bg-clip-text text-transparent">
               Transacciones
             </span>
-            <Heart className="inline ml-2 w-6 h-6 text-theme-green" />
+            <FaHeart className="inline ml-2 w-6 h-6 text-theme-green" />
           </h1>
           <p className="mt-1 text-muted-foreground text-sm">
             {periodSubtitle} • {transactionCount} transacciones • S/ {periodTotal.toFixed(2)}
@@ -334,7 +353,7 @@ const Transactions = () => {
               "transition-all duration-200"
             )}
           >
-            <RefreshCcw className="w-3.5 h-3.5 mr-1.5" />
+            <FaSyncAlt className="w-3.5 h-3.5 mr-1.5" />
             Restablecer
           </Button>
 
@@ -350,14 +369,14 @@ const Transactions = () => {
                 "shadow-soft",
                 "transition-colors duration-150"
               )}>
-                <Plus className="w-4 h-4 mr-2" />
+                <FaPlus className="w-4 h-4 mr-2" />
                 Agregar Transacción
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] bg-white border-pastel-green/30 rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-theme-green" />
+                  <FaPlus className="w-5 h-5 text-theme-green" />
                   Nueva Transacción
                 </DialogTitle>
                 <DialogDescription>
@@ -423,7 +442,7 @@ const Transactions = () => {
       {/* Transactions Table */}
       <Card className={cn(
         "overflow-hidden",
-        "bg-white/80 dark:bg-gray-900/60 backdrop-blur-md",
+        "bg-white dark:bg-gray-900",
         "border-pink-100/30 dark:border-pink-900/20",
         "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
         "rounded-2xl transition-all duration-300"
@@ -435,7 +454,7 @@ const Transactions = () => {
         )}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-pink-500" />
+              <FaCalendarAlt className="w-4 h-4 text-pink-500" />
               <span className="text-sm font-medium text-muted-foreground">
                 Mostrando {paginatedTransactions.length} de {totalRows} transacciones
               </span>
@@ -503,7 +522,7 @@ const Transactions = () => {
                                 <div className="text-xs text-text-secondary mt-1">
                                   {transaction.categories?.name || (
                                     <span className="badge-uncategorized">
-                                      <CircleAlert className="w-3 h-3" />
+                                      <FaExclamationCircle className="w-3 h-3" />
                                       Sin categoría
                                     </span>
                                   )}
@@ -522,7 +541,7 @@ const Transactions = () => {
                                   "border-amber-200 dark:border-amber-800"
                                 )}>
                                   <div className="flex items-center gap-1">
-                                    <CircleAlert className="w-3.5 h-3.5 text-amber-500" />
+                                    <FaExclamationCircle className="w-3.5 h-3.5 text-amber-500" />
                                     <span className="text-xs">Seleccionar</span>
                                   </div>
                                 </SelectTrigger>
@@ -539,7 +558,7 @@ const Transactions = () => {
                           <TableCell className="py-3.5">
                             {transaction.payment_methods ? (
                               <div className="flex items-center gap-1.5 text-sm text-text-secondary">
-                                <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
+                                <FaCreditCard className="w-3.5 h-3.5 text-muted-foreground" />
                                 {transaction.payment_methods.name}
                               </div>
                             ) : (
@@ -564,7 +583,7 @@ const Transactions = () => {
                                 onClick={() => handleEdit(transaction)}
                                 className="transaction-action-btn edit"
                               >
-                                <Edit className="h-4 w-4 text-muted-foreground group-hover:text-pink-500 transition-colors" />
+                                <FaEdit className="h-4 w-4 text-muted-foreground group-hover:text-pink-500 transition-colors" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -572,7 +591,7 @@ const Transactions = () => {
                                 onClick={() => handleDeleteTransaction(transaction.id)}
                                 className="transaction-action-btn delete"
                               >
-                                <Trash2 className="h-4 w-4 text-red-400 group-hover:text-red-500 transition-colors" />
+                                <FaTrash className="h-4 w-4 text-red-400 group-hover:text-red-500 transition-colors" />
                               </Button>
                             </div>
                           </TableCell>
@@ -585,7 +604,7 @@ const Transactions = () => {
                     <TableCell colSpan={6} className="h-48">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                          <Star className="w-8 h-8 text-pink-400 animate-pulse" />
+                          <FaStar className="w-8 h-8 text-pink-400 animate-pulse" />
                         </div>
                         <p className="text-text-secondary font-medium">No hay transacciones que mostrar</p>
                         <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva transacción</p>
@@ -627,7 +646,7 @@ const Transactions = () => {
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <FaChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm px-3 py-1 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-pink-100/30 dark:border-pink-900/20">
               {currentPage} / {totalPages}
@@ -639,7 +658,7 @@ const Transactions = () => {
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
             >
-              <ChevronRight className="h-4 w-4" />
+              <FaChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -657,7 +676,7 @@ const Transactions = () => {
             "transition-all duration-200"
           )}
         >
-          <CircleAlert className="w-4 h-4 mr-2" />
+          <FaExclamationCircle className="w-4 h-4 mr-2" />
           {noCategoryTransactions.length} gasto{noCategoryTransactions.length > 1 ? 's' : ''} sin categoría
         </Button>
       )}
@@ -666,13 +685,13 @@ const Transactions = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className={cn(
           "sm:max-w-[425px]",
-          "bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl",
+          "bg-white dark:bg-gray-900",
           "border-pink-100/50 dark:border-pink-900/30",
           "rounded-2xl shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5 text-pink-500" />
+              <FaEdit className="w-5 h-5 text-pink-500" />
               Editar Transacción
             </DialogTitle>
             <DialogDescription>
@@ -716,13 +735,13 @@ const Transactions = () => {
       <Dialog open={showNoCategoryDialog} onOpenChange={setShowNoCategoryDialog}>
         <DialogContent className={cn(
           "max-w-lg",
-          "bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl",
+          "bg-white dark:bg-gray-900",
           "border-amber-200/50 dark:border-amber-900/30",
           "rounded-2xl shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CircleAlert className="w-5 h-5 text-amber-500" />
+              <FaExclamationCircle className="w-5 h-5 text-amber-500" />
               Asignar categorías
             </DialogTitle>
           </DialogHeader>

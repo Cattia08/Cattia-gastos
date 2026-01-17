@@ -51,7 +51,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-[10px] border-b border-pastel-pink/20 shadow-soft-glow">
+    <nav className="sticky top-0 z-50 w-full bg-white border-b border-pastel-pink/20 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Heart className="w-5 h-5 text-primary" />

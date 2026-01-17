@@ -55,7 +55,7 @@ export const useThemedToast = (options?: UseThemedToastOptions) => {
     toast({
       title: `${catEmojis[type]} ${toastOptions.title}`,
       description: toastOptions.description,
-      className: `${styles[type]} rounded-2xl border-2 shadow-soft-glow backdrop-blur-sm animate-slide-in-right`,
+      className: `${styles[type]} rounded-2xl border-2 shadow-lg animate-slide-in-right`,
       duration: durations[type],
     });
   };

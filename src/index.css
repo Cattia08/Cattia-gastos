@@ -161,8 +161,8 @@
   }
 
   .card-glass {
-    @apply bg-white/80 backdrop-blur-md rounded-2xl;
-    @apply border border-white/50 shadow-soft;
+    @apply bg-white/95 rounded-2xl;
+    @apply border border-gray-100 shadow-soft;
   }
 
   /* ===============================================
@@ -445,7 +445,7 @@
     background: linear-gradient(135deg,
         hsl(var(--muted) / 0.95) 0%,
         hsl(var(--background) / 0.9) 100%);
-    @apply backdrop-blur-md;
+    @apply bg-muted/95;
     @apply text-text-primary capitalize;
     @apply border-b-2 border-pink-200/40 dark:border-pink-800/30;
     @apply shadow-sm;
