@@ -62,7 +62,7 @@ export function usePersistedFilters() {
 
   // Initialize categories/payment methods when data loads
   const initializeSelections = useCallback((
-    categories: { id: number }[],
+    categories: { id: number; name: string }[],
     paymentMethods: { id: number }[]
   ) => {
     setFiltersState(prev => {
@@ -70,7 +70,10 @@ export function usePersistedFilters() {
       
       // Only initialize if empty (first load or after data loads)
       if (prev.selectedCategories.length === 0 && categories.length > 0) {
-        updates.selectedCategories = categories.map(c => c.id);
+        // Exclude "Otros" category by default
+        updates.selectedCategories = categories
+          .filter(c => c.name.toLowerCase() !== 'otros')
+          .map(c => c.id);
       }
       if (prev.selectedPaymentMethods.length === 0 && paymentMethods.length > 0) {
         updates.selectedPaymentMethods = paymentMethods.map(m => m.id);

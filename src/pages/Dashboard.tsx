@@ -76,6 +76,16 @@ const Dashboard = () => {
   const [isFilteredDialogOpen, setIsFilteredDialogOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
+  // Read user name from localStorage
+  const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const name = localStorage.getItem('sidebarName') || 'Catt';
+      setSidebarName(name);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
   // Calculate available years from transactions
   const availableYears = useMemo(() => {
     const years = new Set(transactions.map(t => new Date(t.date).getFullYear()));
@@ -574,7 +584,7 @@ const Dashboard = () => {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-text-emphasis dark:text-foreground">
-              Hola, Catt!
+              Hola, {sidebarName}!
               <FaHeart className="inline ml-3 w-8 h-8 text-theme-green animate-pulse" />
             </h1>
             <div className="mt-3 flex items-center text-text-secondary">
@@ -594,6 +604,28 @@ const Dashboard = () => {
             ✨ Insights
           </Button>
         </div>
+      </div>
+
+      {/* Filters - placed before cards for better hierarchy */}
+      <div className="flex items-center gap-3 flex-wrap bg-white/50 dark:bg-card/50 rounded-xl p-3">
+        <DatePeriodSelector
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          onYearChange={setSelectedYear}
+          onMonthChange={setSelectedMonth}
+          availableYears={availableYears}
+          compact
+        />
+        <MultiSelectFilter
+          label="Categorías"
+          icon={FaTag}
+          iconColorClass="text-theme-lavender"
+          items={categories}
+          selectedIds={selectedCategories}
+          onSelectionChange={setSelectedCategories}
+          showCount={true}
+          compact
+        />
       </div>
 
       {/* Metric Cards - Hierarchical Layout */}
@@ -682,28 +714,6 @@ const Dashboard = () => {
             onClick={() => navigate('/transacciones', { state: { quickFilter: { type: 'period', start: dateRange.start, end: dateRange.end, categories: selectedCategories, year: selectedYear, month: selectedMonth } } })}
           />
         </div>
-      </div>
-
-      {/* Barra de filtros de categoría - movida junto a los otros filtros */}
-      <div className="mt-2 flex items-center gap-3 flex-wrap">
-        <DatePeriodSelector
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          onYearChange={setSelectedYear}
-          onMonthChange={setSelectedMonth}
-          availableYears={availableYears}
-          compact
-        />
-        <MultiSelectFilter
-          label="Categorías"
-          icon={FaTag}
-          iconColorClass="text-theme-lavender"
-          items={categories}
-          selectedIds={selectedCategories}
-          onSelectionChange={setSelectedCategories}
-          showCount={true}
-          compact
-        />
       </div>
 
       {/* Grid de gráficos */}

@@ -88,8 +88,32 @@ const Navbar = () => {
             );
           })}
         </div>
-        {/* Right side controls */}
+        {/* Right side controls - visible on all sizes */}
         <div className="flex items-center gap-2">
+          {/* Profile photo - visible on all sizes */}
+          <img
+            src="/Foto-Catt.jpg"
+            alt="Foto de Catt"
+            className="w-8 h-8 rounded-full shadow-soft-glow object-cover"
+          />
+          {/* Name - hidden on very small screens */}
+          <span className="text-sm font-medium hidden sm:inline">{sidebarName}</span>
+          
+          {/* Cat toggle - visible on all sizes */}
+          <button
+            aria-label="Toggle cat"
+            className={cn(
+              "rounded-full border p-2 transition-all min-w-[40px] min-h-[40px] flex items-center justify-center",
+              isCatEnabled
+                ? "border-pink-400 bg-pink-100 hover:bg-pink-200 dark:bg-pink-900/50 dark:border-pink-600"
+                : "border-pink-200 bg-white dark:bg-gray-800 dark:border-pink-800 hover:bg-pink-50 hover:border-pink-300"
+            )}
+            onClick={toggleCat}
+            title={isCatEnabled ? "Dormir a Remi 🐱" : "Llamar a Remi 🐱"}
+          >
+            <Cat className={cn("w-4 h-4", isCatEnabled ? "text-pink-600" : "text-pink-500")} />
+          </button>
+
           {/* Theme toggle - visible on all sizes */}
           <button
             aria-label="Toggle theme"
@@ -108,31 +132,6 @@ const Navbar = () => {
               <Moon className="w-4 h-4 text-pink-500" />
             )}
           </button>
-          
-          {/* Cat toggle - desktop only */}
-          <button
-            aria-label="Toggle cat"
-            className={cn(
-              "hidden lg:flex rounded-full border p-2 transition-all min-w-[40px] min-h-[40px] items-center justify-center",
-              isCatEnabled
-                ? "border-pink-400 bg-pink-100 hover:bg-pink-200 dark:bg-pink-900/50 dark:border-pink-600"
-                : "border-pink-200 bg-white dark:bg-gray-800 dark:border-pink-800 hover:bg-pink-50 hover:border-pink-300"
-            )}
-            onClick={toggleCat}
-            title={isCatEnabled ? "Dormir a Remi 🐱" : "Llamar a Remi 🐱"}
-          >
-            <Cat className={cn("w-4 h-4", isCatEnabled ? "text-pink-600" : "text-pink-500")} />
-          </button>
-          
-          {/* Profile - desktop only */}
-          <div className="hidden lg:flex items-center gap-2">
-            <img
-              src="/Foto-Catt.jpg"
-              alt="Foto de Catt"
-              className="w-8 h-8 rounded-full shadow-soft-glow object-cover"
-            />
-            <span className="text-sm">{sidebarName}</span>
-          </div>
         </div>
       </div>
     </nav>

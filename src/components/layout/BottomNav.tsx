@@ -72,14 +72,14 @@ export function BottomNav({ onAddClick }: BottomNavProps) {
       role="navigation"
       aria-label="Navegación principal"
     >
-      <div className="flex items-end justify-around px-2 h-16">
+      <div className="grid grid-cols-5 items-end h-16 max-w-md mx-auto">
         {/* Left nav items */}
         {NAV_ITEMS.slice(0, 2).map((item) => (
           <NavLink key={item.path} item={item} isActive={location.pathname === item.path} />
         ))}
 
         {/* Center FAB Button */}
-        <div className="relative -mt-4">
+        <div className="flex items-center justify-center -mt-4">
           <button
             onClick={onAddClick}
             className={cn(
@@ -105,9 +105,9 @@ export function BottomNav({ onAddClick }: BottomNavProps) {
 
         {/* Right nav item */}
         <NavLink item={NAV_ITEMS[2]} isActive={location.pathname === NAV_ITEMS[2].path} />
-
-        {/* Placeholder for symmetry (empty space) */}
-        <div className="w-12" />
+        
+        {/* Empty spacer for balance */}
+        <div />
       </div>
     </nav>
   );
