@@ -393,37 +393,25 @@ const Transactions = () => {
           </p>
         </div>
 
+        {/* Actions - Export only on mobile, full controls on desktop */}
         <div className="flex items-center gap-2 flex-wrap">
           <ExportButton transactions={supabaseTransactions} categories={supabaseCategories} />
 
-          <Button
-            variant="outline"
-            onClick={handleResetFilters}
-            className={cn(
-              "rounded-xl px-4 text-sm",
-              "border-gray-200",
-              "hover:bg-pastel-mint/50",
-              "transition-all duration-200"
-            )}
-          >
-            <FaSyncAlt className="w-3.5 h-3.5 mr-1.5" />
-            Restablecer
-          </Button>
-
+          {/* Add Transaction button - desktop only (mobile uses bottom nav) */}
           <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
             console.log('🚪 Add Dialog opening:', open, 'paymentMethods at this moment:', paymentMethods, 'length:', paymentMethods?.length);
             setIsAddDialogOpen(open);
           }}>
             <DialogTrigger asChild>
               <Button className={cn(
-                "rounded-xl px-5",
+                "rounded-xl px-5 hidden lg:flex",
                 "bg-gradient-to-r from-theme-green to-theme-sage",
                 "hover:shadow-glow-green",
                 "shadow-soft",
                 "transition-colors duration-150"
               )}>
                 <FaPlus className="w-4 h-4 mr-2" />
-                Agregar Transacción
+                Agregar
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] bg-white border-pastel-green/30 rounded-3xl">

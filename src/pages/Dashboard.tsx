@@ -588,13 +588,6 @@ const Dashboard = () => {
           <ExportButton transactions={transactions} categories={categories} paymentMethods={paymentMethods} />
           <Button
             variant="outline"
-            onClick={handleResetFilters}
-            className="rounded-xl px-4 text-sm border-border hover:bg-pastel-mint/30 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-all"
-          >
-            <FaSyncAlt className="w-3.5 h-3.5 mr-1.5" /> Restablecer
-          </Button>
-          <Button
-            variant="outline"
             className="rounded-xl px-4 text-sm border-border hover:bg-pastel-lavender/30 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-all"
             onClick={() => setIsInsightsOpen(true)}
           >

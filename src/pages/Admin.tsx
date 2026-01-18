@@ -333,22 +333,34 @@ const Admin = () => {
       </div>
 
       <Tabs defaultValue="categories" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
-          <TabsTrigger value="categories" className="data-[state=active]:bg-pastel-pink/20 data-[state=inactive]:text-gray-600">
-            <Tag className="w-4 h-4 mr-2" />
-            Categorías
+        <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1 mb-6 p-1 bg-muted/50 rounded-xl">
+          <TabsTrigger 
+            value="categories" 
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-pink/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          >
+            <Tag className="w-4 h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Categorías</span>
           </TabsTrigger>
-          <TabsTrigger value="payment-methods" className="data-[state=active]:bg-pastel-blue/20 data-[state=inactive]:text-gray-600">
-            <CreditCard className="w-4 h-4 mr-2" />
-            Métodos de Pago
+          <TabsTrigger 
+            value="payment-methods" 
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-blue/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          >
+            <CreditCard className="w-4 h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Métodos</span>
           </TabsTrigger>
-          <TabsTrigger value="incomes" className="data-[state=active]:bg-pastel-green/20 data-[state=inactive]:text-gray-600">
-            <CircleDollarSign className="w-4 h-4 mr-2" />
-            Ingresos
+          <TabsTrigger 
+            value="incomes" 
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-green/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          >
+            <CircleDollarSign className="w-4 h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Ingresos</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="data-[state=active]:bg-pastel-yellow/20 data-[state=inactive]:text-gray-600">
-            <Settings className="w-4 h-4 mr-2" />
-            Configuración
+          <TabsTrigger 
+            value="settings" 
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-yellow/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          >
+            <Settings className="w-4 h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Config</span>
           </TabsTrigger>
         </TabsList>
 

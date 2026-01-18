@@ -10,7 +10,8 @@ import TransactionForm from "@/components/transactions/TransactionForm";
 import { useTransactionMutations } from "@/hooks/useTransactionMutations";
 import { Sparkles } from "lucide-react";
 
-type Category = { id: number; name: string };
+import { Category } from "@/types/index";
+
 type PaymentMethod = { id: number; name: string };
 
 type Props = {
@@ -44,7 +45,12 @@ const AddTransactionDialog = ({ open, onOpenChange, categories, paymentMethods, 
   };
 
   return (
-    <ThemedDialog open={open} onOpenChange={onOpenChange}>
+    <ThemedDialog 
+      open={open} 
+      onOpenChange={onOpenChange}
+      title="Nueva Transacción"
+      description="Completa los detalles de tu nueva transacción."
+    >
       <ThemedDialogContent>
         <ThemedDialogHeader>
           <ThemedDialogTitle icon={<Sparkles className="w-5 h-5" />}>

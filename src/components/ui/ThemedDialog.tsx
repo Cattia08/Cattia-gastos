@@ -8,6 +8,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { useDeviceType } from "@/hooks/useDeviceType";
 import { cn } from "@/lib/utils";
 
 export interface ThemedDialogProps {
@@ -15,6 +17,12 @@ export interface ThemedDialogProps {
   onOpenChange?: (open: boolean) => void;
   children: React.ReactNode;
   trigger?: React.ReactNode;
+  /** Force desktop modal even on mobile */
+  forceDesktop?: boolean;
+  /** Title for bottom sheet (mobile) */
+  title?: string;
+  /** Description for bottom sheet (mobile) */
+  description?: string;
 }
 
 export interface ThemedDialogContentProps {
@@ -32,15 +40,38 @@ const sizeClasses = {
 };
 
 /**
- * ThemedDialog - Wrapper component for consistent modal styling
- * Uses theme tokens for easy theme switching
+ * ThemedDialog - Responsive wrapper that uses BottomSheet on mobile/tablet
+ * and regular Dialog on desktop.
  */
 const ThemedDialog: React.FC<ThemedDialogProps> = ({
   open,
   onOpenChange,
   children,
   trigger,
+  forceDesktop = false,
+  title,
+  description,
 }) => {
+  const { isMobile, isTablet } = useDeviceType();
+  const useMobileSheet = (isMobile || isTablet) && !forceDesktop;
+
+  if (useMobileSheet) {
+    return (
+      <>
+        {trigger}
+        <BottomSheet
+          open={open ?? false}
+          onOpenChange={onOpenChange ?? (() => {})}
+          title={title}
+          description={description}
+          showClose={true}
+        >
+          {children}
+        </BottomSheet>
+      </>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
@@ -51,18 +82,27 @@ const ThemedDialog: React.FC<ThemedDialogProps> = ({
 
 /**
  * ThemedDialogContent - Styled content wrapper
+ * Note: On mobile, this content is rendered inside BottomSheet
  */
 const ThemedDialogContent: React.FC<ThemedDialogContentProps> = ({
   children,
   className,
   size = "md",
 }) => {
+  const { isMobile, isTablet } = useDeviceType();
+
+  // On mobile/tablet, content is already wrapped by BottomSheet
+  // so we render a simpler wrapper
+  if (isMobile || isTablet) {
+    return <div className={cn("pb-6", className)}>{children}</div>;
+  }
+
   return (
     <DialogContent
       className={cn(
         // Base styling from theme
-        "bg-white rounded-2xl",
-        "border border-gray-200",
+        "bg-white dark:bg-card rounded-2xl",
+        "border border-gray-200 dark:border-gray-700",
         "shadow-soft-lg",
         // Size
         sizeClasses[size],
@@ -76,15 +116,25 @@ const ThemedDialogContent: React.FC<ThemedDialogContentProps> = ({
 
 /**
  * ThemedDialogHeader - Consistent header styling
+ * Hidden on mobile as BottomSheet handles header
  */
 const ThemedDialogHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
-}> = ({ children, className }) => (
-  <DialogHeader className={cn("space-y-1.5", className)}>
-    {children}
-  </DialogHeader>
-);
+}> = ({ children, className }) => {
+  const { isMobile, isTablet } = useDeviceType();
+
+  // On mobile, BottomSheet handles the header
+  if (isMobile || isTablet) {
+    return null;
+  }
+
+  return (
+    <DialogHeader className={cn("space-y-1.5", className)}>
+      {children}
+    </DialogHeader>
+  );
+};
 
 /**
  * ThemedDialogTitle - Title with optional icon
@@ -132,3 +182,4 @@ export {
   ThemedDialogDescription,
   ThemedDialogFooter,
 };
+

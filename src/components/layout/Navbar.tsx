@@ -51,13 +51,16 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white border-b border-pastel-pink/20 shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-white dark:bg-gray-900 border-b border-pastel-pink/20 dark:border-gray-800 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo - always visible */}
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Heart className="w-5 h-5 text-primary" />
-          <span className="font-medium">ExpenseTracker</span>
+          <span className="font-medium hidden sm:inline">ExpenseTracker</span>
         </Link>
-        <div className="flex items-center gap-1">
+        
+        {/* Desktop Navigation - hidden on mobile (uses BottomNav instead) */}
+        <div className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -67,11 +70,10 @@ const Navbar = () => {
                 className={cn(
                   "relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200",
                   isActive
-                    ? "bg-gradient-to-r from-pink-100 to-purple-100 text-primary font-medium shadow-sm"
+                    ? "bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 text-primary font-medium shadow-sm"
                     : "hover:bg-pastel-pink/20 text-muted-foreground hover:text-primary"
                 )}
               >
-                {/* Active indicator dot */}
                 {isActive && (
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
@@ -86,25 +88,12 @@ const Navbar = () => {
             );
           })}
         </div>
-        <div className="hidden md:flex items-center gap-3">
-          {/* Botón toggle del gato */}
-          <button
-            aria-label="Toggle cat"
-            className={cn(
-              "rounded-full border p-2 transition-all",
-              isCatEnabled
-                ? "border-pink-400 bg-pink-100 hover:bg-pink-200"
-                : "border-pink-200 bg-white hover:bg-pink-50 hover:border-pink-300"
-            )}
-            onClick={toggleCat}
-            title={isCatEnabled ? "Dormir a Remi 🐱" : "Llamar a Remi 🐱"}
-          >
-            <Cat className={cn("w-4 h-4", isCatEnabled ? "text-pink-600" : "text-pink-500")} />
-          </button>
-          {/* Botón toggle del tema */}
+        {/* Right side controls */}
+        <div className="flex items-center gap-2">
+          {/* Theme toggle - visible on all sizes */}
           <button
             aria-label="Toggle theme"
-            className="rounded-full border border-pink-200 bg-white p-2 hover:bg-pink-50 hover:border-pink-300"
+            className="rounded-full border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-800 p-2 hover:bg-pink-50 dark:hover:bg-gray-700 hover:border-pink-300 min-w-[40px] min-h-[40px] flex items-center justify-center"
             onClick={() => {
               const isDark = document.documentElement.classList.toggle("dark");
               localStorage.setItem("theme", isDark ? "dark" : "light");
@@ -119,12 +108,31 @@ const Navbar = () => {
               <Moon className="w-4 h-4 text-pink-500" />
             )}
           </button>
-          <img
-            src="/Foto-Catt.jpg"
-            alt="Foto de Catt"
-            className="w-8 h-8 rounded-full shadow-soft-glow object-cover"
-          />
-          <span className="text-sm">{sidebarName}</span>
+          
+          {/* Cat toggle - desktop only */}
+          <button
+            aria-label="Toggle cat"
+            className={cn(
+              "hidden lg:flex rounded-full border p-2 transition-all min-w-[40px] min-h-[40px] items-center justify-center",
+              isCatEnabled
+                ? "border-pink-400 bg-pink-100 hover:bg-pink-200 dark:bg-pink-900/50 dark:border-pink-600"
+                : "border-pink-200 bg-white dark:bg-gray-800 dark:border-pink-800 hover:bg-pink-50 hover:border-pink-300"
+            )}
+            onClick={toggleCat}
+            title={isCatEnabled ? "Dormir a Remi 🐱" : "Llamar a Remi 🐱"}
+          >
+            <Cat className={cn("w-4 h-4", isCatEnabled ? "text-pink-600" : "text-pink-500")} />
+          </button>
+          
+          {/* Profile - desktop only */}
+          <div className="hidden lg:flex items-center gap-2">
+            <img
+              src="/Foto-Catt.jpg"
+              alt="Foto de Catt"
+              className="w-8 h-8 rounded-full shadow-soft-glow object-cover"
+            />
+            <span className="text-sm">{sidebarName}</span>
+          </div>
         </div>
       </div>
     </nav>
