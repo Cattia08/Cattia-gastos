@@ -129,10 +129,25 @@
 
   html {
     scroll-behavior: smooth;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* Prevent pull-to-refresh on Android Chrome when not needed */
+    overscroll-behavior-y: contain;
+    /* Improve touch responsiveness */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Safe area padding utilities */
+  .pb-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pt-safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   /* Typography */
@@ -143,6 +158,29 @@
   h5,
   h6 {
     @apply font-heading font-bold tracking-tight;
+  }
+
+  /* Responsive typography scale */
+  h1 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+
+  /* Touch manipulation for interactive elements */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
   }
 }
 

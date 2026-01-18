@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useThemedToast } from "@/hooks/useThemedToast";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { useDeviceType } from "@/hooks/useDeviceType";
 import { supabase } from "@/lib/supabase";
 import {
   FaPlus,
@@ -14,9 +15,9 @@ import {
   FaTrash,
   FaChevronLeft,
   FaChevronRight,
-  FaMagic,
   FaCreditCard
 } from "react-icons/fa";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -36,6 +37,8 @@ import { es } from "date-fns/locale";
 import ExportButton from "@/components/export/ExportButton";
 import FilterBar from "@/components/FilterBar";
 import TransactionForm from "@/components/transactions/TransactionForm";
+import MobileTransactionCard from "@/components/transactions/MobileTransactionCard";
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { cn } from "@/lib/utils";
 import { groupTransactionsByDate } from "@/lib/dateGrouping";
 import { usePersistedFilters } from "@/hooks/usePersistedFilters";
@@ -44,6 +47,14 @@ const Transactions = () => {
   const toast = useThemedToast();
   const { transactions: supabaseTransactions, categories: supabaseCategories, paymentMethods, loading, error, refreshData } = useSupabaseData();
   const location = useLocation();
+  const { isMobile, isTablet, isTouchDevice } = useDeviceType();
+  
+  // Refs for pull-to-refresh
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const startYRef = useRef(0);
 
   // Persisted filter state (shared with Dashboard)
   const {
@@ -282,6 +293,48 @@ const Transactions = () => {
     await refreshData();
   };
 
+  // Pull-to-refresh handlers for mobile
+  const pullThreshold = 80;
+  const maxPull = 120;
+
+  const handlePullStart = (e: React.TouchEvent) => {
+    if (!isTouchDevice) return;
+    const container = containerRef.current;
+    if (!container || container.scrollTop > 0) return;
+    
+    startYRef.current = e.touches[0].clientY;
+    setIsPulling(true);
+  };
+
+  const handlePullMove = (e: React.TouchEvent) => {
+    if (!isPulling || isRefreshing) return;
+    
+    const deltaY = e.touches[0].clientY - startYRef.current;
+    if (deltaY <= 0) {
+      setPullDistance(0);
+      return;
+    }
+
+    // Apply resistance
+    const adjustedDelta = Math.min(deltaY * 0.5, maxPull);
+    setPullDistance(adjustedDelta);
+  };
+
+  const handlePullEnd = async () => {
+    if (!isPulling) return;
+    
+    if (pullDistance >= pullThreshold) {
+      setIsRefreshing(true);
+      setPullDistance(pullThreshold);
+      await refreshData();
+      toast.success({ title: "Actualizado", description: "Datos actualizados correctamente" });
+      setIsRefreshing(false);
+    }
+    
+    setPullDistance(0);
+    setIsPulling(false);
+  };
+
   const memoizedCurrentTransaction = useMemo(() => currentTransaction, [
     currentTransaction.id,
     currentTransaction.name,
@@ -439,28 +492,116 @@ const Transactions = () => {
         expenses={supabaseTransactions.map(t => ({ date: new Date(t.date), amount: t.amount }))}
       />
 
-      {/* Transactions Table */}
-      <Card className={cn(
-        "overflow-hidden",
-        "bg-white dark:bg-gray-900",
-        "border-pink-100/30 dark:border-pink-900/20",
-        "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
-        "rounded-2xl transition-all duration-300"
-      )}>
-        <CardHeader className={cn(
-          "p-4 border-b",
-          "border-pink-100/30 dark:border-pink-900/20",
-          "bg-gradient-to-r from-pink-50/50 to-purple-50/30 dark:from-pink-950/20 dark:to-purple-950/10"
-        )}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FaCalendarAlt className="w-4 h-4 text-pink-500" />
-              <span className="text-sm font-medium text-muted-foreground">
-                Mostrando {paginatedTransactions.length} de {totalRows} transacciones
-              </span>
-            </div>
-          </div>
-        </CardHeader>
+      {/* Transactions Container with Pull-to-Refresh */}
+      <div
+        ref={containerRef}
+        className="relative"
+        onTouchStart={handlePullStart}
+        onTouchMove={handlePullMove}
+        onTouchEnd={handlePullEnd}
+      >
+        {/* Pull-to-Refresh Indicator */}
+        <PullToRefreshIndicator
+          progress={pullDistance / pullThreshold}
+          isRefreshing={isRefreshing}
+          thresholdReached={pullDistance >= pullThreshold}
+          pullDistance={pullDistance}
+        />
+
+        {/* Mobile View: Card-based Layout */}
+        {(isMobile || isTablet) ? (
+          <Card className={cn(
+            "overflow-hidden",
+            "bg-white dark:bg-gray-900",
+            "border-pink-100/30 dark:border-pink-900/20",
+            "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
+            "rounded-2xl transition-all duration-300"
+          )}>
+            <CardHeader className={cn(
+              "p-4 border-b",
+              "border-pink-100/30 dark:border-pink-900/20",
+              "bg-gradient-to-r from-pink-50/50 to-purple-50/30 dark:from-pink-950/20 dark:to-purple-950/10"
+            )}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaCalendarAlt className="w-4 h-4 text-pink-500" />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {paginatedTransactions.length} de {totalRows} transacciones
+                  </span>
+                </div>
+                {isRefreshing && (
+                  <Loader2 className="w-4 h-4 animate-spin text-theme-green" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Desliza ← para eliminar, → para editar
+              </p>
+            </CardHeader>
+            <CardContent className="p-0">
+              {groupedTransactions.length > 0 ? (
+                groupedTransactions.map((group) => (
+                  <div key={group.dateKey}>
+                    {/* Date group header */}
+                    <div className={cn(
+                      "sticky top-0 z-10 px-4 py-2.5",
+                      "bg-muted/95 backdrop-blur-sm",
+                      "border-b border-border/30"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-text-primary capitalize text-sm">
+                          {group.label}
+                        </span>
+                        <span className="text-xs text-text-secondary">
+                          {group.transactions.length} • S/ {group.total.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Transaction cards */}
+                    {group.transactions.map((transaction) => (
+                      <MobileTransactionCard
+                        key={transaction.id}
+                        transaction={transaction}
+                        onEdit={handleEdit}
+                        onDelete={handleDeleteTransaction}
+                        swipeEnabled={isTouchDevice}
+                      />
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-3 py-16">
+                  <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                    <FaStar className="w-8 h-8 text-pink-400 animate-pulse" />
+                  </div>
+                  <p className="text-text-secondary font-medium">No hay transacciones</p>
+                  <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          /* Desktop View: Table Layout */
+          <Card className={cn(
+            "overflow-hidden",
+            "bg-white dark:bg-gray-900",
+            "border-pink-100/30 dark:border-pink-900/20",
+            "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
+            "rounded-2xl transition-all duration-300"
+          )}>
+            <CardHeader className={cn(
+              "p-4 border-b",
+              "border-pink-100/30 dark:border-pink-900/20",
+              "bg-gradient-to-r from-pink-50/50 to-purple-50/30 dark:from-pink-950/20 dark:to-purple-950/10"
+            )}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaCalendarAlt className="w-4 h-4 text-pink-500" />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Mostrando {paginatedTransactions.length} de {totalRows} transacciones
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
 
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -663,6 +804,8 @@ const Transactions = () => {
           </div>
         </div>
       </Card>
+        )}
+      </div>
 
       {/* No Category Transactions Alert */}
       {noCategoryTransactions.length > 0 && (
