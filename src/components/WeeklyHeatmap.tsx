@@ -4,8 +4,8 @@ import FilteredTransactionsDialog from "@/components/FilteredTransactionsDialog"
 import { cn } from "@/lib/utils";
 import { format, isSameDay, startOfWeek, addDays, subDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
 import { Tooltip as UiTooltip, TooltipContent as UiTooltipContent, TooltipProvider as UiTooltipProvider, TooltipTrigger as UiTooltipTrigger } from "@/components/ui/tooltip";
+import { Calendar } from "lucide-react";
 
 type Tx = { id: number; name?: string; amount: number; date: string; categories?: { id: number; name: string; color?: string } };
 
@@ -17,26 +17,7 @@ interface WeeklyHeatmapProps {
 const DAYS = ["L", "M", "M", "J", "V", "S", "D"];
 const DAY_FULL = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
-function hexToRgb(hex: string) {
-  const clean = hex.replace("#", "");
-  const bigint = parseInt(clean, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  return { r, g, b };
-}
-
-function mixColors(hexA: string, hexB: string, t: number) {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  const r = Math.round(a.r + (b.r - a.r) * t);
-  const g = Math.round(a.g + (b.g - a.g) * t);
-  const bC = Math.round(a.b + (b.b - a.b) * t);
-  return `rgb(${r}, ${g}, ${bC})`;
-}
-
 const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }) => {
-  const navigate = useNavigate();
   const today = new Date();
   const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekStarts = [3, 2, 1, 0].map(w => subDays(currentWeekStart, w * 7));
@@ -47,17 +28,11 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
   // Dark mode detection
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   useEffect(() => {
-    const handler = () => setIsDark(document.documentElement.classList.contains('dark'));
-    window.addEventListener('themechange', handler);
-    // Also observe class changes
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains('dark'));
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => {
-      window.removeEventListener('themechange', handler);
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, []);
 
   const grid = useMemo(() => {
@@ -67,7 +42,6 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
         const dayTx = transactions.filter(t => isSameDay(new Date(t.date), date));
         const total = dayTx.reduce((s, t) => s + t.amount, 0);
         const count = dayTx.length;
-        // principal category by amount
         const catMap: Record<string, number> = {};
         dayTx.forEach(t => {
           const name = t.categories?.name || "";
@@ -78,121 +52,117 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
         return { date, total, count, principalCategory };
       });
     });
-  }, [transactions]);
+  }, [transactions, weekStarts]);
 
   const maxValue = useMemo(() => {
     const vals = grid.flat().map(c => c.total);
     return Math.max(0, ...vals);
   }, [grid]);
 
-  const weekdayTotals = useMemo(() => {
-    const sums = Array(7).fill(0);
-    grid.forEach(week => week.forEach((cell, idx) => { sums[idx] += cell.total; }));
-    return sums;
-  }, [grid]);
+  // Improved color palette with gradients
+  const getColor = (value: number) => {
+    if (value <= 0) return isDark ? "bg-slate-800/50" : "bg-gray-100";
+    if (maxValue <= 0) return isDark ? "bg-emerald-900/50" : "bg-emerald-100";
 
-  const habitualDayIndex = useMemo(() => {
-    const max = Math.max(...weekdayTotals);
-    if (max <= 0) return -1;
-    return weekdayTotals.indexOf(max);
-  }, [weekdayTotals]);
+    const intensity = Math.min(1, value / maxValue);
 
-  const valuesByDay = useMemo(() => {
-    const arr = Array(7).fill(0).map(() => [] as number[]);
-    grid.forEach(week => week.forEach((cell, idx) => { arr[idx].push(cell.total); }));
-    return arr;
-  }, [grid]);
-  const avgByDay = useMemo(() => valuesByDay.map(a => (a.reduce((s, v) => s + v, 0) / (a.length || 1))), [valuesByDay]);
-  const std = (arr: number[]) => {
-    if (arr.length === 0) return 0;
-    const m = arr.reduce((s, v) => s + v, 0) / arr.length;
-    const v = arr.reduce((s, v) => s + Math.pow(v - m, 2), 0) / arr.length;
-    return Math.sqrt(v);
-  };
-  const stdByDay = useMemo(() => valuesByDay.map(std), [valuesByDay]);
-  const maxAvgIdx = useMemo(() => avgByDay.indexOf(Math.max(...avgByDay)), [avgByDay]);
-  const maxStdIdx = useMemo(() => stdByDay.indexOf(Math.max(...stdByDay)), [stdByDay]);
-  const weekendAvg = useMemo(() => (avgByDay[5] + avgByDay[6]) / 2, [avgByDay]);
-  const weekdayAvg = useMemo(() => (avgByDay[0] + avgByDay[1] + avgByDay[2] + avgByDay[3] + avgByDay[4]) / 5, [avgByDay]);
-  const patternText = useMemo(() => {
-    if (Math.abs(weekendAvg - weekdayAvg) < Math.max(1, weekdayAvg) * 0.1) return "Fines de semana estables";
-    if (maxAvgIdx >= 1 && maxAvgIdx <= 4) return "Picos entre semana";
-    return "Variación mixta";
-  }, [weekendAvg, weekdayAvg, maxAvgIdx]);
-
-  // Theme-aware palette
-  const palette = isDark ? {
-    zero: "#0f172a",      // Slate dark base (matches new theme)
-    low: "#1a3329",       // Dark green tint
-    medium: "#3D3520",    // Dark amber
-    high: "#4A2A1A",      // Dark orange
-    veryhigh: "#5C1E1E"   // Dark red
-  } : {
-    zero: "#F3F4F6",
-    low: "#E8F5E9",
-    medium: "#FFF59D",
-    high: "#FFB74D",
-    veryhigh: "#E53935"
+    if (intensity <= 0.25) return isDark ? "bg-emerald-900/60" : "bg-emerald-200";
+    if (intensity <= 0.5) return isDark ? "bg-amber-900/60" : "bg-amber-200";
+    if (intensity <= 0.75) return isDark ? "bg-orange-800/70" : "bg-orange-300";
+    return isDark ? "bg-rose-800/80" : "bg-rose-400";
   };
 
-  const colorFor = (v: number) => {
-    if (v <= 0) return palette.zero;
-    if (maxValue <= 0) return palette.low;
-    const t = Math.min(1, v / maxValue);
-    if (t <= 0.33) return palette.low;
-    if (t <= 0.66) return palette.medium;
-    if (t <= 0.85) return palette.high;
-    return palette.veryhigh;
-  };
+  // Calculate period totals for quick summary
+  const periodTotal = useMemo(() => grid.flat().reduce((s, c) => s + c.total, 0), [grid]);
+  const daysWithExpenses = useMemo(() => grid.flat().filter(c => c.total > 0).length, [grid]);
 
   return (
     <Card className={cn("rounded-2xl shadow-card p-5 bg-white dark:bg-card", className)}>
-      <div className="text-sm font-semibold text-foreground mb-3">Patrón de gasto por día</div>
-      <div className="grid mb-2" style={{ gridTemplateColumns: "96px repeat(7, 24px)", columnGap: "8px" }}>
+      {/* Header with icon */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
+            <Calendar className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-foreground">Actividad del mes</div>
+            <div className="text-[11px] text-muted-foreground">Últimas 4 semanas</div>
+          </div>
+        </div>
+        {/* Mini summary */}
+        <div className="text-right">
+          <div className="text-lg font-bold text-foreground">S/ {periodTotal.toFixed(0)}</div>
+          <div className="text-[10px] text-muted-foreground">{daysWithExpenses} días activos</div>
+        </div>
+      </div>
+
+      {/* Day labels */}
+      <div className="grid mb-2" style={{ gridTemplateColumns: "72px repeat(7, 1fr)", gap: "4px" }}>
         <div />
         {DAYS.map((d, i) => (
-          <div key={`lab-${i}`} className="text-[11px] text-muted-foreground text-center">{d}</div>
+          <div key={`lab-${i}`} className="text-[10px] text-muted-foreground text-center font-medium">{d}</div>
         ))}
       </div>
-      <UiTooltipProvider delayDuration={80}>
-        <div className="grid" style={{ gridTemplateColumns: "96px repeat(7, 24px)", rowGap: "10px", columnGap: "8px" }}>
+
+      {/* Heatmap grid */}
+      <UiTooltipProvider delayDuration={100}>
+        <div className="grid" style={{ gridTemplateColumns: "72px repeat(7, 1fr)", rowGap: "6px", gap: "4px" }}>
           {grid.map((week, wi) => (
             <React.Fragment key={`w-${wi}`}>
-              <div className="flex flex-col items-start justify-center leading-tight">
-                <div className="text-xs font-semibold text-foreground">Sem {wi + 1}</div>
-                <div className="text-[11px] text-muted-foreground">
-                  {(() => {
-                    const startTxt = format(weekStarts[wi], "LLL dd", { locale: es });
-                    const endTxt = format(addDays(weekStarts[wi], 6), "dd", { locale: es });
-                    const cap = startTxt.charAt(0).toUpperCase() + startTxt.slice(1);
-                    return `${cap}-${endTxt}`;
-                  })()}
-                </div>
+              {/* Week label */}
+              <div className="flex items-center">
+                <span className="text-[10px] text-muted-foreground">
+                  {format(weekStarts[wi], "dd MMM", { locale: es })}
+                </span>
               </div>
+              {/* Day cells */}
               {week.map((cell, di) => {
-                const bg = colorFor(cell.total);
                 const key = format(cell.date, "yyyy-MM-dd");
                 const isSelected = selectedKey === key;
-                const delay = wi * 80 + di * 30;
+                const isToday = isSameDay(cell.date, today);
+                const isFuture = cell.date > today;
+
                 return (
                   <UiTooltip key={`c-${wi}-${di}`}>
                     <UiTooltipTrigger asChild>
                       <button
                         className={cn(
-                          "h-6 w-6 rounded-full transition-transform duration-200 hover:scale-105 animate-in fade-in-50 zoom-in-95 justify-self-center",
-                          isSelected && "ring-2 ring-[#A594F9] shadow-sm"
+                          "aspect-square w-full max-w-[28px] mx-auto rounded-md transition-all duration-200",
+                          isFuture ? "bg-transparent border border-dashed border-border/30" : getColor(cell.total),
+                          !isFuture && "hover:scale-110 hover:shadow-md cursor-pointer",
+                          isSelected && "ring-2 ring-primary ring-offset-1",
+                          isToday && "ring-2 ring-violet-500/50"
                         )}
-                        style={{ backgroundColor: bg, animationDelay: `${delay}ms` }}
-                        onClick={() => { setSelectedKey(key); setSelectedDate(cell.date); setIsDialogOpen(true); }}
-                        aria-label={`Gasto ${format(cell.date, "dd/MM", { locale: es })}`}
+                        onClick={() => {
+                          if (!isFuture) {
+                            setSelectedKey(key);
+                            setSelectedDate(cell.date);
+                            setIsDialogOpen(true);
+                          }
+                        }}
+                        disabled={isFuture}
+                        aria-label={`${format(cell.date, "dd/MM", { locale: es })}: S/ ${cell.total.toFixed(2)}`}
                       />
                     </UiTooltipTrigger>
-                    <UiTooltipContent className="text-xs">
-                      <div className="font-medium text-foreground">
-                        {DAY_FULL[new Date(cell.date).getDay() === 0 ? 6 : new Date(cell.date).getDay() - 1]} · {format(cell.date, "dd/MM", { locale: es })}
-                      </div>
-                      <div className="text-muted-foreground">S/ {cell.total.toFixed(2)}{cell.principalCategory ? ` · ${cell.principalCategory}` : ""} · {cell.count} transacciones</div>
-                    </UiTooltipContent>
+                    {!isFuture && (
+                      <UiTooltipContent side="top" className="text-xs px-3 py-2">
+                        <div className="font-semibold text-foreground">
+                          {DAY_FULL[cell.date.getDay() === 0 ? 6 : cell.date.getDay() - 1]}
+                          <span className="font-normal text-muted-foreground ml-1">
+                            {format(cell.date, "d 'de' MMM", { locale: es })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-base font-bold text-foreground">S/ {cell.total.toFixed(2)}</span>
+                          <span className="text-muted-foreground">· {cell.count} {cell.count === 1 ? "gasto" : "gastos"}</span>
+                        </div>
+                        {cell.principalCategory && (
+                          <div className="text-muted-foreground mt-0.5">
+                            Más en: {cell.principalCategory}
+                          </div>
+                        )}
+                      </UiTooltipContent>
+                    )}
                   </UiTooltip>
                 );
               })}
@@ -201,32 +171,17 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
         </div>
       </UiTooltipProvider>
 
-      <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
-        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: palette.zero }} /> Sin gasto
-        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: palette.low }} /> Bajo
-        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: palette.medium }} /> Medio
-        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: palette.high }} /> Alto
-        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: palette.veryhigh }} /> Muy alto
+      {/* Gradient legend - more visual */}
+      <div className="mt-4 flex items-center justify-center gap-1">
+        <span className="text-[10px] text-muted-foreground mr-2">Menos</span>
+        <div className={cn("w-4 h-4 rounded", isDark ? "bg-slate-800/50" : "bg-gray-100")} />
+        <div className={cn("w-4 h-4 rounded", isDark ? "bg-emerald-900/60" : "bg-emerald-200")} />
+        <div className={cn("w-4 h-4 rounded", isDark ? "bg-amber-900/60" : "bg-amber-200")} />
+        <div className={cn("w-4 h-4 rounded", isDark ? "bg-orange-800/70" : "bg-orange-300")} />
+        <div className={cn("w-4 h-4 rounded", isDark ? "bg-rose-800/80" : "bg-rose-400")} />
+        <span className="text-[10px] text-muted-foreground ml-2">Más</span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div>
-          <div className="text-[11px] text-muted-foreground">Mayor Gasto</div>
-          <div className="text-lg font-semibold text-foreground">{habitualDayIndex >= 0 ? DAY_FULL[habitualDayIndex] : "-"}</div>
-        </div>
-        <div>
-          <div className="text-[11px] text-muted-foreground">Promedio más alto</div>
-          <div className="text-lg font-semibold text-foreground">{maxAvgIdx >= 0 ? DAY_FULL[maxAvgIdx] : "-"}</div>
-        </div>
-        <div>
-          <div className="text-[11px] text-muted-foreground">Mayor variabilidad</div>
-          <div className="text-lg font-semibold text-foreground">{maxStdIdx >= 0 ? DAY_FULL[maxStdIdx] : "-"}</div>
-        </div>
-        <div>
-          <div className="text-[11px] text-muted-foreground">Patrón</div>
-          <div className="text-lg font-semibold text-foreground">{patternText}</div>
-        </div>
-      </div>
       <FilteredTransactionsDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}

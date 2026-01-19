@@ -348,13 +348,14 @@ const Admin = () => {
             <CreditCard className="w-4 h-4 lg:mr-2" />
             <span className="hidden lg:inline">Métodos</span>
           </TabsTrigger>
-          <TabsTrigger
+          {/* Tab Ingresos oculta temporalmente */}
+          {/* <TabsTrigger
             value="incomes"
             className="flex-1 min-w-fit data-[state=active]:bg-pastel-green/30 dark:data-[state=active]:bg-accent/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
           >
             <CircleDollarSign className="w-4 h-4 lg:mr-2" />
             <span className="hidden lg:inline">Ingresos</span>
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="settings"
             className="flex-1 min-w-fit data-[state=active]:bg-pastel-yellow/30 dark:data-[state=active]:bg-amber-500/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
@@ -698,67 +699,100 @@ const Admin = () => {
 
         {/* Settings Tab */}
         <TabsContent value="settings">
-          <Card className="p-6 border-pastel-yellow/30">
-            <h2 className="text-xl font-semibold flex items-center mb-6">
-              <Settings className="w-5 h-5 mr-2 text-pastel-yellow" />
+          <Card className="p-6 border-primary/20 dark:border-border bg-gradient-to-br from-background to-muted/30">
+            <h2 className="text-xl font-semibold flex items-center mb-8">
+              <Settings className="w-5 h-5 mr-2 text-primary" />
               Configuración
             </h2>
 
-            <div className="space-y-6">
-              <Separator className="my-4" />
-
-              <div className="flex flex-col items-center mb-6">
-                <h3 className="font-medium mb-2">Foto de Perfil</h3>
-                <img
-                  src="/Foto-Catt.jpg"
-                  alt="Foto de Catt"
-                  className="w-24 h-24 rounded-full shadow-lg border-4 border-white object-cover mb-2"
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleProfilePicChange}
-                />
-                <Button
-                  variant="outline"
-                  className="border-pastel-yellow/30 hover:bg-pastel-yellow/10 mb-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Cambiar foto
-                </Button>
-                {selectedProfilePic && (
-                  <Button variant="success" onClick={handleSaveProfilePic}>
-                    Guardar nueva foto
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Sección Perfil */}
+              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pastel-pink to-pastel-purple/60 flex items-center justify-center">
+                    <Star className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Tu Perfil</h3>
+                    <p className="text-xs text-muted-foreground">Personaliza tu imagen y nombre</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-4 group">
+                    <img
+                      src="/Foto-Catt.jpg"
+                      alt="Foto de perfil"
+                      className="w-28 h-28 rounded-full shadow-lg border-4 border-white dark:border-border object-cover transition-transform group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Edit className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleProfilePicChange}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-primary/30 hover:bg-primary/10 mb-3"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Edit className="w-3.5 h-3.5 mr-2" />
+                    Cambiar foto
                   </Button>
-                )}
-                {profilePicMessage && (
-                  <span className="text-xs text-muted-foreground mt-2">{profilePicMessage}</span>
-                )}
+                  {selectedProfilePic && (
+                    <Button variant="success" size="sm" onClick={handleSaveProfilePic}>
+                      Guardar nueva foto
+                    </Button>
+                  )}
+                  {profilePicMessage && (
+                    <span className="text-xs text-muted-foreground mt-2 text-center max-w-[200px]">{profilePicMessage}</span>
+                  )}
+                </div>
               </div>
 
-              <Separator className="my-4" />
-
-              <div className="flex flex-col items-center gap-2 mb-8 w-full max-w-md mx-auto">
-                <h3 className="font-medium mb-2 text-lg text-pastel-blue">Nombre en el menú lateral</h3>
-                <input
-                  type="text"
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                  className="border border-pastel-blue/60 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-pastel-blue/40 font-semibold text-lg text-pastel-blue bg-white shadow"
-                  maxLength={20}
-                />
-                <Button
-                  variant="success"
-                  onClick={handleUpdateSidebarName}
-                  disabled={nameInput.trim() === sidebarName.trim() || nameInput.trim() === ''}
-                >
-                  Actualizar nombre
-                </Button>
+              {/* Sección Nombre */}
+              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pastel-blue to-pastel-green/60 flex items-center justify-center">
+                    <Tag className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Nombre de Usuario</h3>
+                    <p className="text-xs text-muted-foreground">Aparece en el menú lateral</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-full">
+                    <Label className="text-sm text-muted-foreground mb-2 block">Tu nombre</Label>
+                    <input
+                      type="text"
+                      value={nameInput}
+                      onChange={e => setNameInput(e.target.value)}
+                      className="w-full border border-border rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 focus:ring-primary/40 font-semibold text-lg bg-muted/30 dark:bg-muted/10 transition-all"
+                      maxLength={20}
+                      placeholder="Tu nombre..."
+                    />
+                  </div>
+                  <Button
+                    variant="success"
+                    className="w-full"
+                    onClick={handleUpdateSidebarName}
+                    disabled={nameInput.trim() === sidebarName.trim() || nameInput.trim() === ''}
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Actualizar nombre
+                  </Button>
+                </div>
               </div>
-
-
             </div>
           </Card>
         </TabsContent>
