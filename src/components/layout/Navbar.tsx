@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Heart, PieChart, List, Settings, Sun, Moon, Cat } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Heart, PieChart, List, Settings, Sun, Moon, Cat, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOneko } from "@/addons/oneko";
+import { useAuth } from "@/context/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isEnabled: isCatEnabled, toggle: toggleCat } = useOneko();
+  const { user, signOut } = useAuth();
 
   // Leer el nombre del sidebar desde localStorage y actualizar en tiempo real
   const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
@@ -31,6 +41,11 @@ const Navbar = () => {
     window.addEventListener('themechange', handler as any);
     return () => window.removeEventListener('themechange', handler as any);
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   const navItems = [
     {
@@ -90,14 +105,35 @@ const Navbar = () => {
         </div>
         {/* Right side controls - visible on all sizes */}
         <div className="flex items-center gap-2">
-          {/* Profile photo - visible on all sizes */}
-          <img
-            src="/Foto-Catt.jpg"
-            alt="Foto de Catt"
-            className="w-8 h-8 rounded-full shadow-soft-glow object-cover"
-          />
-          {/* Name - hidden on very small screens */}
-          <span className="text-sm font-medium hidden sm:inline">{sidebarName}</span>
+          {/* User dropdown with profile photo */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 rounded-full hover:bg-pink-50 dark:hover:bg-muted p-1 pr-2 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400/50">
+                <img
+                  src="/Foto-Catt.jpg"
+                  alt="Foto de perfil"
+                  className="w-8 h-8 rounded-full shadow-soft-glow object-cover"
+                />
+                <span className="text-sm font-medium hidden sm:inline">{sidebarName}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-medium">{sidebarName}</p>
+                {user && (
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                )}
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Cat toggle - visible on all sizes */}
           <button
@@ -139,3 +175,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
