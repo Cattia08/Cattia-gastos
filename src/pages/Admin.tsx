@@ -334,30 +334,30 @@ const Admin = () => {
 
       <Tabs defaultValue="categories" className="w-full">
         <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1 mb-6 p-1 bg-muted/50 rounded-xl">
-          <TabsTrigger 
-            value="categories" 
-            className="flex-1 min-w-fit data-[state=active]:bg-pastel-pink/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          <TabsTrigger
+            value="categories"
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-pink/30 dark:data-[state=active]:bg-primary/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
           >
             <Tag className="w-4 h-4 lg:mr-2" />
             <span className="hidden lg:inline">Categorías</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="payment-methods" 
-            className="flex-1 min-w-fit data-[state=active]:bg-pastel-blue/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          <TabsTrigger
+            value="payment-methods"
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-blue/30 dark:data-[state=active]:bg-secondary/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
           >
             <CreditCard className="w-4 h-4 lg:mr-2" />
             <span className="hidden lg:inline">Métodos</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="incomes" 
-            className="flex-1 min-w-fit data-[state=active]:bg-pastel-green/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          <TabsTrigger
+            value="incomes"
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-green/30 dark:data-[state=active]:bg-accent/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
           >
             <CircleDollarSign className="w-4 h-4 lg:mr-2" />
             <span className="hidden lg:inline">Ingresos</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="settings" 
-            className="flex-1 min-w-fit data-[state=active]:bg-pastel-yellow/30 data-[state=inactive]:text-gray-600 rounded-lg px-3 py-2.5 lg:px-4"
+          <TabsTrigger
+            value="settings"
+            className="flex-1 min-w-fit data-[state=active]:bg-pastel-yellow/30 dark:data-[state=active]:bg-amber-500/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
           >
             <Settings className="w-4 h-4 lg:mr-2" />
             <span className="hidden lg:inline">Config</span>
@@ -429,7 +429,7 @@ const Admin = () => {
               {categories.map(category => (
                 <div
                   key={category.id}
-                  className="flex justify-between items-center p-4 bg-white/70 rounded-xl border border-pastel-pink/20 shadow-sm transition-colors hover:bg-pastel-pink/10 hover:border-pastel-pink/40 transition-transform duration-150 hover:scale-[0.99]"
+                  className="flex justify-between items-center p-4 bg-white dark:bg-card rounded-xl border border-pastel-pink/20 dark:border-border shadow-sm transition-all hover:bg-pastel-pink/10 dark:hover:bg-muted/50 hover:border-pastel-pink/40 dark:hover:border-primary/30 duration-150 hover:scale-[0.99]"
                 >
                   <div className="flex items-center">
                     <div
@@ -546,7 +546,7 @@ const Admin = () => {
               {paymentMethods.map(paymentMethod => (
                 <div
                   key={paymentMethod.id}
-                  className="flex justify-between items-center p-4 bg-white/70 rounded-xl border border-pastel-blue/20 shadow-sm transition-colors hover:bg-pastel-blue/10 hover:border-pastel-blue/40 transition-transform duration-150 hover:scale-[0.99]"
+                  className="flex justify-between items-center p-4 bg-white dark:bg-card rounded-xl border border-pastel-blue/20 dark:border-border shadow-sm transition-all hover:bg-pastel-blue/10 dark:hover:bg-muted/50 hover:border-pastel-blue/40 dark:hover:border-secondary/30 duration-150 hover:scale-[0.99]"
                 >
                   <div className="flex items-center">
                     <div className="w-10 h-10 rounded-full mr-3 bg-pastel-blue/20 flex items-center justify-center">
@@ -660,12 +660,12 @@ const Admin = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white/70 rounded-xl border border-pastel-green/20 shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-pastel-green/20 dark:border-border shadow-sm p-6">
                 <h3 className="text-lg font-medium mb-4">Historial de Ingresos</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="text-sm text-gray-500 border-b">
+                      <tr className="text-sm text-muted-foreground border-b border-border">
                         <th className="text-left p-3">Fuente</th>
                         <th className="text-left p-3">Fecha</th>
                         <th className="text-right p-3">Monto</th>
@@ -674,7 +674,7 @@ const Admin = () => {
                     </thead>
                     <tbody>
                       {income.map(inc => (
-                        <tr key={inc.id} className="border-b border-pastel-green/10">
+                        <tr key={inc.id} className="border-b border-border dark:hover:bg-muted/30">
                           <td className="p-3">{inc.source}</td>
                           <td className="p-3">{new Date(inc.date).toLocaleDateString()}</td>
                           <td className="p-3 text-right font-medium">${inc.amount.toFixed(2)}</td>
@@ -684,7 +684,7 @@ const Admin = () => {
                           </td>
                         </tr>
                       ))}
-                      <tr className="bg-pastel-green/10">
+                      <tr className="bg-pastel-green/10 dark:bg-accent/10">
                         <td className="p-3 font-bold" colSpan={3}>Total</td>
                         <td className="p-3 text-right font-bold">${income.reduce((sum, inc) => sum + inc.amount, 0).toFixed(2)}</td>
                       </tr>
@@ -758,18 +758,7 @@ const Admin = () => {
                 </Button>
               </div>
 
-              <div className="flex flex-col items-center mt-8 w-full max-w-md mx-auto bg-pastel-yellow/80 rounded-2xl shadow-lg p-6">
-                <h3 className="font-bold text-lg mb-2 text-pastel-foreground">Ingresar a make para actualizar los gastos</h3>
-                <a
-                  href="https://us2.make.com/855106/scenarios/1782501/edit"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-pastel-green hover:bg-pastel-pink/90 hover:text-white text-pastel-foreground font-bold rounded-full px-6 py-2 shadow-lg transition-all duration-200 text-lg focus:ring-2 focus:ring-pastel-green/40 focus:outline-none active:scale-95 mb-2"
-                >
-                  Actualizar datos
-                </a>
-                <span className="text-sm text-pastel-foreground mt-2 font-semibold">El último día que se actualizó es: <span className="font-bold text-pastel-blue">{lastTransactionDate}</span></span>
-              </div>
+
             </div>
           </Card>
         </TabsContent>

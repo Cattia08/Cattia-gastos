@@ -5,19 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 dark:ring-offset-background",
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-[#FF7597] to-[#FF8FA3] text-white hover:shadow-soft-glow",
-        success: "bg-gradient-to-r from-[#6BCB77] to-[#8AD17E] text-white hover:shadow-soft-glow",
+        default: "bg-gradient-to-r from-[#FF7597] to-[#FF8FA3] text-white hover:shadow-soft-glow dark:from-[#FF85A5] dark:to-[#FF9DB3]",
+        success: "bg-gradient-to-r from-[#6BCB77] to-[#8AD17E] text-white hover:shadow-soft-glow dark:from-[#7BD987] dark:to-[#9AE18E]",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-pink-100 bg-white text-text-main hover:bg-primary-light/20 hover:text-[#FF7597]",
+          "border border-pink-100 bg-white text-text-main hover:bg-primary-light/20 hover:text-[#FF7597] dark:border-border dark:bg-transparent dark:text-foreground dark:hover:bg-muted dark:hover:text-primary",
         secondary:
           "bg-secondary text-white hover:shadow-soft-glow",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-muted",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -36,7 +36,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 

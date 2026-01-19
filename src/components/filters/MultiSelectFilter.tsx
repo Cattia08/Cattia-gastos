@@ -68,8 +68,8 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
         <Button
           variant="outline"
           className={cn(
-            "rounded-xl border-gray-200",
-            "bg-white hover:bg-gray-50",
+            "rounded-xl border-gray-200 dark:border-border",
+            "bg-white dark:bg-input hover:bg-gray-50 dark:hover:bg-muted",
             "transition-all duration-200",
             compact ? "px-3 py-1 text-xs h-7" : "px-4 py-1.5 text-sm",
             className
@@ -87,7 +87,7 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
       <DropdownMenuContent
         className={cn(
           "w-56 max-h-72 overflow-y-auto",
-          "bg-white border-gray-200",
+          "bg-white dark:bg-popover border-gray-200 dark:border-border",
           "shadow-soft-md rounded-xl"
         )}
         align={align}
@@ -95,30 +95,30 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
         <DropdownMenuLabel className="text-xs text-muted-foreground">
           Filtrar por {label.toLowerCase()}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-gray-100" />
-        
+        <DropdownMenuSeparator className="bg-gray-100 dark:bg-border" />
+
         {/* Toggle All */}
         <button
           onClick={toggleAll}
           className={cn(
             "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg",
-            "hover:bg-gray-100 transition-colors",
+            "hover:bg-gray-100 dark:hover:bg-muted transition-colors",
             "text-left cursor-pointer"
           )}
         >
           <div className={cn(
             "w-4 h-4 rounded border flex items-center justify-center transition-all",
-            effectiveAllSelected 
-              ? "bg-theme-green border-theme-green" 
+            effectiveAllSelected
+              ? "bg-theme-green border-theme-green"
               : "border-gray-300"
           )}>
             {effectiveAllSelected && <Check className="w-3 h-3 text-white" />}
           </div>
           <span className="font-medium">Todos</span>
         </button>
-        
-        <DropdownMenuSeparator className="bg-gray-100" />
-        
+
+        <DropdownMenuSeparator className="bg-gray-100 dark:bg-border" />
+
         {/* Items */}
         {items.map((item) => {
           const isSelected = selectedIds.includes(item.id);
@@ -128,36 +128,36 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
               onClick={() => toggleItem(item.id)}
               className={cn(
                 "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg",
-                "hover:bg-gray-50 transition-colors",
+                "hover:bg-gray-50 dark:hover:bg-muted transition-colors",
                 "text-left cursor-pointer"
               )}
             >
               <div className={cn(
                 "w-4 h-4 rounded border flex items-center justify-center transition-all",
-                isSelected 
-                  ? "border-transparent" 
+                isSelected
+                  ? "border-transparent"
                   : "border-gray-300"
               )}
-              style={{ 
-                backgroundColor: isSelected ? (item.color || 'var(--color-theme-green)') : 'transparent',
-                borderColor: isSelected ? 'transparent' : undefined
-              }}
+                style={{
+                  backgroundColor: isSelected ? (item.color || 'var(--color-theme-green)') : 'transparent',
+                  borderColor: isSelected ? 'transparent' : undefined
+                }}
               >
                 {isSelected && <Check className="w-3 h-3 text-white" />}
               </div>
-              
+
               {item.color && (
                 <span
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
               )}
-              
+
               <span className="truncate">{item.name}</span>
             </button>
           );
         })}
-        
+
         {items.length === 0 && (
           <div className="px-2 py-4 text-center text-sm text-muted-foreground">
             No hay opciones

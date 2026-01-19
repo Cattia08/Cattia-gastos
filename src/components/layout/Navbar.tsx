@@ -51,14 +51,14 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white dark:bg-gray-900 border-b border-pastel-pink/20 dark:border-gray-800 shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-white dark:bg-card border-b border-pastel-pink/20 dark:border-border shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo - always visible */}
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Heart className="w-5 h-5 text-primary" />
           <span className="font-medium hidden sm:inline">ExpenseTracker</span>
         </Link>
-        
+
         {/* Desktop Navigation - hidden on mobile (uses BottomNav instead) */}
         <div className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => {
@@ -98,7 +98,7 @@ const Navbar = () => {
           />
           {/* Name - hidden on very small screens */}
           <span className="text-sm font-medium hidden sm:inline">{sidebarName}</span>
-          
+
           {/* Cat toggle - visible on all sizes */}
           <button
             aria-label="Toggle cat"
@@ -106,7 +106,7 @@ const Navbar = () => {
               "rounded-full border p-2 transition-all min-w-[40px] min-h-[40px] flex items-center justify-center",
               isCatEnabled
                 ? "border-pink-400 bg-pink-100 hover:bg-pink-200 dark:bg-pink-900/50 dark:border-pink-600"
-                : "border-pink-200 bg-white dark:bg-gray-800 dark:border-pink-800 hover:bg-pink-50 hover:border-pink-300"
+                : "border-pink-200 bg-white dark:bg-input dark:border-border hover:bg-pink-50 hover:border-pink-300"
             )}
             onClick={toggleCat}
             title={isCatEnabled ? "Dormir a Remi 🐱" : "Llamar a Remi 🐱"}
@@ -117,7 +117,7 @@ const Navbar = () => {
           {/* Theme toggle - visible on all sizes */}
           <button
             aria-label="Toggle theme"
-            className="rounded-full border border-pink-200 dark:border-pink-800 bg-white dark:bg-gray-800 p-2 hover:bg-pink-50 dark:hover:bg-gray-700 hover:border-pink-300 min-w-[40px] min-h-[40px] flex items-center justify-center"
+            className="rounded-full border border-pink-200 dark:border-border bg-white dark:bg-input p-2 hover:bg-pink-50 dark:hover:bg-muted hover:border-pink-300 min-w-[40px] min-h-[40px] flex items-center justify-center"
             onClick={() => {
               const isDark = document.documentElement.classList.toggle("dark");
               localStorage.setItem("theme", isDark ? "dark" : "light");

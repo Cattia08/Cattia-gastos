@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface InteractiveCalendarProps {
   selectedDate: Date | undefined;
   onDateSelect: (date: Date | undefined) => void;
-  expenses?: Array<{date: Date, amount: number}>;
+  expenses?: Array<{ date: Date, amount: number }>;
   className?: string;
   mode?: "single" | "range";
   rangeDate?: Date | undefined;
@@ -69,7 +69,7 @@ const InteractiveCalendar = ({
             selected={selectedDate}
             onSelect={onDateSelect}
             initialFocus
-            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-card dark:border-border"
           />
         ) : (
           <Calendar
@@ -89,7 +89,7 @@ const InteractiveCalendar = ({
               }
             }}
             initialFocus
-            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-card dark:border-border"
           />
         )}
       </div>
@@ -147,7 +147,7 @@ const InteractiveCalendar = ({
             selected={selectedDate}
             onSelect={onDateSelect}
             initialFocus
-            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-card dark:border-border"
           />
         ) : (
           <Calendar
@@ -167,7 +167,7 @@ const InteractiveCalendar = ({
               }
             }}
             initialFocus
-            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-gray-800"
+            className="p-3 pointer-events-auto bg-white border border-pastel-pink/20 rounded-xl dark:bg-card dark:border-border"
           />
         )}
       </PopoverContent>

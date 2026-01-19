@@ -48,7 +48,7 @@ const Transactions = () => {
   const { transactions: supabaseTransactions, categories: supabaseCategories, paymentMethods, loading, error, refreshData } = useSupabaseData();
   const location = useLocation();
   const { isMobile, isTablet, isTouchDevice } = useDeviceType();
-  
+
   // Refs for pull-to-refresh
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPulling, setIsPulling] = useState(false);
@@ -67,7 +67,7 @@ const Transactions = () => {
     resetFilters: resetPersistedFilters,
     initializeSelections,
   } = usePersistedFilters();
-  
+
   const { selectedYear, selectedMonth, selectedCategories, selectedPaymentMethods, searchQuery } = filters;
 
   // Local date range state (not persisted - specific to transactions view)
@@ -89,6 +89,10 @@ const Transactions = () => {
   const [showNoCategoryDialog, setShowNoCategoryDialog] = useState(false);
   const [noCategoryEdits, setNoCategoryEdits] = useState<any[]>([]);
   const [savingNoCategory, setSavingNoCategory] = useState(false);
+
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<{ id: number; name: string } | null>(null);
 
   // Pagination state
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -249,7 +253,15 @@ const Transactions = () => {
       await refreshData();
     } catch {
       toast.error({ title: "Error", description: "No se pudo eliminar la transacción" });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setTransactionToDelete(null);
     }
+  };
+
+  const handleConfirmDelete = (transaction: { id: number; name: string }) => {
+    setTransactionToDelete(transaction);
+    setDeleteConfirmOpen(true);
   };
 
   const handleCategoryUpdate = async (id: number, category_id: string) => {
@@ -301,14 +313,14 @@ const Transactions = () => {
     if (!isTouchDevice) return;
     const container = containerRef.current;
     if (!container || container.scrollTop > 0) return;
-    
+
     startYRef.current = e.touches[0].clientY;
     setIsPulling(true);
   };
 
   const handlePullMove = (e: React.TouchEvent) => {
     if (!isPulling || isRefreshing) return;
-    
+
     const deltaY = e.touches[0].clientY - startYRef.current;
     if (deltaY <= 0) {
       setPullDistance(0);
@@ -322,7 +334,7 @@ const Transactions = () => {
 
   const handlePullEnd = async () => {
     if (!isPulling) return;
-    
+
     if (pullDistance >= pullThreshold) {
       setIsRefreshing(true);
       setPullDistance(pullThreshold);
@@ -330,7 +342,7 @@ const Transactions = () => {
       toast.success({ title: "Actualizado", description: "Datos actualizados correctamente" });
       setIsRefreshing(false);
     }
-    
+
     setPullDistance(0);
     setIsPulling(false);
   };
@@ -500,7 +512,7 @@ const Transactions = () => {
         {(isMobile || isTablet) ? (
           <Card className={cn(
             "overflow-hidden",
-            "bg-white dark:bg-gray-900",
+            "bg-white dark:bg-card",
             "border-pink-100/30 dark:border-pink-900/20",
             "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
             "rounded-2xl transition-all duration-300"
@@ -550,7 +562,7 @@ const Transactions = () => {
                         key={transaction.id}
                         transaction={transaction}
                         onEdit={handleEdit}
-                        onDelete={handleDeleteTransaction}
+                        onDelete={(id) => handleConfirmDelete({ id, name: transaction.name })}
                         swipeEnabled={isTouchDevice}
                       />
                     ))}
@@ -571,7 +583,7 @@ const Transactions = () => {
           /* Desktop View: Table Layout */
           <Card className={cn(
             "overflow-hidden",
-            "bg-white dark:bg-gray-900",
+            "bg-white dark:bg-card",
             "border-pink-100/30 dark:border-pink-900/20",
             "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
             "rounded-2xl transition-all duration-300"
@@ -591,207 +603,207 @@ const Transactions = () => {
               </div>
             </CardHeader>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gradient-to-r from-pink-50/80 to-purple-50/50 dark:from-pink-950/30 dark:to-purple-950/20 hover:bg-pink-50/90">
-                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Comercio</TableHead>
-                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Categoría</TableHead>
-                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Método</TableHead>
-                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Fecha</TableHead>
-                  <TableHead className="text-right text-pink-600 dark:text-pink-400 font-semibold">Monto</TableHead>
-                  <TableHead className="text-pink-600 dark:text-pink-400 font-semibold w-24">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {groupedTransactions.length > 0 ? (
-                  groupedTransactions.map((group) => (
-                    <React.Fragment key={group.dateKey}>
-                      {/* Date group header */}
-                      <TableRow className="date-group-header hover:bg-muted/90">
-                        <TableCell colSpan={6} className="p-0">
-                          <div className="flex items-center justify-between px-4 py-2.5">
-                            <span className="font-semibold text-text-primary capitalize">{group.label}</span>
-                            <span className="text-xs text-text-secondary">
-                              {group.transactions.length} transacción{group.transactions.length > 1 ? 'es' : ''} • S/ {group.total.toFixed(2)}
-                            </span>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-pink-50/80 to-purple-50/50 dark:from-pink-950/30 dark:to-purple-950/20 hover:bg-pink-50/90">
+                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Comercio</TableHead>
+                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Categoría</TableHead>
+                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Método</TableHead>
+                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Fecha</TableHead>
+                      <TableHead className="text-right text-pink-600 dark:text-pink-400 font-semibold">Monto</TableHead>
+                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold w-24">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {groupedTransactions.length > 0 ? (
+                      groupedTransactions.map((group) => (
+                        <React.Fragment key={group.dateKey}>
+                          {/* Date group header */}
+                          <TableRow className="date-group-header hover:bg-muted/90">
+                            <TableCell colSpan={6} className="p-0">
+                              <div className="flex items-center justify-between px-4 py-2.5">
+                                <span className="font-semibold text-text-primary capitalize">{group.label}</span>
+                                <span className="text-xs text-text-secondary">
+                                  {group.transactions.length} transacción{group.transactions.length > 1 ? 'es' : ''} • S/ {group.total.toFixed(2)}
+                                </span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+
+                          {/* Transactions in this group */}
+                          {group.transactions.map((transaction, idx) => (
+                            <TableRow
+                              key={transaction.id}
+                              className={cn(
+                                "group transaction-row",
+                                "border-b border-border/30 last:border-b-0",
+                                !transaction.category_id && "bg-amber-50/30 dark:bg-amber-950/10"
+                              )}
+                            >
+                              <TableCell className="py-3.5">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={cn(
+                                      "w-10 h-10 rounded-xl flex items-center justify-center",
+                                      "transition-transform duration-200 group-hover:scale-110"
+                                    )}
+                                    style={{ backgroundColor: `${transaction.categories?.color || '#FF7597'}15` }}
+                                  >
+                                    <span
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: transaction.categories?.color || '#FF7597' }}
+                                    />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="font-semibold text-text-primary truncate">
+                                      {transaction.name}
+                                    </div>
+                                    <div className="text-xs text-text-secondary mt-1">
+                                      {transaction.categories?.name || (
+                                        <span className="badge-uncategorized">
+                                          <FaExclamationCircle className="w-3 h-3" />
+                                          Sin categoría
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3.5">
+                                {transaction.categories ? (
+                                  <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
+                                ) : (
+                                  <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
+                                    <SelectTrigger className={cn(
+                                      "h-8 max-w-[150px]",
+                                      "bg-amber-50/80 dark:bg-amber-950/40",
+                                      "border-amber-200 dark:border-amber-800"
+                                    )}>
+                                      <div className="flex items-center gap-1">
+                                        <FaExclamationCircle className="w-3.5 h-3.5 text-amber-500" />
+                                        <span className="text-xs">Seleccionar</span>
+                                      </div>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {supabaseCategories.map(category => (
+                                        <SelectItem key={category.id} value={category.id.toString()}>
+                                          {category.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              </TableCell>
+                              <TableCell className="py-3.5">
+                                {transaction.payment_methods ? (
+                                  <div className="flex items-center gap-1.5 text-sm text-text-secondary">
+                                    <FaCreditCard className="w-3.5 h-3.5 text-muted-foreground" />
+                                    {transaction.payment_methods.name}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground italic">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="py-3.5">
+                                <span className="text-sm text-text-secondary">
+                                  {format(new Date(transaction.date), "d MMM", { locale: es })}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right py-3.5">
+                                <span className="font-bold text-text-emphasis text-base tabular-nums">
+                                  S/ {transaction.amount.toFixed(2)}
+                                </span>
+                              </TableCell>
+                              <TableCell className="py-3.5">
+                                <div className="transaction-actions">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEdit(transaction)}
+                                    className="transaction-action-btn edit"
+                                  >
+                                    <FaEdit className="h-4 w-4 text-muted-foreground group-hover:text-pink-500 transition-colors" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleConfirmDelete({ id: transaction.id, name: transaction.name })}
+                                    className="transaction-action-btn delete"
+                                  >
+                                    <FaTrash className="h-4 w-4 text-red-400 group-hover:text-red-500 transition-colors" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </React.Fragment>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-48">
+                          <div className="flex flex-col items-center justify-center gap-3">
+                            <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                              <FaStar className="w-8 h-8 text-pink-400 animate-pulse" />
+                            </div>
+                            <p className="text-text-secondary font-medium">No hay transacciones que mostrar</p>
+                            <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva transacción</p>
                           </div>
                         </TableCell>
                       </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
 
-                      {/* Transactions in this group */}
-                      {group.transactions.map((transaction, idx) => (
-                        <TableRow
-                          key={transaction.id}
-                          className={cn(
-                            "group transaction-row",
-                            "border-b border-border/30 last:border-b-0",
-                            !transaction.category_id && "bg-amber-50/30 dark:bg-amber-950/10"
-                          )}
-                        >
-                          <TableCell className="py-3.5">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={cn(
-                                  "w-10 h-10 rounded-xl flex items-center justify-center",
-                                  "transition-transform duration-200 group-hover:scale-110"
-                                )}
-                                style={{ backgroundColor: `${transaction.categories?.color || '#FF7597'}15` }}
-                              >
-                                <span
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: transaction.categories?.color || '#FF7597' }}
-                                />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="font-semibold text-text-primary truncate">
-                                  {transaction.name}
-                                </div>
-                                <div className="text-xs text-text-secondary mt-1">
-                                  {transaction.categories?.name || (
-                                    <span className="badge-uncategorized">
-                                      <FaExclamationCircle className="w-3 h-3" />
-                                      Sin categoría
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3.5">
-                            {transaction.categories ? (
-                              <CategoryBadge name={transaction.categories.name} color={transaction.categories.color} />
-                            ) : (
-                              <Select onValueChange={value => handleCategoryUpdate(transaction.id, value)}>
-                                <SelectTrigger className={cn(
-                                  "h-8 max-w-[150px]",
-                                  "bg-amber-50/80 dark:bg-amber-950/40",
-                                  "border-amber-200 dark:border-amber-800"
-                                )}>
-                                  <div className="flex items-center gap-1">
-                                    <FaExclamationCircle className="w-3.5 h-3.5 text-amber-500" />
-                                    <span className="text-xs">Seleccionar</span>
-                                  </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {supabaseCategories.map(category => (
-                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                      {category.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3.5">
-                            {transaction.payment_methods ? (
-                              <div className="flex items-center gap-1.5 text-sm text-text-secondary">
-                                <FaCreditCard className="w-3.5 h-3.5 text-muted-foreground" />
-                                {transaction.payment_methods.name}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3.5">
-                            <span className="text-sm text-text-secondary">
-                              {format(new Date(transaction.date), "d MMM", { locale: es })}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right py-3.5">
-                            <span className="font-bold text-text-emphasis text-base tabular-nums">
-                              S/ {transaction.amount.toFixed(2)}
-                            </span>
-                          </TableCell>
-                          <TableCell className="py-3.5">
-                            <div className="transaction-actions">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(transaction)}
-                                className="transaction-action-btn edit"
-                              >
-                                <FaEdit className="h-4 w-4 text-muted-foreground group-hover:text-pink-500 transition-colors" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteTransaction(transaction.id)}
-                                className="transaction-action-btn delete"
-                              >
-                                <FaTrash className="h-4 w-4 text-red-400 group-hover:text-red-500 transition-colors" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-48">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                          <FaStar className="w-8 h-8 text-pink-400 animate-pulse" />
-                        </div>
-                        <p className="text-text-secondary font-medium">No hay transacciones que mostrar</p>
-                        <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva transacción</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+            {/* Pagination Footer */}
+            <div className={cn(
+              "flex flex-col sm:flex-row items-center justify-between gap-4 p-4",
+              "border-t border-pink-100/30 dark:border-pink-900/20",
+              "bg-gradient-to-r from-pink-50/30 to-purple-50/20 dark:from-pink-950/10 dark:to-purple-950/5"
+            )}>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Filas:</span>
+                <Select value={rowsPerPage.toString()} onValueChange={val => setRowsPerPage(Number(val))}>
+                  <SelectTrigger className="w-16 h-8 rounded-lg border-pink-200/50 dark:border-pink-800/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Pagination Footer */}
-        <div className={cn(
-          "flex flex-col sm:flex-row items-center justify-between gap-4 p-4",
-          "border-t border-pink-100/30 dark:border-pink-900/20",
-          "bg-gradient-to-r from-pink-50/30 to-purple-50/20 dark:from-pink-950/10 dark:to-purple-950/5"
-        )}>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Filas:</span>
-            <Select value={rowsPerPage.toString()} onValueChange={val => setRowsPerPage(Number(val))}>
-              <SelectTrigger className="w-16 h-8 rounded-lg border-pink-200/50 dark:border-pink-800/30">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
-            >
-              <FaChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm px-3 py-1 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-pink-100/30 dark:border-pink-900/20">
-              {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
-            >
-              <FaChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </Card>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
+                >
+                  <FaChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm px-3 py-1 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-pink-100/30 dark:border-pink-900/20">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
+                >
+                  <FaChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </Card>
         )}
       </div>
 
@@ -911,6 +923,41 @@ const Transactions = () => {
               )}
             >
               Guardar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-white dark:bg-card border-red-200 dark:border-red-900/30 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+              <FaTrash className="w-5 h-5" />
+              Confirmar eliminación
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              ¿Estás seguro de que deseas eliminar la transacción{' '}
+              <span className="font-semibold text-foreground">"{transactionToDelete?.name}"</span>?
+              <br />
+              <span className="text-red-500 text-sm mt-2 block">Esta acción no se puede deshacer.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+              className="rounded-xl"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => transactionToDelete && handleDeleteTransaction(transactionToDelete.id)}
+              className="rounded-xl bg-red-500 hover:bg-red-600"
+            >
+              <FaTrash className="w-4 h-4 mr-2" />
+              Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>

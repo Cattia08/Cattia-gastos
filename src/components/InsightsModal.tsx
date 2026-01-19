@@ -24,7 +24,7 @@ interface InsightsModalProps {
 }
 
 const InsightItem = ({ icon, title, description, className }: { icon: React.ReactNode; title: string; description: React.ReactNode; className?: string }) => (
-  <Card className={cn("p-3 rounded-xl border-gray-200 bg-white shadow-soft", className)}>
+  <Card className={cn("p-3 rounded-xl border-gray-200 dark:border-border bg-white dark:bg-card shadow-soft", className)}>
     <div className="flex items-start gap-3">
       <div className="shrink-0 text-lg">{icon}</div>
       <div className="space-y-0.5">
@@ -54,12 +54,12 @@ const InsightsModal = ({ open, onOpenChange, transactions, periodStart, periodEn
     });
   }, [matchingTransactions, prevStart, prevEnd]);
   const prevTotal = useMemo(() => prevTransactions.reduce((s, t) => s + t.amount, 0), [prevTransactions]);
-  
+
   const changeEmoji = useMemo(() => {
     if (prevTransactions.length === 0 || prevTotal === 0) return "📊";
     return currentTotal - prevTotal < 0 ? "📉" : "📈";
   }, [currentTotal, prevTotal, prevTransactions]);
-  
+
   const changeDescription = useMemo(() => {
     if (prevTransactions.length === 0 || prevTotal === 0) return "Sin datos suficientes para comparar.";
     const diff = currentTotal - prevTotal;
@@ -129,14 +129,14 @@ const InsightsModal = ({ open, onOpenChange, transactions, periodStart, periodEn
     });
     return map;
   }, [transactions]);
-  
+
   const strongestDay = useMemo(() => {
     const entries = Object.entries(byDay);
     if (!entries.length) return null;
     const max = entries.sort((a, b) => b[1] - a[1])[0];
     return { date: new Date(max[0]), total: max[1] };
   }, [byDay]);
-  
+
   const lightestDay = useMemo(() => {
     const entries = Object.entries(byDay);
     if (!entries.length) return null;

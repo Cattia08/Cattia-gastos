@@ -120,7 +120,7 @@ const DashboardStatCard = ({
 
                 {/* Progress bar (optional) */}
                 {progressPercent !== undefined && (
-                    <div className="mt-2 h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                    <div className="mt-2 h-2 rounded-full bg-gray-100 dark:bg-muted overflow-hidden">
                         <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{

@@ -55,7 +55,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { transactions, income, categories, paymentMethods, loading, error } = useSupabaseData();
   const navigate = useNavigate();
-  
+
   // Persisted filter state
   const {
     filters,
@@ -66,9 +66,9 @@ const Dashboard = () => {
     resetFilters: resetPersistedFilters,
     initializeSelections,
   } = usePersistedFilters();
-  
+
   const { selectedYear, selectedMonth, selectedCategories, searchQuery } = filters;
-  
+
   const [filteredExpenses, setFilteredExpenses] = useState([]);
   const [expenseData, setExpenseData] = useState([]);
   const [isDark, setIsDark] = useState<boolean>(() => document.documentElement.classList.contains('dark'));
@@ -429,9 +429,9 @@ const Dashboard = () => {
     if (active && payload && payload.length) {
       const val = Number(payload[0].value || 0);
       return (
-        <div className="bg-white rounded-lg shadow-card px-3 py-2 text-sm">
-          <div className="font-medium">Fecha: {label}</div>
-          <div className="text-gray-600">Monto: S/ {val.toFixed(2)}</div>
+        <div className="bg-white dark:bg-popover rounded-lg shadow-card px-3 py-2 text-sm border dark:border-border">
+          <div className="font-medium text-foreground">Fecha: {label}</div>
+          <div className="text-muted-foreground">Monto: S/ {val.toFixed(2)}</div>
         </div>
       );
     }
@@ -444,9 +444,9 @@ const Dashboard = () => {
       const category = p.payload?.category;
       const value = Number(p.value || 0).toFixed(2);
       return (
-        <div className="bg-white rounded-md shadow-md px-3 py-2 text-sm">
-          <div className="font-medium">{category}</div>
-          <div className="text-gray-600">S/ {value}</div>
+        <div className="bg-white dark:bg-popover rounded-md shadow-md px-3 py-2 text-sm border dark:border-border">
+          <div className="font-medium text-foreground">{category}</div>
+          <div className="text-muted-foreground">S/ {value}</div>
         </div>
       );
     }
@@ -614,7 +614,6 @@ const Dashboard = () => {
           onYearChange={setSelectedYear}
           onMonthChange={setSelectedMonth}
           availableYears={availableYears}
-          compact
         />
         <MultiSelectFilter
           label="Categorías"
@@ -624,7 +623,6 @@ const Dashboard = () => {
           selectedIds={selectedCategories}
           onSelectionChange={setSelectedCategories}
           showCount={true}
-          compact
         />
       </div>
 

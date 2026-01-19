@@ -38,8 +38,8 @@ const DatePeriodSelector: React.FC<DatePeriodSelectorProps> = ({
 }) => {
   const selectBaseClass = cn(
     "appearance-none cursor-pointer transition-all duration-200",
-    "rounded-xl border border-gray-200",
-    "bg-white hover:bg-pastel-mint/30",
+    "rounded-xl border border-gray-200 dark:border-border",
+    "bg-white dark:bg-input hover:bg-pastel-mint/30 dark:hover:bg-muted",
     "hover:border-theme-green/40",
     "focus:outline-none focus:ring-2 focus:ring-theme-green/30 focus:border-theme-green",
     "text-foreground",
@@ -52,7 +52,7 @@ const DatePeriodSelector: React.FC<DatePeriodSelectorProps> = ({
         "text-theme-green",
         compact ? "w-3.5 h-3.5" : "w-4 h-4"
       )} />
-      
+
       <select
         value={selectedYear}
         onChange={(e) => onYearChange(Number(e.target.value))}

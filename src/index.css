@@ -83,42 +83,64 @@
     --sidebar-ring: 152 42% 55%;
   }
 
-  /* Dark mode - NO TOCAR */
+  /* Dark Mode - Modern Neutral Dark Theme */
   .dark {
-    --background: 276 36% 11%;
-    --foreground: 276 25% 92%;
+    /* Background - Surface Hierarchy (slate/gray tones) */
+    --background: 222 47% 6%;
+    --foreground: 210 40% 96%;
 
-    /* Semantic Text Colors - Dark Mode */
-    --text-primary: 276 25% 95%;
-    --text-secondary: 276 25% 80%;
-    --text-muted: 276 25% 65%;
+    /* Semantic Text Colors - WCAG AA Compliant */
+    --text-primary: 210 40% 98%;
+    --text-secondary: 215 20% 70%;
+    --text-muted: 215 15% 55%;
     --text-emphasis: 0 0% 100%;
 
-    --card: 276 28% 16%;
-    --card-foreground: 276 25% 92%;
-    --popover: 276 28% 16%;
-    --popover-foreground: 276 25% 92%;
-    --primary: 340 82% 66%;
-    --primary-foreground: 276 25% 92%;
-    --secondary: 260 40% 60%;
-    --secondary-foreground: 276 25% 92%;
-    --accent: 152 42% 55%;
-    --accent-foreground: 276 25% 92%;
-    --muted: 276 20% 20%;
-    --muted-foreground: 276 25% 75%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 276 25% 92%;
-    --border: 330 20% 35%;
-    --input: 276 20% 20%;
-    --ring: 340 82% 66%;
+    /* Card surfaces (progressively lighter) */
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 96%;
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 65%;
 
-    /* Category Tint Backgrounds - Dark Mode */
-    --category-rose-tint: 340 30% 18%;
-    --category-green-tint: 152 25% 18%;
-    --category-lavender-tint: 260 25% 18%;
-    --category-sage-tint: 152 20% 18%;
-    --category-orange-tint: 25 40% 18%;
-    --category-blue-tint: 210 35% 18%;
+    /* Primary - Vibrant pink (keeps brand identity) */
+    --primary: 340 82% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Soft lavender */
+    --secondary: 260 45% 58%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent - Fresh mint green */
+    --accent: 152 55% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Status colors */
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & Inputs - Subtle gray borders */
+    --border: 217 33% 18%;
+    --input: 217 33% 12%;
+    --ring: 340 82% 62%;
+
+    /* Category Tint Backgrounds - Dark Mode (subtle) */
+    --category-rose-tint: 340 25% 14%;
+    --category-green-tint: 152 20% 12%;
+    --category-lavender-tint: 260 20% 14%;
+    --category-sage-tint: 152 15% 12%;
+    --category-orange-tint: 30 30% 13%;
+    --category-blue-tint: 210 30% 14%;
+
+    /* Sidebar - Dark Mode */
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 210 40% 92%;
+    --sidebar-primary: 340 82% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 14%;
+    --sidebar-accent-foreground: 210 40% 92%;
+    --sidebar-border: 217 33% 16%;
+    --sidebar-ring: 340 82% 62%;
   }
 }
 
@@ -127,18 +149,32 @@
     @apply border-border;
   }
 
+  /* Theme transition - smooth color changes */
   html {
     scroll-behavior: smooth;
-    /* Prevent horizontal scroll on mobile */
     overflow-x: hidden;
+    transition: background-color 0.2s ease-out;
+  }
+
+  html:not(.theme-switching) * {
+    transition: background-color 0.15s ease-out,
+      border-color 0.15s ease-out,
+      box-shadow 0.15s ease-out,
+      color 0.15s ease-out;
+  }
+
+  /* Disable transitions during theme switch to prevent flash */
+  html.theme-switching * {
+    transition: none !important;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    /* Prevent pull-to-refresh on Android Chrome when not needed */
     overscroll-behavior-y: contain;
-    /* Improve touch responsiveness */
     -webkit-tap-highlight-color: transparent;
+    font-weight: 450;
+    /* Slightly heavier base weight for better readability */
+    letter-spacing: -0.01em;
   }
 
   /* Safe area padding utilities */
@@ -150,7 +186,7 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Typography */
+  /* Typography - Enhanced for better readability */
   h1,
   h2,
   h3,
@@ -158,19 +194,40 @@
   h5,
   h6 {
     @apply font-heading font-bold tracking-tight;
+    font-weight: 700;
   }
 
   /* Responsive typography scale */
   h1 {
     @apply text-2xl md:text-3xl lg:text-4xl;
+    font-weight: 800;
   }
 
   h2 {
     @apply text-xl md:text-2xl lg:text-3xl;
+    font-weight: 700;
   }
 
   h3 {
     @apply text-lg md:text-xl;
+    font-weight: 600;
+  }
+
+  /* Improve paragraph readability */
+  p {
+    font-weight: 450;
+    line-height: 1.6;
+  }
+
+  /* Make labels and important text more readable */
+  label,
+  .label {
+    font-weight: 500;
+  }
+
+  /* Table headers should be more prominent */
+  th {
+    font-weight: 600;
   }
 
   /* Touch manipulation for interactive elements */
@@ -235,12 +292,15 @@
 
   /* Scrollbar hide utility */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
+    display: none;
+    /* Chrome, Safari and Opera */
   }
 
   /* ===============================================
@@ -775,35 +835,105 @@ html.dark {
   color-scheme: dark;
 }
 
+.dark .recharts-cartesian-grid line {
+  stroke: hsl(217 33% 18%);
+}
+
 .dark .recharts-cartesian-grid-bg {
-  fill: hsl(276 28% 16%);
+  fill: hsl(222 47% 9%);
 }
 
 .dark .recharts-cartesian-axis-line {
-  stroke: #372f45;
+  stroke: hsl(217 33% 20%);
 }
 
 .dark .recharts-cartesian-axis-tick-line {
-  stroke: #372f45;
+  stroke: hsl(217 33% 20%);
 }
 
 .dark .recharts-cartesian-axis-tick-value {
-  fill: hsl(276 25% 92%);
+  fill: hsl(215 20% 65%);
 }
 
 .dark .recharts-legend-item-text {
-  color: #E9E1EF !important;
+  color: hsl(210 40% 96%) !important;
 }
 
 .dark .recharts-tooltip-wrapper .recharts-default-tooltip {
-  background-color: rgba(30, 18, 38, 0.92) !important;
-  border-color: rgba(255, 117, 151, 0.3) !important;
+  background-color: hsl(222 47% 11%) !important;
+  border-color: hsl(217 33% 22%) !important;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-label {
+  color: hsl(210 40% 98%) !important;
 }
 
 .dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item {
-  color: #E9E1EF !important;
+  color: hsl(215 20% 75%) !important;
 }
 
 .dark .recharts-polar-grid line {
-  stroke: rgba(233, 225, 239, 0.25);
+  stroke: hsl(217 33% 20%);
+}
+
+/* ===============================================
+   DARK MODE SCROLLBAR
+   =============================================== */
+.dark ::-webkit-scrollbar-track {
+  background: hsl(222 47% 6%);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(217 33% 20%);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(217 33% 28%);
+}
+
+/* ===============================================
+   DARK MODE CARD & COMPONENT REFINEMENTS
+   =============================================== */
+.dark .card-theme {
+  background: hsl(222 47% 9%);
+  border-color: hsl(217 33% 18%);
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+.dark .card-theme:hover {
+  box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+.dark .card-glass {
+  background: hsla(222, 47%, 9%, 0.95);
+  border-color: hsl(217 33% 18%);
+}
+
+/* Dark mode input refinement */
+.dark .input-theme {
+  background: hsl(217 33% 12%);
+  border-color: hsl(217 33% 18%);
+  color: hsl(210 40% 96%);
+}
+
+.dark .input-theme::placeholder {
+  color: hsl(215 15% 50%);
+}
+
+.dark .input-theme:focus {
+  border-color: hsl(340 82% 62%);
+  box-shadow: 0 0 0 3px hsla(340, 82%, 62%, 0.2);
+}
+
+/* Dark mode table refinement */
+.dark .table-theme thead {
+  background: hsl(217 33% 14%);
+}
+
+.dark .table-theme tbody tr {
+  border-color: hsl(217 33% 16%);
+}
+
+.dark .table-theme tbody tr:hover {
+  background: hsl(217 33% 16%);
 }

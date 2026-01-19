@@ -58,8 +58,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
   className,
   compact = false,
 }) => {
-  const hasActiveFilters = searchQuery || 
-    selectedCategories.length !== categories.length || 
+  const hasActiveFilters = searchQuery ||
+    selectedCategories.length !== categories.length ||
     (paymentMethods.length > 0 && selectedPaymentMethods.length !== paymentMethods.length) ||
     selectedDate !== undefined;
 
@@ -131,7 +131,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
               variant="outline"
               className={cn(
                 "rounded-xl border-gray-200",
-                "bg-white hover:bg-pastel-rose/30",
+                "bg-white dark:bg-input hover:bg-pastel-rose/30 dark:hover:bg-muted",
                 "hover:border-theme-rose/40",
                 "transition-all duration-200",
                 compact ? "px-3 py-1 text-xs h-7" : "px-4 py-1.5 text-sm",
@@ -142,12 +142,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
               {selectedDate && endDate
                 ? `${format(selectedDate, "dd MMM")} - ${format(endDate, "dd MMM")}`
                 : selectedDate
-                ? format(selectedDate, "dd MMM yyyy")
-                : "Rango de fechas"}
+                  ? format(selectedDate, "dd MMM yyyy")
+                  : "Rango de fechas"}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            className="p-2 bg-white border-gray-200 shadow-soft-md rounded-xl"
+          <DropdownMenuContent
+            className="p-2 bg-white dark:bg-popover border-gray-200 dark:border-border shadow-soft-md rounded-xl"
             align="start"
           >
             <InteractiveCalendar

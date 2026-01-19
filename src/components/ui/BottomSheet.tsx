@@ -47,7 +47,7 @@ export function BottomSheet({
       snapPoints={snapPoints}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40 dark:bg-black/60" />
         <Drawer.Content
           className={cn(
             'fixed bottom-0 left-0 right-0 z-50',

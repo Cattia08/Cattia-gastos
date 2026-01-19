@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import FilteredTransactionsDialog from "@/components/FilteredTransactionsDialog";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,22 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Dark mode detection
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  useEffect(() => {
+    const handler = () => setIsDark(document.documentElement.classList.contains('dark'));
+    window.addEventListener('themechange', handler);
+    // Also observe class changes
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => {
+      window.removeEventListener('themechange', handler);
+      observer.disconnect();
+    };
+  }, []);
 
   const grid = useMemo(() => {
     return weekStarts.map(weekStart => {
@@ -104,7 +120,14 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
     return "Variación mixta";
   }, [weekendAvg, weekdayAvg, maxAvgIdx]);
 
-  const palette = {
+  // Theme-aware palette
+  const palette = isDark ? {
+    zero: "#0f172a",      // Slate dark base (matches new theme)
+    low: "#1a3329",       // Dark green tint
+    medium: "#3D3520",    // Dark amber
+    high: "#4A2A1A",      // Dark orange
+    veryhigh: "#5C1E1E"   // Dark red
+  } : {
     zero: "#F3F4F6",
     low: "#E8F5E9",
     medium: "#FFF59D",
@@ -123,8 +146,8 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
   };
 
   return (
-    <Card className={cn("rounded-2xl shadow-card p-5 bg-white", className)}>
-      <div className="text-sm font-semibold text-[#4A404E] mb-3">Patrón de gasto por día</div>
+    <Card className={cn("rounded-2xl shadow-card p-5 bg-white dark:bg-card", className)}>
+      <div className="text-sm font-semibold text-foreground mb-3">Patrón de gasto por día</div>
       <div className="grid mb-2" style={{ gridTemplateColumns: "96px repeat(7, 24px)", columnGap: "8px" }}>
         <div />
         {DAYS.map((d, i) => (
@@ -136,7 +159,7 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
           {grid.map((week, wi) => (
             <React.Fragment key={`w-${wi}`}>
               <div className="flex flex-col items-start justify-center leading-tight">
-                <div className="text-xs font-semibold text-[#4A404E]">Sem {wi + 1}</div>
+                <div className="text-xs font-semibold text-foreground">Sem {wi + 1}</div>
                 <div className="text-[11px] text-muted-foreground">
                   {(() => {
                     const startTxt = format(weekStarts[wi], "LLL dd", { locale: es });
@@ -165,7 +188,7 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
                       />
                     </UiTooltipTrigger>
                     <UiTooltipContent className="text-xs">
-                      <div className="font-medium text-[#4A404E]">
+                      <div className="font-medium text-foreground">
                         {DAY_FULL[new Date(cell.date).getDay() === 0 ? 6 : new Date(cell.date).getDay() - 1]} · {format(cell.date, "dd/MM", { locale: es })}
                       </div>
                       <div className="text-muted-foreground">S/ {cell.total.toFixed(2)}{cell.principalCategory ? ` · ${cell.principalCategory}` : ""} · {cell.count} transacciones</div>
@@ -189,19 +212,19 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div>
           <div className="text-[11px] text-muted-foreground">Mayor Gasto</div>
-          <div className="text-lg font-semibold text-[#4A404E]">{habitualDayIndex >= 0 ? DAY_FULL[habitualDayIndex] : "-"}</div>
+          <div className="text-lg font-semibold text-foreground">{habitualDayIndex >= 0 ? DAY_FULL[habitualDayIndex] : "-"}</div>
         </div>
         <div>
           <div className="text-[11px] text-muted-foreground">Promedio más alto</div>
-          <div className="text-lg font-semibold text-[#4A404E]">{maxAvgIdx >= 0 ? DAY_FULL[maxAvgIdx] : "-"}</div>
+          <div className="text-lg font-semibold text-foreground">{maxAvgIdx >= 0 ? DAY_FULL[maxAvgIdx] : "-"}</div>
         </div>
         <div>
           <div className="text-[11px] text-muted-foreground">Mayor variabilidad</div>
-          <div className="text-lg font-semibold text-[#4A404E]">{maxStdIdx >= 0 ? DAY_FULL[maxStdIdx] : "-"}</div>
+          <div className="text-lg font-semibold text-foreground">{maxStdIdx >= 0 ? DAY_FULL[maxStdIdx] : "-"}</div>
         </div>
         <div>
           <div className="text-[11px] text-muted-foreground">Patrón</div>
-          <div className="text-lg font-semibold text-[#4A404E]">{patternText}</div>
+          <div className="text-lg font-semibold text-foreground">{patternText}</div>
         </div>
       </div>
       <FilteredTransactionsDialog
