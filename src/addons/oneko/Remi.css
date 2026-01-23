@@ -5,8 +5,8 @@
   z-index: 9999;
   pointer-events: auto;
   cursor: pointer;
-  left: -100px;
-  top: 50%;
+  width: 62px;
+  height: 62px;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -16,42 +16,18 @@
 }
 
 .remi-container:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
-.remi-image {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
+.remi-sprite {
+  width: 62px;
+  height: 62px;
+  background-size: auto;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
   filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.25));
-  animation: remi-walk 0.3s ease-in-out infinite alternate;
-}
-
-.remi-flip .remi-image {
-  transform: scaleX(-1);
-}
-
-/* Animación de caminar */
-@keyframes remi-walk {
-  0% {
-    transform: translateY(0) rotate(-2deg);
-  }
-  100% {
-    transform: translateY(-3px) rotate(2deg);
-  }
-}
-
-.remi-flip .remi-image {
-  animation: remi-walk-flip 0.3s ease-in-out infinite alternate;
-}
-
-@keyframes remi-walk-flip {
-  0% {
-    transform: scaleX(-1) translateY(0) rotate(2deg);
-  }
-  100% {
-    transform: scaleX(-1) translateY(-3px) rotate(-2deg);
-  }
 }
 
 /* Tooltip con el nombre - mejorado para mejor visibilidad */
@@ -99,7 +75,7 @@
   animation: remi-run-away 0.8s ease-in forwards !important;
 }
 
-.remi-hiding .remi-image {
+.remi-hiding .remi-sprite {
   animation: remi-run 0.1s linear infinite !important;
 }
 
