@@ -32,35 +32,39 @@ export default function Remi({ isHiding = false, onHidden }: RemiProps) {
 
   const nekoSpeed = 10;
 
-  // Sprite sets - basado en tu nuevo sprite sheet 8x8
+  // Sprite sets - basado en tu sprite sheet 8x8
   // Formato: [columna, fila] (0-indexed)
+  // Usamos 4 frames espaciados para ciclo de caminar visible
   const spriteSets: Record<string, number[][]> = {
     // Fila 0: Idle sentado mirando al frente
-    idle: [[0, 0], [1, 0]],
-    // Fila 0-1: Alerta y bostezando
-    alert: [[2, 0], [3, 0]],
+    idle: [[0, 0]],
+    // Fila 0: Mirando a los lados (alerta)
+    alert: [[4, 0], [5, 0]],
     // Fila 1: Bostezando/cansado
     tired: [[0, 1], [1, 1]],
     // Fila 1: Durmiendo con Zz
-    sleeping: [[2, 1], [3, 1], [4, 1], [5, 1]],
-    // Fila 2: Acicalándose/scratch
+    sleeping: [[2, 1], [3, 1], [4, 1]],
+    // Fila 2: Acicalándose
     scratch: [[0, 2], [1, 2], [2, 2]],
     
-    // Filas 3-7: Caminando en diferentes direcciones
-    // Fila 3: Caminando hacia el frente (Sur)
-    S: [[0, 3], [1, 3], [2, 3], [3, 3]],
-    // Fila 4: Caminando diagonal
-    SE: [[0, 4], [1, 4]],
-    SW: [[2, 4], [3, 4]],
-    // Fila 5: Caminando lateral (Este/Oeste)
-    E: [[0, 5], [1, 5], [2, 5], [3, 5]],
-    W: [[4, 5], [5, 5], [6, 5], [7, 5]],
-    // Fila 6: Caminando lateral alternativo
-    N: [[0, 6], [1, 6], [2, 6], [3, 6]],
-    // Fila 7: Diagonales
-    NE: [[0, 7], [1, 7]],
-    NW: [[2, 7], [3, 7]],
+    // Caminar: 4 frames espaciados para ciclo visible de patas
+    // Fila 3: Norte (de espaldas)
+    N: [[0, 3], [2, 3], [4, 3], [6, 3]],
+    // Fila 4: Sur (de frente)  
+    S: [[0, 4], [2, 4], [4, 4], [6, 4]],
+    // Fila 5: Este (derecha) - ciclo de caminar completo
+    E: [[0, 5], [2, 5], [4, 5], [6, 5]],
+    // Oeste: mismos frames volteados
+    W: [[0, 5], [2, 5], [4, 5], [6, 5]],
+    // Diagonales con ciclo de caminar
+    NE: [[0, 6], [2, 6], [4, 6], [6, 6]],
+    SE: [[0, 7], [2, 7], [4, 7], [6, 7]],
+    NW: [[0, 6], [2, 6], [4, 6], [6, 6]],  // Volteado
+    SW: [[0, 7], [2, 7], [4, 7], [6, 7]],  // Volteado
   };
+
+  // Direcciones que necesitan voltear el sprite horizontalmente
+  const flipDirections = ['W', 'NW', 'SW'];
 
   const setSprite = (name: string, frame: number) => {
     const el = spriteRef.current;
@@ -70,6 +74,8 @@ export default function Remi({ isHiding = false, onHidden }: RemiProps) {
     const sprite = set[frame % set.length];
     // Posición negativa porque movemos el background
     el.style.backgroundPosition = `${-sprite[0] * SPRITE_WIDTH}px ${-sprite[1] * SPRITE_HEIGHT}px`;
+    // Voltear horizontalmente para direcciones hacia la izquierda
+    el.style.transform = flipDirections.includes(name) ? 'scaleX(-1)' : 'scaleX(1)';
   };
 
   const resetIdleAnimation = () => {
@@ -212,8 +218,8 @@ export default function Remi({ isHiding = false, onHidden }: RemiProps) {
 
     document.addEventListener("mousemove", onMouseMove);
     
-    // Usar 100ms como en el código vanilla JS original
-    const intervalId = setInterval(frame, 100);
+    // Usar 60ms para animación de caminar más fluida y visible
+    const intervalId = setInterval(frame, 60);
 
     return () => {
       document.removeEventListener("mousemove", onMouseMove);
