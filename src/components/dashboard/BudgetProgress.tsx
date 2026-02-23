@@ -45,7 +45,7 @@ const statusConfig = {
 };
 
 function fmt(n: number): string {
-    return `$${n.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    return `S/ ${n.toLocaleString("es-PE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 const BudgetProgress: React.FC<BudgetProgressProps> = ({ budgets, className }) => {

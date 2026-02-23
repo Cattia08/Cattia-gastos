@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useThemedToast } from "@/hooks/useThemedToast";
-import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield } from "lucide-react";
+import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield, Clock, Zap, CheckCircle2, XCircle, Sparkles, ArrowRight, Radio, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -34,9 +34,75 @@ const Admin = () => {
   const { user } = useAuth();
   const { categories, income, paymentMethods, loading, error, refreshData, transactions } = useSupabaseData();
   const { createPaymentMethod, updatePaymentMethod, deletePaymentMethod, isCreating, isUpdating, isDeleting } = usePaymentMethodMutations();
-  const { settings, updateSettings, isUpdating: isUpdatingSettings, sendReportNow } = useSettings();
+  const { settings, updateSettings, isUpdating: isUpdatingSettings, sendReportNow, testBudgetAlerts, testDailyDigest } = useSettings();
   const { budgets, setBudget, removeBudget, isSaving: isSavingBudget } = useBudgets();
   const [sendingReport, setSendingReport] = useState(false);
+  const [sendingBudgetAlert, setSendingBudgetAlert] = useState(false);
+  const [sendingDigest, setSendingDigest] = useState(false);
+  const [sendingAll, setSendingAll] = useState(false);
+
+  // Track test results per notification type
+  type TestResult = { status: 'success' | 'error'; message: string; timestamp: Date } | null;
+  const [reportResult, setReportResult] = useState<TestResult>(null);
+  const [budgetResult, setBudgetResult] = useState<TestResult>(null);
+  const [digestResult, setDigestResult] = useState<TestResult>(null);
+
+  // Animated counter for "Test All" progress
+  const [testAllProgress, setTestAllProgress] = useState(0);
+
+  const handleTestAll = useCallback(async () => {
+    setSendingAll(true);
+    setTestAllProgress(0);
+    const results: { report: boolean; budget: boolean; digest: boolean } = { report: false, budget: false, digest: false };
+
+    // 1. Report
+    try {
+      setSendingReport(true);
+      await sendReportNow();
+      setReportResult({ status: 'success', message: 'Reporte enviado correctamente', timestamp: new Date() });
+      results.report = true;
+    } catch (err: any) {
+      setReportResult({ status: 'error', message: err.message || 'Error al enviar', timestamp: new Date() });
+    } finally {
+      setSendingReport(false);
+      setTestAllProgress(1);
+    }
+
+    // 2. Budget Alerts
+    try {
+      setSendingBudgetAlert(true);
+      await testBudgetAlerts();
+      setBudgetResult({ status: 'success', message: 'Verificación enviada correctamente', timestamp: new Date() });
+      results.budget = true;
+    } catch (err: any) {
+      setBudgetResult({ status: 'error', message: err.message || 'Error al verificar', timestamp: new Date() });
+    } finally {
+      setSendingBudgetAlert(false);
+      setTestAllProgress(2);
+    }
+
+    // 3. Daily Digest
+    try {
+      setSendingDigest(true);
+      await testDailyDigest();
+      setDigestResult({ status: 'success', message: 'Resumen enviado correctamente', timestamp: new Date() });
+      results.digest = true;
+    } catch (err: any) {
+      setDigestResult({ status: 'error', message: err.message || 'Error al enviar', timestamp: new Date() });
+    } finally {
+      setSendingDigest(false);
+      setTestAllProgress(3);
+    }
+
+    setSendingAll(false);
+
+    const successCount = Object.values(results).filter(Boolean).length;
+    if (successCount === 3) {
+      toast.success({ title: '¡Todos enviados! 🎉', description: 'Los 3 correos se enviaron exitosamente' });
+    } else {
+      toast.info({ title: `${successCount}/3 enviados`, description: 'Revisa los resultados de cada tarjeta' });
+    }
+  }, [sendReportNow, testBudgetAlerts, testDailyDigest, toast]);
   const [budgetInputs, setBudgetInputs] = useState<Record<number, string>>({});
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [isAddIncomeDialogOpen, setIsAddIncomeDialogOpen] = useState(false);
@@ -713,98 +779,86 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab */}
+        {/* Notifications Tab — Premium Redesign */}
         <TabsContent value="notifications">
-          <Card className="p-6 border-violet-500/20 dark:border-border bg-gradient-to-br from-background to-violet-500/5">
-            <h2 className="text-xl font-semibold flex items-center mb-8">
-              <Mail className="w-5 h-5 mr-2 text-violet-500" />
-              Reportes y Presupuestos
-            </h2>
+          <Card className="p-0 border-0 bg-transparent shadow-none overflow-visible">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Email Reports + Send */}
-              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-white" />
+            {/* ═══════════ HERO HEADER ═══════════ */}
+            <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 sm:p-8">
+              {/* Decorative background orbs */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl" />
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-pink-500/10 rounded-full translate-y-1/2 -translate-x-1/4 blur-xl" />
+              <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-cyan-400/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-lg" />
+
+              <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-xl">
+                    <MailCheck className="w-7 h-7 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">Reportes por Email</h3>
-                    <p className="text-xs text-muted-foreground">Envía un resumen de gastos a tu correo</p>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                      Centro de Correos
+                      <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                    </h2>
+                    <p className="text-violet-200 text-sm mt-0.5">Configura, activa y prueba tus notificaciones</p>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground mb-2 block">Frecuencia</Label>
-                    <Select
-                      value={settings.report_frequency}
-                      onValueChange={(value: 'weekly' | 'monthly') => updateSettings({ report_frequency: value })}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="weekly">📅 Semanal</SelectItem>
-                        <SelectItem value="monthly">🗓️ Mensual</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="flex items-center gap-3">
+                  {/* Live status pill */}
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                    <Radio className={`w-3.5 h-3.5 ${[settings.email_reports_enabled, settings.budget_alerts_enabled, settings.daily_digest_enabled].filter(Boolean).length > 0 ? 'text-emerald-400 animate-pulse' : 'text-white/40'}`} />
+                    <span className="text-sm font-semibold text-white">
+                      {[settings.email_reports_enabled, settings.budget_alerts_enabled, settings.daily_digest_enabled].filter(Boolean).length}/3 activas
+                    </span>
                   </div>
 
+                  {/* TEST ALL ★ Hero Button */}
                   <Button
-                    className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-md"
-                    onClick={async () => {
-                      setSendingReport(true);
-                      try {
-                        await sendReportNow();
-                        toast.success({ title: "¡Reporte enviado!", description: "Revisa tu bandeja de entrada 📧" });
-                      } catch (err: any) {
-                        toast.error({ title: "Error al enviar", description: err.message || "Intenta de nuevo más tarde" });
-                      } finally {
-                        setSendingReport(false);
-                      }
-                    }}
-                    disabled={sendingReport}
+                    onClick={handleTestAll}
+                    disabled={sendingAll || sendingReport || sendingBudgetAlert || sendingDigest}
+                    className="bg-white text-violet-700 hover:bg-violet-50 font-bold shadow-xl shadow-black/20 h-10 px-5 gap-2 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
                   >
-                    {sendingReport ? (
+                    {sendingAll ? (
                       <>
-                        <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Enviando...
+                        <div className="w-4 h-4 border-2 border-violet-300 border-t-violet-700 rounded-full animate-spin" />
+                        <span>{testAllProgress}/3</span>
                       </>
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Enviar Reporte Ahora
+                        <Zap className="w-4 h-4" />
+                        Probar Todo
                       </>
                     )}
                   </Button>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    Se enviará a <span className="font-medium text-foreground">cattia.ra99@gmail.com</span>
-                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Notification Toggles */}
-              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Preferencias</h3>
-                    <p className="text-xs text-muted-foreground">Configura tus notificaciones</p>
-                  </div>
-                </div>
+            {/* ═══════════ NOTIFICATION CARDS GRID ═══════════ */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
 
-                <div className="space-y-1">
-                  {/* Email Reports Toggle */}
-                  <div className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+              {/* ─── Card 1: Reportes Automáticos ─── */}
+              <div className={`group relative rounded-2xl border-2 transition-all duration-500 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 ${settings.email_reports_enabled
+                  ? 'border-violet-500/30 bg-white dark:bg-card shadow-lg shadow-violet-500/5'
+                  : 'border-border/50 bg-white/80 dark:bg-card/60 hover:border-violet-500/20'
+                }`}>
+                {/* Subtle top gradient bar */}
+                <div className={`h-1 w-full transition-all duration-500 ${settings.email_reports_enabled ? 'bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+
+                <div className="p-5">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="flex items-center gap-3">
-                      <Mail className="w-5 h-5 text-violet-500" />
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${settings.email_reports_enabled ? 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30 scale-100' : 'bg-gray-100 dark:bg-gray-800 scale-95'}`}>
+                        <Mail className={`w-5 h-5 transition-colors ${settings.email_reports_enabled ? 'text-white' : 'text-gray-400'}`} />
+                      </div>
                       <div>
-                        <p className="text-sm font-medium">Reportes Automáticos</p>
-                        <p className="text-xs text-muted-foreground">Enviar reporte según frecuencia</p>
+                        <h3 className="font-bold text-foreground text-sm">Reportes Automáticos</h3>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5 transition-colors ${settings.email_reports_enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${settings.email_reports_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                          {settings.email_reports_enabled ? 'Activo' : 'Inactivo'}
+                        </span>
                       </div>
                     </div>
                     <Switch
@@ -813,13 +867,94 @@ const Admin = () => {
                     />
                   </div>
 
-                  {/* Budget Alerts Toggle */}
-                  <div className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  {/* Description */}
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">Resumen completo con categorías, tendencias e insights enviado automáticamente.</p>
+
+                  {/* Meta chips */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-500/20">
+                      <Clock className="w-3 h-3" />
+                      {settings.report_frequency === 'weekly' ? 'Lunes 9AM' : 'Día 1 · 9AM'}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700">
+                      <Mail className="w-3 h-3" />
+                      cattia.ra99@gmail.com
+                    </span>
+                  </div>
+
+                  {/* Frequency selector */}
+                  <Select
+                    value={settings.report_frequency}
+                    onValueChange={(value: 'weekly' | 'monthly') => updateSettings({ report_frequency: value })}
+                  >
+                    <SelectTrigger className="h-9 text-xs border-violet-200 dark:border-violet-500/20 mb-3">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">📅 Semanal (Lunes)</SelectItem>
+                      <SelectItem value="monthly">🗓️ Mensual (Día 1)</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Test result indicator */}
+                  {reportResult && (
+                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${reportResult.status === 'success'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                        : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                      }`}>
+                      {reportResult.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <XCircle className="w-3.5 h-3.5 shrink-0" />}
+                      <span className="truncate">{reportResult.message}</span>
+                      <span className="ml-auto text-[10px] opacity-60 shrink-0">{reportResult.timestamp.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  )}
+
+                  {/* Send button */}
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-md shadow-violet-500/20 h-10 gap-2 transition-all hover:shadow-lg group-hover:shadow-violet-500/30"
+                    onClick={async () => {
+                      setSendingReport(true);
+                      try {
+                        await sendReportNow();
+                        setReportResult({ status: 'success', message: 'Reporte enviado correctamente', timestamp: new Date() });
+                        toast.success({ title: "¡Reporte enviado!", description: "Revisa tu bandeja de entrada 📧" });
+                      } catch (err: any) {
+                        setReportResult({ status: 'error', message: err.message || 'Error al enviar', timestamp: new Date() });
+                        toast.error({ title: "Error al enviar", description: err.message || "Intenta de nuevo" });
+                      } finally {
+                        setSendingReport(false);
+                      }
+                    }}
+                    disabled={sendingReport}
+                  >
+                    {sendingReport ? (
+                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Enviando...</span></>
+                    ) : (
+                      <><Send className="w-4 h-4" /><span>Enviar Reporte</span><ArrowRight className="w-3.5 h-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" /></>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* ─── Card 2: Alertas de Presupuesto ─── */}
+              <div className={`group relative rounded-2xl border-2 transition-all duration-500 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 ${settings.budget_alerts_enabled
+                  ? 'border-amber-500/30 bg-white dark:bg-card shadow-lg shadow-amber-500/5'
+                  : 'border-border/50 bg-white/80 dark:bg-card/60 hover:border-amber-500/20'
+                }`}>
+                <div className={`h-1 w-full transition-all duration-500 ${settings.budget_alerts_enabled ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="flex items-center gap-3">
-                      <Shield className="w-5 h-5 text-amber-500" />
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${settings.budget_alerts_enabled ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30 scale-100' : 'bg-gray-100 dark:bg-gray-800 scale-95'}`}>
+                        <Shield className={`w-5 h-5 transition-colors ${settings.budget_alerts_enabled ? 'text-white' : 'text-gray-400'}`} />
+                      </div>
                       <div>
-                        <p className="text-sm font-medium">Alertas de Presupuesto</p>
-                        <p className="text-xs text-muted-foreground">Notificar al superar un límite</p>
+                        <h3 className="font-bold text-foreground text-sm">Alertas de Presupuesto</h3>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5 transition-colors ${settings.budget_alerts_enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${settings.budget_alerts_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                          {settings.budget_alerts_enabled ? 'Activo' : 'Inactivo'}
+                        </span>
                       </div>
                     </div>
                     <Switch
@@ -828,13 +963,78 @@ const Admin = () => {
                     />
                   </div>
 
-                  {/* Daily Digest Toggle */}
-                  <div className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">Alerta cuando una categoría se acerca o supera su límite mensual.</p>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-500/20">
+                      <Clock className="w-3 h-3" />
+                      Diario · 10AM
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700">
+                      🎯 {budgets.length} presupuesto{budgets.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  {/* Spacer to align with card 1 that has the frequency selector */}
+                  <div className="h-[36px] mb-3" />
+
+                  {budgetResult && (
+                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${budgetResult.status === 'success'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                        : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                      }`}>
+                      {budgetResult.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <XCircle className="w-3.5 h-3.5 shrink-0" />}
+                      <span className="truncate">{budgetResult.message}</span>
+                      <span className="ml-auto text-[10px] opacity-60 shrink-0">{budgetResult.timestamp.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  )}
+
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20 h-10 gap-2 transition-all hover:shadow-lg group-hover:shadow-amber-500/30"
+                    onClick={async () => {
+                      setSendingBudgetAlert(true);
+                      try {
+                        await testBudgetAlerts();
+                        setBudgetResult({ status: 'success', message: 'Verificación enviada correctamente', timestamp: new Date() });
+                        toast.success({ title: "¡Verificación enviada!", description: "Si tienes presupuestos en alerta, recibirás un email ⚡" });
+                      } catch (err: any) {
+                        setBudgetResult({ status: 'error', message: err.message || 'Error al verificar', timestamp: new Date() });
+                        toast.error({ title: "Error al verificar", description: err.message || "Intenta de nuevo" });
+                      } finally {
+                        setSendingBudgetAlert(false);
+                      }
+                    }}
+                    disabled={sendingBudgetAlert}
+                  >
+                    {sendingBudgetAlert ? (
+                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Verificando...</span></>
+                    ) : (
+                      <><Shield className="w-4 h-4" /><span>Verificar Alertas</span><ArrowRight className="w-3.5 h-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" /></>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* ─── Card 3: Resumen Diario ─── */}
+              <div className={`group relative rounded-2xl border-2 transition-all duration-500 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 ${settings.daily_digest_enabled
+                  ? 'border-blue-500/30 bg-white dark:bg-card shadow-lg shadow-blue-500/5'
+                  : 'border-border/50 bg-white/80 dark:bg-card/60 hover:border-blue-500/20'
+                }`}>
+                <div className={`h-1 w-full transition-all duration-500 ${settings.daily_digest_enabled ? 'bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="flex items-center gap-3">
-                      <Bell className="w-5 h-5 text-blue-500" />
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${settings.daily_digest_enabled ? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 scale-100' : 'bg-gray-100 dark:bg-gray-800 scale-95'}`}>
+                        <Bell className={`w-5 h-5 transition-colors ${settings.daily_digest_enabled ? 'text-white' : 'text-gray-400'}`} />
+                      </div>
                       <div>
-                        <p className="text-sm font-medium">Resumen Diario</p>
-                        <p className="text-xs text-muted-foreground">"Hoy gastaste $X" cada noche</p>
+                        <h3 className="font-bold text-foreground text-sm">Resumen Diario</h3>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5 transition-colors ${settings.daily_digest_enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${settings.daily_digest_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                          {settings.daily_digest_enabled ? 'Activo' : 'Inactivo'}
+                        </span>
                       </div>
                     </div>
                     <Switch
@@ -842,73 +1042,123 @@ const Admin = () => {
                       onCheckedChange={(checked) => updateSettings({ daily_digest_enabled: checked })}
                     />
                   </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">Resumen nocturno con tus gastos del día, contexto semanal y top categoría.</p>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20">
+                      <Clock className="w-3 h-3" />
+                      9PM diario
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700">
+                      🌙 "Hoy gastaste S/ X"
+                    </span>
+                  </div>
+
+                  <div className="h-[36px] mb-3" />
+
+                  {digestResult && (
+                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${digestResult.status === 'success'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                        : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                      }`}>
+                      {digestResult.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <XCircle className="w-3.5 h-3.5 shrink-0" />}
+                      <span className="truncate">{digestResult.message}</span>
+                      <span className="ml-auto text-[10px] opacity-60 shrink-0">{digestResult.timestamp.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  )}
+
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 h-10 gap-2 transition-all hover:shadow-lg group-hover:shadow-blue-500/30"
+                    onClick={async () => {
+                      setSendingDigest(true);
+                      try {
+                        await testDailyDigest();
+                        setDigestResult({ status: 'success', message: 'Resumen enviado correctamente', timestamp: new Date() });
+                        toast.success({ title: "¡Resumen enviado!", description: "Revisa tu correo para ver el resumen 🌙" });
+                      } catch (err: any) {
+                        setDigestResult({ status: 'error', message: err.message || 'Error al enviar', timestamp: new Date() });
+                        toast.error({ title: "Error al enviar", description: err.message || "Intenta de nuevo" });
+                      } finally {
+                        setSendingDigest(false);
+                      }
+                    }}
+                    disabled={sendingDigest}
+                  >
+                    {sendingDigest ? (
+                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Enviando...</span></>
+                    ) : (
+                      <><Bell className="w-4 h-4" /><span>Enviar Resumen</span><ArrowRight className="w-3.5 h-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" /></>
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>
 
-            {/* Category Budgets Section */}
-            <div className="mt-8">
-              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                    <span className="text-white text-lg">🎯</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Presupuestos por Categoría</h3>
-                    <p className="text-xs text-muted-foreground">Define límites mensuales de gasto</p>
-                  </div>
+            {/* ═══════════ PRESUPUESTOS SECTION ═══════════ */}
+            <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+                  <span className="text-white text-lg">🎯</span>
                 </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Presupuestos por Categoría</h3>
+                  <p className="text-xs text-muted-foreground">Define límites mensuales para recibir alertas</p>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {categories.map(category => {
-                    const existingBudget = budgets.find(b => b.category_id === category.id);
-                    const inputValue = budgetInputs[category.id] ?? (existingBudget?.monthly_limit?.toString() || '');
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {categories.map(category => {
+                  const existingBudget = budgets.find(b => b.category_id === category.id);
+                  const inputValue = budgetInputs[category.id] ?? (existingBudget?.monthly_limit?.toString() || '');
 
-                    return (
+                  return (
+                    <div
+                      key={category.id}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:border-amber-500/30 transition-all duration-200 hover:bg-amber-50/30 dark:hover:bg-amber-500/5"
+                    >
                       <div
-                        key={category.id}
-                        className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:border-amber-500/30 transition-colors"
-                      >
-                        <div
-                          className="w-4 h-4 rounded-full shrink-0"
-                          style={{ backgroundColor: category.color || '#9ca3af' }}
-                        />
-                        <span className="text-sm font-medium flex-1 truncate">{category.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">$</span>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={inputValue}
-                            onChange={(e) => setBudgetInputs(prev => ({ ...prev, [category.id]: e.target.value }))}
-                            onBlur={async () => {
-                              const val = parseFloat(inputValue);
-                              if (!isNaN(val) && val > 0) {
-                                await setBudget(category.id, val);
-                                toast.success({ title: "Presupuesto guardado", description: `${category.name}: $${val}` });
-                              } else if (inputValue === '' && existingBudget?.id) {
+                        className="w-4 h-4 rounded-full shrink-0 ring-2 ring-offset-1 ring-offset-white dark:ring-offset-card"
+                        style={{ backgroundColor: category.color || '#9ca3af', ringColor: (category.color || '#9ca3af') + '40' }}
+                      />
+                      <span className="text-sm font-medium flex-1 truncate">{category.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground font-medium">S/</span>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={inputValue}
+                          onChange={(e) => setBudgetInputs(prev => ({ ...prev, [category.id]: e.target.value }))}
+                          onBlur={async () => {
+                            const val = parseFloat(inputValue);
+                            if (!isNaN(val) && val > 0) {
+                              await setBudget(category.id, val);
+                              toast.success({ title: "Presupuesto guardado", description: `${category.name}: S/ ${val}` });
+                            } else if (inputValue === '' || (!isNaN(val) && val === 0)) {
+                              if (existingBudget?.id) {
                                 await removeBudget(existingBudget.id);
                                 toast.info({ title: "Presupuesto eliminado", description: category.name });
                               }
-                              setBudgetInputs(prev => { const next = { ...prev }; delete next[category.id]; return next; });
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                            }}
-                            className="w-24 h-8 text-right text-sm border-amber-500/20"
-                          />
-                        </div>
+                            }
+                            setBudgetInputs(prev => { const next = { ...prev }; delete next[category.id]; return next; });
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                          }}
+                          className="w-24 h-8 text-right text-sm border-amber-500/20 focus:border-amber-500/50"
+                        />
                       </div>
-                    );
-                  })}
-                </div>
-
-                {categories.length === 0 && (
-                  <p className="text-center text-muted-foreground text-sm py-6">
-                    Crea categorías primero en la pestaña "Categorías"
-                  </p>
-                )}
+                    </div>
+                  );
+                })}
               </div>
+
+              {categories.length === 0 && (
+                <p className="text-center text-muted-foreground text-sm py-6">
+                  Crea categorías primero en la pestaña "Categorías"
+                </p>
+              )}
             </div>
           </Card>
         </TabsContent>

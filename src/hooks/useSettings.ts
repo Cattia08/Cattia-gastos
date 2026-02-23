@@ -105,6 +105,34 @@ export function useSettings() {
         return data;
     };
 
+    const testBudgetAlerts = async () => {
+        if (!userId) throw new Error('No user');
+
+        const { data, error } = await supabase.functions.invoke('check-budgets', {
+            body: {},
+        });
+
+        if (error) {
+            throw new Error(error.message || 'Error al verificar presupuestos');
+        }
+
+        return data;
+    };
+
+    const testDailyDigest = async () => {
+        if (!userId) throw new Error('No user');
+
+        const { data, error } = await supabase.functions.invoke('daily-digest', {
+            body: {},
+        });
+
+        if (error) {
+            throw new Error(error.message || 'Error al enviar resumen diario');
+        }
+
+        return data;
+    };
+
     return {
         settings: query.data ?? defaultSettings,
         isLoading: query.isLoading,
@@ -112,5 +140,7 @@ export function useSettings() {
         updateSettings,
         isUpdating: mutation.isPending,
         sendReportNow,
+        testBudgetAlerts,
+        testDailyDigest,
     };
 }
