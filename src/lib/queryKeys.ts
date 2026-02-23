@@ -26,4 +26,16 @@ export const queryKeys = {
     all: ['payment_methods'] as const,
     list: () => [...queryKeys.paymentMethods.all, 'list'] as const,
   },
+  
+  // User Settings
+  settings: {
+    all: ['settings'] as const,
+    detail: () => [...queryKeys.settings.all, 'detail'] as const,
+  },
+  
+  // Category Budgets
+  budgets: {
+    all: ['budgets'] as const,
+    list: () => [...queryKeys.budgets.all, 'list'] as const,
+  },
 } as const;

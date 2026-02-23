@@ -36,6 +36,8 @@ import {
 import ExportButton from "@/components/export/ExportButton";
 import InsightsModal from "@/components/InsightsModal";
 import WeeklyHeatmap from "@/components/WeeklyHeatmap";
+import BudgetProgress from "@/components/dashboard/BudgetProgress";
+import { useBudgets } from "@/hooks/useBudgets";
 
 const COLORS = ["#5DBE8A", "#E879A8", "#B8A9E8", "#F5C869", "#7CB899"];
 
@@ -55,6 +57,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { transactions, income, categories, paymentMethods, loading, error } = useSupabaseData();
   const navigate = useNavigate();
+  const { getBudgetsWithUsage, budgets: rawBudgets } = useBudgets();
 
   // Persisted filter state
   const {
@@ -847,6 +850,14 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Budget Progress Section */}
+      {rawBudgets.length > 0 && (
+        <BudgetProgress
+          budgets={getBudgetsWithUsage(transactions)}
+          className="mt-6"
+        />
+      )}
 
       <InsightsModal
         open={isInsightsOpen}

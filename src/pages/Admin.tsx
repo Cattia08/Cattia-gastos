@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useThemedToast } from "@/hooks/useThemedToast";
-import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard } from "lucide-react";
+import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -19,16 +19,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CategoryBadge from "@/components/ui/CategoryBadge";
+import { Switch } from "@/components/ui/switch";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { usePaymentMethodMutations } from "@/hooks/usePaymentMethodMutations";
+import { useSettings } from "@/hooks/useSettings";
+import { useBudgets } from "@/hooks/useBudgets";
+import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 const Admin = () => {
   const toast = useThemedToast();
+  const { user } = useAuth();
   const { categories, income, paymentMethods, loading, error, refreshData, transactions } = useSupabaseData();
   const { createPaymentMethod, updatePaymentMethod, deletePaymentMethod, isCreating, isUpdating, isDeleting } = usePaymentMethodMutations();
+  const { settings, updateSettings, isUpdating: isUpdatingSettings, sendReportNow } = useSettings();
+  const { budgets, setBudget, removeBudget, isSaving: isSavingBudget } = useBudgets();
+  const [sendingReport, setSendingReport] = useState(false);
+  const [budgetInputs, setBudgetInputs] = useState<Record<number, string>>({});
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [isAddIncomeDialogOpen, setIsAddIncomeDialogOpen] = useState(false);
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
@@ -357,6 +366,13 @@ const Admin = () => {
             <span className="hidden lg:inline">Ingresos</span>
           </TabsTrigger> */}
           <TabsTrigger
+            value="notifications"
+            className="flex-1 min-w-fit data-[state=active]:bg-violet-500/20 dark:data-[state=active]:bg-violet-500/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
+          >
+            <Mail className="w-4 h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Correos</span>
+          </TabsTrigger>
+          <TabsTrigger
             value="settings"
             className="flex-1 min-w-fit data-[state=active]:bg-pastel-yellow/30 dark:data-[state=active]:bg-amber-500/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
           >
@@ -678,7 +694,7 @@ const Admin = () => {
                         <tr key={inc.id} className="border-b border-border dark:hover:bg-muted/30">
                           <td className="p-3">{inc.source}</td>
                           <td className="p-3">{new Date(inc.date).toLocaleDateString()}</td>
-                          <td className="p-3 text-right font-medium">${inc.amount.toFixed(2)}</td>
+                          <td className="p-3 text-right font-medium">S/ {inc.amount.toFixed(2)}</td>
                           <td className="p-3 text-center">
                             <Button size="icon" variant="ghost" className="text-pastel-blue hover:bg-pastel-blue/10 mr-1" onClick={() => handleStartEditIncome(inc)}><Edit className="w-4 h-4" /></Button>
                             <Button size="icon" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteIncome(inc.id)}><Trash className="w-4 h-4" /></Button>
@@ -687,11 +703,211 @@ const Admin = () => {
                       ))}
                       <tr className="bg-pastel-green/10 dark:bg-accent/10">
                         <td className="p-3 font-bold" colSpan={3}>Total</td>
-                        <td className="p-3 text-right font-bold">${income.reduce((sum, inc) => sum + inc.amount, 0).toFixed(2)}</td>
+                        <td className="p-3 text-right font-bold">S/ {income.reduce((sum, inc) => sum + inc.amount, 0).toFixed(2)}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <Card className="p-6 border-violet-500/20 dark:border-border bg-gradient-to-br from-background to-violet-500/5">
+            <h2 className="text-xl font-semibold flex items-center mb-8">
+              <Mail className="w-5 h-5 mr-2 text-violet-500" />
+              Reportes y Presupuestos
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Email Reports + Send */}
+              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Reportes por Email</h3>
+                    <p className="text-xs text-muted-foreground">Envía un resumen de gastos a tu correo</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground mb-2 block">Frecuencia</Label>
+                    <Select
+                      value={settings.report_frequency}
+                      onValueChange={(value: 'weekly' | 'monthly') => updateSettings({ report_frequency: value })}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">📅 Semanal</SelectItem>
+                        <SelectItem value="monthly">🗓️ Mensual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-md"
+                    onClick={async () => {
+                      setSendingReport(true);
+                      try {
+                        await sendReportNow();
+                        toast.success({ title: "¡Reporte enviado!", description: "Revisa tu bandeja de entrada 📧" });
+                      } catch (err: any) {
+                        toast.error({ title: "Error al enviar", description: err.message || "Intenta de nuevo más tarde" });
+                      } finally {
+                        setSendingReport(false);
+                      }
+                    }}
+                    disabled={sendingReport}
+                  >
+                    {sendingReport ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Enviar Reporte Ahora
+                      </>
+                    )}
+                  </Button>
+
+                  <p className="text-xs text-muted-foreground text-center">
+                    Se enviará a <span className="font-medium text-foreground">cattia.ra99@gmail.com</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Notification Toggles */}
+              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Preferencias</h3>
+                    <p className="text-xs text-muted-foreground">Configura tus notificaciones</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  {/* Email Reports Toggle */}
+                  <div className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-5 h-5 text-violet-500" />
+                      <div>
+                        <p className="text-sm font-medium">Reportes Automáticos</p>
+                        <p className="text-xs text-muted-foreground">Enviar reporte según frecuencia</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.email_reports_enabled}
+                      onCheckedChange={(checked) => updateSettings({ email_reports_enabled: checked })}
+                    />
+                  </div>
+
+                  {/* Budget Alerts Toggle */}
+                  <div className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-5 h-5 text-amber-500" />
+                      <div>
+                        <p className="text-sm font-medium">Alertas de Presupuesto</p>
+                        <p className="text-xs text-muted-foreground">Notificar al superar un límite</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.budget_alerts_enabled}
+                      onCheckedChange={(checked) => updateSettings({ budget_alerts_enabled: checked })}
+                    />
+                  </div>
+
+                  {/* Daily Digest Toggle */}
+                  <div className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="text-sm font-medium">Resumen Diario</p>
+                        <p className="text-xs text-muted-foreground">"Hoy gastaste $X" cada noche</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.daily_digest_enabled}
+                      onCheckedChange={(checked) => updateSettings({ daily_digest_enabled: checked })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Budgets Section */}
+            <div className="mt-8">
+              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                    <span className="text-white text-lg">🎯</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Presupuestos por Categoría</h3>
+                    <p className="text-xs text-muted-foreground">Define límites mensuales de gasto</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {categories.map(category => {
+                    const existingBudget = budgets.find(b => b.category_id === category.id);
+                    const inputValue = budgetInputs[category.id] ?? (existingBudget?.monthly_limit?.toString() || '');
+
+                    return (
+                      <div
+                        key={category.id}
+                        className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:border-amber-500/30 transition-colors"
+                      >
+                        <div
+                          className="w-4 h-4 rounded-full shrink-0"
+                          style={{ backgroundColor: category.color || '#9ca3af' }}
+                        />
+                        <span className="text-sm font-medium flex-1 truncate">{category.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">$</span>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={inputValue}
+                            onChange={(e) => setBudgetInputs(prev => ({ ...prev, [category.id]: e.target.value }))}
+                            onBlur={async () => {
+                              const val = parseFloat(inputValue);
+                              if (!isNaN(val) && val > 0) {
+                                await setBudget(category.id, val);
+                                toast.success({ title: "Presupuesto guardado", description: `${category.name}: $${val}` });
+                              } else if (inputValue === '' && existingBudget?.id) {
+                                await removeBudget(existingBudget.id);
+                                toast.info({ title: "Presupuesto eliminado", description: category.name });
+                              }
+                              setBudgetInputs(prev => { const next = { ...prev }; delete next[category.id]; return next; });
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                            }}
+                            className="w-24 h-8 text-right text-sm border-amber-500/20"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {categories.length === 0 && (
+                  <p className="text-center text-muted-foreground text-sm py-6">
+                    Crea categorías primero en la pestaña "Categorías"
+                  </p>
+                )}
               </div>
             </div>
           </Card>
@@ -717,7 +933,7 @@ const Admin = () => {
                     <p className="text-xs text-muted-foreground">Personaliza tu imagen y nombre</p>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col items-center">
                   <div className="relative mb-4 group">
                     <img
@@ -769,7 +985,7 @@ const Admin = () => {
                     <p className="text-xs text-muted-foreground">Aparece en el menú lateral</p>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-full">
                     <Label className="text-sm text-muted-foreground mb-2 block">Tu nombre</Label>
