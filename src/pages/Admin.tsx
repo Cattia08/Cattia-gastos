@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useThemedToast } from "@/hooks/useThemedToast";
-import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield, Clock, Zap, CheckCircle2, XCircle, Sparkles, ArrowRight, Radio, MailCheck } from "lucide-react";
+import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield, Clock, Zap, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -783,82 +783,77 @@ const Admin = () => {
         <TabsContent value="notifications">
           <Card className="p-0 border-0 bg-transparent shadow-none overflow-visible">
 
-            {/* ═══════════ HERO HEADER ═══════════ */}
-            <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 sm:p-8">
-              {/* Decorative background orbs */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl" />
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-pink-500/10 rounded-full translate-y-1/2 -translate-x-1/4 blur-xl" />
-              <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-cyan-400/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-lg" />
-
-              <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-xl">
-                    <MailCheck className="w-7 h-7 text-white" />
+            {/* ═══════════ HEADER ═══════════ */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                    <Mail className="w-6 h-6 text-white" />
                   </div>
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-                      Centro de Correos
-                      <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-                    </h2>
-                    <p className="text-violet-200 text-sm mt-0.5">Configura, activa y prueba tus notificaciones</p>
-                  </div>
+                  {[settings.email_reports_enabled, settings.budget_alerts_enabled, settings.daily_digest_enabled].some(Boolean) && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-background rounded-full animate-pulse" />
+                  )}
                 </div>
-
-                <div className="flex items-center gap-3">
-                  {/* Live status pill */}
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-                    <Radio className={`w-3.5 h-3.5 ${[settings.email_reports_enabled, settings.budget_alerts_enabled, settings.daily_digest_enabled].filter(Boolean).length > 0 ? 'text-emerald-400 animate-pulse' : 'text-white/40'}`} />
-                    <span className="text-sm font-semibold text-white">
-                      {[settings.email_reports_enabled, settings.budget_alerts_enabled, settings.daily_digest_enabled].filter(Boolean).length}/3 activas
+                <div>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Notificaciones por Correo</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    <span className="text-emerald-500 font-semibold">
+                      {[settings.email_reports_enabled, settings.budget_alerts_enabled, settings.daily_digest_enabled].filter(Boolean).length}
                     </span>
-                  </div>
-
-                  {/* TEST ALL ★ Hero Button */}
-                  <Button
-                    onClick={handleTestAll}
-                    disabled={sendingAll || sendingReport || sendingBudgetAlert || sendingDigest}
-                    className="bg-white text-violet-700 hover:bg-violet-50 font-bold shadow-xl shadow-black/20 h-10 px-5 gap-2 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
-                  >
-                    {sendingAll ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-violet-300 border-t-violet-700 rounded-full animate-spin" />
-                        <span>{testAllProgress}/3</span>
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4" />
-                        Probar Todo
-                      </>
-                    )}
-                  </Button>
+                    {' '}de 3 activas
+                  </p>
                 </div>
               </div>
+
+              <Button
+                variant="outline"
+                onClick={handleTestAll}
+                disabled={sendingAll || sendingReport || sendingBudgetAlert || sendingDigest || ![settings.email_reports_enabled, settings.budget_alerts_enabled, settings.daily_digest_enabled].some(Boolean)}
+                className="h-10 px-5 gap-2 text-sm font-semibold border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:border-violet-400 transition-all"
+              >
+                {sendingAll ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+                    <span className="text-violet-600 dark:text-violet-400">{testAllProgress}/3</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                    Probar Todo
+                  </>
+                )}
+              </Button>
             </div>
 
-            {/* ═══════════ NOTIFICATION CARDS GRID ═══════════ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            {/* ═══════════ NOTIFICATION CARDS ═══════════ */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
 
               {/* ─── Card 1: Reportes Automáticos ─── */}
-              <div className={`group relative rounded-2xl border-2 transition-all duration-500 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 ${settings.email_reports_enabled
-                  ? 'border-violet-500/30 bg-white dark:bg-card shadow-lg shadow-violet-500/5'
-                  : 'border-border/50 bg-white/80 dark:bg-card/60 hover:border-violet-500/20'
+              <div className={`relative rounded-2xl border overflow-hidden transition-all duration-300 ${settings.email_reports_enabled
+                ? 'border-violet-200 dark:border-violet-800/60 shadow-lg shadow-violet-500/10 bg-white dark:bg-card'
+                : 'border-border/40 bg-white/60 dark:bg-card/60 opacity-70'
                 }`}>
-                {/* Subtle top gradient bar */}
-                <div className={`h-1 w-full transition-all duration-500 ${settings.email_reports_enabled ? 'bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+                {/* Glow top gradient */}
+                <div className={`absolute top-0 left-0 right-0 h-1 transition-all duration-300 ${settings.email_reports_enabled ? 'bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500' : 'bg-border'}`} />
+                <div className={`absolute top-0 left-0 right-0 h-16 transition-opacity duration-300 ${settings.email_reports_enabled ? 'opacity-100' : 'opacity-0'}`}
+                  style={{ background: 'linear-gradient(to bottom, hsl(270 80% 60% / 0.06), transparent)' }} />
 
-                <div className="p-5">
+                <div className="p-5 pt-6">
                   {/* Header */}
-                  <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${settings.email_reports_enabled ? 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30 scale-100' : 'bg-gray-100 dark:bg-gray-800 scale-95'}`}>
-                        <Mail className={`w-5 h-5 transition-colors ${settings.email_reports_enabled ? 'text-white' : 'text-gray-400'}`} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${settings.email_reports_enabled
+                        ? 'bg-gradient-to-br from-violet-500 to-purple-700 shadow-md shadow-violet-500/30'
+                        : 'bg-muted'
+                        }`}>
+                        <Mail className={`w-5 h-5 ${settings.email_reports_enabled ? 'text-white' : 'text-muted-foreground/50'}`} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-foreground text-sm">Reportes Automáticos</h3>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5 transition-colors ${settings.email_reports_enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${settings.email_reports_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                          {settings.email_reports_enabled ? 'Activo' : 'Inactivo'}
-                        </span>
+                        <p className="font-bold text-sm text-foreground">Reportes</p>
+                        <div className={`flex items-center gap-1.5 mt-0.5 ${settings.email_reports_enabled ? '' : 'opacity-50'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${settings.email_reports_enabled ? 'bg-emerald-400 animate-pulse' : 'bg-border'}`} />
+                          <span className="text-xs text-muted-foreground">{settings.email_reports_enabled ? 'Activo' : 'Inactivo'}</span>
+                        </div>
                       </div>
                     </div>
                     <Switch
@@ -867,94 +862,97 @@ const Admin = () => {
                     />
                   </div>
 
-                  {/* Description */}
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">Resumen completo con categorías, tendencias e insights enviado automáticamente.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                    Resumen completo con categorías, tendencias e insights de tus gastos.
+                  </p>
 
-                  {/* Meta chips */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-500/20">
-                      <Clock className="w-3 h-3" />
-                      {settings.report_frequency === 'weekly' ? 'Lunes 9AM' : 'Día 1 · 9AM'}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700">
-                      <Mail className="w-3 h-3" />
-                      cattia.ra99@gmail.com
-                    </span>
+                  {/* Schedule pill */}
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-4 transition-colors ${settings.email_reports_enabled
+                    ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/50'
+                    : 'bg-muted text-muted-foreground'
+                    }`}>
+                    <Clock className="w-3 h-3" />
+                    {settings.report_frequency === 'weekly' ? 'Lunes · 9AM' : 'Día 1 del mes · 9AM'}
                   </div>
 
-                  {/* Frequency selector */}
                   <Select
                     value={settings.report_frequency}
                     onValueChange={(value: 'weekly' | 'monthly') => updateSettings({ report_frequency: value })}
+                    disabled={!settings.email_reports_enabled}
                   >
-                    <SelectTrigger className="h-9 text-xs border-violet-200 dark:border-violet-500/20 mb-3">
+                    <SelectTrigger className="h-8 text-xs mb-4 border-violet-200/60 dark:border-violet-800/40 focus:ring-violet-400">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="weekly">📅 Semanal (Lunes)</SelectItem>
-                      <SelectItem value="monthly">🗓️ Mensual (Día 1)</SelectItem>
+                      <SelectItem value="weekly">Semanal (Lunes)</SelectItem>
+                      <SelectItem value="monthly">Mensual (Día 1)</SelectItem>
                     </SelectContent>
                   </Select>
 
-                  {/* Test result indicator */}
                   {reportResult && (
-                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${reportResult.status === 'success'
-                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
-                        : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-xl mb-3 ${reportResult.status === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
+                      : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/40'
                       }`}>
                       {reportResult.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <XCircle className="w-3.5 h-3.5 shrink-0" />}
                       <span className="truncate">{reportResult.message}</span>
-                      <span className="ml-auto text-[10px] opacity-60 shrink-0">{reportResult.timestamp.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   )}
 
-                  {/* Send button */}
                   <Button
                     size="sm"
-                    className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-md shadow-violet-500/20 h-10 gap-2 transition-all hover:shadow-lg group-hover:shadow-violet-500/30"
+                    className={`w-full h-9 text-xs font-semibold gap-2 transition-all ${settings.email_reports_enabled
+                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md shadow-violet-500/20'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                      }`}
                     onClick={async () => {
                       setSendingReport(true);
                       try {
                         await sendReportNow();
-                        setReportResult({ status: 'success', message: 'Reporte enviado correctamente', timestamp: new Date() });
-                        toast.success({ title: "¡Reporte enviado!", description: "Revisa tu bandeja de entrada 📧" });
+                        setReportResult({ status: 'success', message: 'Reporte enviado', timestamp: new Date() });
+                        toast.success({ title: "Reporte enviado", description: "Revisa tu correo" });
                       } catch (err: any) {
-                        setReportResult({ status: 'error', message: err.message || 'Error al enviar', timestamp: new Date() });
-                        toast.error({ title: "Error al enviar", description: err.message || "Intenta de nuevo" });
+                        setReportResult({ status: 'error', message: err.message || 'Error', timestamp: new Date() });
+                        toast.error({ title: "Error", description: err.message || "Intenta de nuevo" });
                       } finally {
                         setSendingReport(false);
                       }
                     }}
-                    disabled={sendingReport}
+                    disabled={!settings.email_reports_enabled || sendingReport}
                   >
                     {sendingReport ? (
-                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Enviando...</span></>
+                      <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Enviando...</span></>
                     ) : (
-                      <><Send className="w-4 h-4" /><span>Enviar Reporte</span><ArrowRight className="w-3.5 h-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" /></>
+                      <><Send className="w-3.5 h-3.5" /><span>Enviar Reporte</span></>
                     )}
                   </Button>
                 </div>
               </div>
 
               {/* ─── Card 2: Alertas de Presupuesto ─── */}
-              <div className={`group relative rounded-2xl border-2 transition-all duration-500 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 ${settings.budget_alerts_enabled
-                  ? 'border-amber-500/30 bg-white dark:bg-card shadow-lg shadow-amber-500/5'
-                  : 'border-border/50 bg-white/80 dark:bg-card/60 hover:border-amber-500/20'
+              <div className={`relative rounded-2xl border overflow-hidden transition-all duration-300 ${settings.budget_alerts_enabled
+                ? 'border-amber-200 dark:border-amber-800/60 shadow-lg shadow-amber-500/10 bg-white dark:bg-card'
+                : 'border-border/40 bg-white/60 dark:bg-card/60 opacity-70'
                 }`}>
-                <div className={`h-1 w-full transition-all duration-500 ${settings.budget_alerts_enabled ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+                <div className={`absolute top-0 left-0 right-0 h-1 transition-all duration-300 ${settings.budget_alerts_enabled ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-400' : 'bg-border'}`} />
+                <div className={`absolute top-0 left-0 right-0 h-16 transition-opacity duration-300 ${settings.budget_alerts_enabled ? 'opacity-100' : 'opacity-0'}`}
+                  style={{ background: 'linear-gradient(to bottom, hsl(38 95% 55% / 0.06), transparent)' }} />
 
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="p-5 pt-6">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${settings.budget_alerts_enabled ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30 scale-100' : 'bg-gray-100 dark:bg-gray-800 scale-95'}`}>
-                        <Shield className={`w-5 h-5 transition-colors ${settings.budget_alerts_enabled ? 'text-white' : 'text-gray-400'}`} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${settings.budget_alerts_enabled
+                        ? 'bg-gradient-to-br from-amber-400 to-orange-600 shadow-md shadow-amber-500/30'
+                        : 'bg-muted'
+                        }`}>
+                        <Shield className={`w-5 h-5 ${settings.budget_alerts_enabled ? 'text-white' : 'text-muted-foreground/50'}`} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-foreground text-sm">Alertas de Presupuesto</h3>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5 transition-colors ${settings.budget_alerts_enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${settings.budget_alerts_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                          {settings.budget_alerts_enabled ? 'Activo' : 'Inactivo'}
-                        </span>
+                        <p className="font-bold text-sm text-foreground">Presupuestos</p>
+                        <div className={`flex items-center gap-1.5 mt-0.5 ${settings.budget_alerts_enabled ? '' : 'opacity-50'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${settings.budget_alerts_enabled ? 'bg-emerald-400 animate-pulse' : 'bg-border'}`} />
+                          <span className="text-xs text-muted-foreground">{settings.budget_alerts_enabled ? 'Activo' : 'Inactivo'}</span>
+                        </div>
                       </div>
                     </div>
                     <Switch
@@ -963,78 +961,87 @@ const Admin = () => {
                     />
                   </div>
 
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">Alerta cuando una categoría se acerca o supera su límite mensual.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                    Alerta cuando te acercas o superas el límite de una categoría.
+                  </p>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-500/20">
-                      <Clock className="w-3 h-3" />
-                      Diario · 10AM
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700">
-                      🎯 {budgets.length} presupuesto{budgets.length !== 1 ? 's' : ''}
-                    </span>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-4 transition-colors ${settings.budget_alerts_enabled
+                    ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50'
+                    : 'bg-muted text-muted-foreground'
+                    }`}>
+                    <Clock className="w-3 h-3" />
+                    Diario · 10AM
+                    <span className="opacity-50 mx-0.5">·</span>
+                    {budgets.length} presupuesto{budgets.length !== 1 ? 's' : ''}
                   </div>
 
-                  {/* Spacer to align with card 1 that has the frequency selector */}
-                  <div className="h-[36px] mb-3" />
+                  {/* Spacer to align button */}
+                  <div className="h-[60px] mb-4" />
 
                   {budgetResult && (
-                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${budgetResult.status === 'success'
-                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
-                        : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-xl mb-3 ${budgetResult.status === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
+                      : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/40'
                       }`}>
                       {budgetResult.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <XCircle className="w-3.5 h-3.5 shrink-0" />}
                       <span className="truncate">{budgetResult.message}</span>
-                      <span className="ml-auto text-[10px] opacity-60 shrink-0">{budgetResult.timestamp.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   )}
 
                   <Button
                     size="sm"
-                    className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20 h-10 gap-2 transition-all hover:shadow-lg group-hover:shadow-amber-500/30"
+                    className={`w-full h-9 text-xs font-semibold gap-2 transition-all ${settings.budget_alerts_enabled
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                      }`}
                     onClick={async () => {
                       setSendingBudgetAlert(true);
                       try {
                         await testBudgetAlerts();
-                        setBudgetResult({ status: 'success', message: 'Verificación enviada correctamente', timestamp: new Date() });
-                        toast.success({ title: "¡Verificación enviada!", description: "Si tienes presupuestos en alerta, recibirás un email ⚡" });
+                        setBudgetResult({ status: 'success', message: 'Verificación enviada', timestamp: new Date() });
+                        toast.success({ title: "Verificación enviada", description: "Revisa tu correo" });
                       } catch (err: any) {
-                        setBudgetResult({ status: 'error', message: err.message || 'Error al verificar', timestamp: new Date() });
-                        toast.error({ title: "Error al verificar", description: err.message || "Intenta de nuevo" });
+                        setBudgetResult({ status: 'error', message: err.message || 'Error', timestamp: new Date() });
+                        toast.error({ title: "Error", description: err.message || "Intenta de nuevo" });
                       } finally {
                         setSendingBudgetAlert(false);
                       }
                     }}
-                    disabled={sendingBudgetAlert}
+                    disabled={!settings.budget_alerts_enabled || sendingBudgetAlert}
                   >
                     {sendingBudgetAlert ? (
-                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Verificando...</span></>
+                      <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Verificando...</span></>
                     ) : (
-                      <><Shield className="w-4 h-4" /><span>Verificar Alertas</span><ArrowRight className="w-3.5 h-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" /></>
+                      <><Shield className="w-3.5 h-3.5" /><span>Verificar Alertas</span></>
                     )}
                   </Button>
                 </div>
               </div>
 
               {/* ─── Card 3: Resumen Diario ─── */}
-              <div className={`group relative rounded-2xl border-2 transition-all duration-500 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 ${settings.daily_digest_enabled
-                  ? 'border-blue-500/30 bg-white dark:bg-card shadow-lg shadow-blue-500/5'
-                  : 'border-border/50 bg-white/80 dark:bg-card/60 hover:border-blue-500/20'
+              <div className={`relative rounded-2xl border overflow-hidden transition-all duration-300 ${settings.daily_digest_enabled
+                ? 'border-blue-200 dark:border-blue-800/60 shadow-lg shadow-blue-500/10 bg-white dark:bg-card'
+                : 'border-border/40 bg-white/60 dark:bg-card/60 opacity-70'
                 }`}>
-                <div className={`h-1 w-full transition-all duration-500 ${settings.daily_digest_enabled ? 'bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+                <div className={`absolute top-0 left-0 right-0 h-1 transition-all duration-300 ${settings.daily_digest_enabled ? 'bg-gradient-to-r from-blue-400 via-cyan-500 to-sky-400' : 'bg-border'}`} />
+                <div className={`absolute top-0 left-0 right-0 h-16 transition-opacity duration-300 ${settings.daily_digest_enabled ? 'opacity-100' : 'opacity-0'}`}
+                  style={{ background: 'linear-gradient(to bottom, hsl(210 90% 55% / 0.06), transparent)' }} />
 
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="p-5 pt-6">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${settings.daily_digest_enabled ? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 scale-100' : 'bg-gray-100 dark:bg-gray-800 scale-95'}`}>
-                        <Bell className={`w-5 h-5 transition-colors ${settings.daily_digest_enabled ? 'text-white' : 'text-gray-400'}`} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${settings.daily_digest_enabled
+                        ? 'bg-gradient-to-br from-blue-400 to-cyan-600 shadow-md shadow-blue-500/30'
+                        : 'bg-muted'
+                        }`}>
+                        <Bell className={`w-5 h-5 ${settings.daily_digest_enabled ? 'text-white' : 'text-muted-foreground/50'}`} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-foreground text-sm">Resumen Diario</h3>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5 transition-colors ${settings.daily_digest_enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${settings.daily_digest_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                          {settings.daily_digest_enabled ? 'Activo' : 'Inactivo'}
-                        </span>
+                        <p className="font-bold text-sm text-foreground">Resumen Diario</p>
+                        <div className={`flex items-center gap-1.5 mt-0.5 ${settings.daily_digest_enabled ? '' : 'opacity-50'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${settings.daily_digest_enabled ? 'bg-emerald-400 animate-pulse' : 'bg-border'}`} />
+                          <span className="text-xs text-muted-foreground">{settings.daily_digest_enabled ? 'Activo' : 'Inactivo'}</span>
+                        </div>
                       </div>
                     </div>
                     <Switch
@@ -1043,53 +1050,56 @@ const Admin = () => {
                     />
                   </div>
 
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">Resumen nocturno con tus gastos del día, contexto semanal y top categoría.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                    Resumen nocturno con los gastos del día y contexto de la semana.
+                  </p>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20">
-                      <Clock className="w-3 h-3" />
-                      9PM diario
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-700">
-                      🌙 "Hoy gastaste S/ X"
-                    </span>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-4 transition-colors ${settings.daily_digest_enabled
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50'
+                    : 'bg-muted text-muted-foreground'
+                    }`}>
+                    <Clock className="w-3 h-3" />
+                    9PM · Todos los días
                   </div>
 
-                  <div className="h-[36px] mb-3" />
+                  {/* Spacer to align button */}
+                  <div className="h-[60px] mb-4" />
 
                   {digestResult && (
-                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${digestResult.status === 'success'
-                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
-                        : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-xl mb-3 ${digestResult.status === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
+                      : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/40'
                       }`}>
                       {digestResult.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <XCircle className="w-3.5 h-3.5 shrink-0" />}
                       <span className="truncate">{digestResult.message}</span>
-                      <span className="ml-auto text-[10px] opacity-60 shrink-0">{digestResult.timestamp.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   )}
 
                   <Button
                     size="sm"
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 h-10 gap-2 transition-all hover:shadow-lg group-hover:shadow-blue-500/30"
+                    className={`w-full h-9 text-xs font-semibold gap-2 transition-all ${settings.daily_digest_enabled
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white shadow-md shadow-blue-500/20'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                      }`}
                     onClick={async () => {
                       setSendingDigest(true);
                       try {
                         await testDailyDigest();
-                        setDigestResult({ status: 'success', message: 'Resumen enviado correctamente', timestamp: new Date() });
-                        toast.success({ title: "¡Resumen enviado!", description: "Revisa tu correo para ver el resumen 🌙" });
+                        setDigestResult({ status: 'success', message: 'Resumen enviado', timestamp: new Date() });
+                        toast.success({ title: "Resumen enviado", description: "Revisa tu correo" });
                       } catch (err: any) {
-                        setDigestResult({ status: 'error', message: err.message || 'Error al enviar', timestamp: new Date() });
-                        toast.error({ title: "Error al enviar", description: err.message || "Intenta de nuevo" });
+                        setDigestResult({ status: 'error', message: err.message || 'Error', timestamp: new Date() });
+                        toast.error({ title: "Error", description: err.message || "Intenta de nuevo" });
                       } finally {
                         setSendingDigest(false);
                       }
                     }}
-                    disabled={sendingDigest}
+                    disabled={!settings.daily_digest_enabled || sendingDigest}
                   >
                     {sendingDigest ? (
-                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Enviando...</span></>
+                      <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Enviando...</span></>
                     ) : (
-                      <><Bell className="w-4 h-4" /><span>Enviar Resumen</span><ArrowRight className="w-3.5 h-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" /></>
+                      <><Bell className="w-3.5 h-3.5" /><span>Enviar Resumen</span></>
                     )}
                   </Button>
                 </div>
@@ -1163,138 +1173,138 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        {/* Settings Tab */}
-        <TabsContent value="settings">
-          <Card className="p-6 border-primary/20 dark:border-border bg-gradient-to-br from-background to-muted/30">
-            <h2 className="text-xl font-semibold flex items-center mb-8">
-              <Settings className="w-5 h-5 mr-2 text-primary" />
-              Configuración
-            </h2>
+      {/* Settings Tab */}
+      <TabsContent value="settings">
+        <Card className="p-6 border-primary/20 dark:border-border bg-gradient-to-br from-background to-muted/30">
+          <h2 className="text-xl font-semibold flex items-center mb-8">
+            <Settings className="w-5 h-5 mr-2 text-primary" />
+            Configuración
+          </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Sección Perfil */}
-              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pastel-pink to-pastel-purple/60 flex items-center justify-center">
-                    <Star className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Tu Perfil</h3>
-                    <p className="text-xs text-muted-foreground">Personaliza tu imagen y nombre</p>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Sección Perfil */}
+            <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pastel-pink to-pastel-purple/60 flex items-center justify-center">
+                  <Star className="w-5 h-5 text-white" />
                 </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Tu Perfil</h3>
+                  <p className="text-xs text-muted-foreground">Personaliza tu imagen y nombre</p>
+                </div>
+              </div>
 
-                <div className="flex flex-col items-center">
-                  <div className="relative mb-4 group">
-                    <img
-                      src="/Foto-Catt.jpg"
-                      alt="Foto de perfil"
-                      className="w-28 h-28 rounded-full shadow-lg border-4 border-white dark:border-border object-cover transition-transform group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Edit className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleProfilePicChange}
+              <div className="flex flex-col items-center">
+                <div className="relative mb-4 group">
+                  <img
+                    src="/Foto-Catt.jpg"
+                    alt="Foto de perfil"
+                    className="w-28 h-28 rounded-full shadow-lg border-4 border-white dark:border-border object-cover transition-transform group-hover:scale-105"
                   />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-primary/30 hover:bg-primary/10 mb-3"
+                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Edit className="w-3.5 h-3.5 mr-2" />
-                    Cambiar foto
+                    <Edit className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleProfilePicChange}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-primary/30 hover:bg-primary/10 mb-3"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Edit className="w-3.5 h-3.5 mr-2" />
+                  Cambiar foto
+                </Button>
+                {selectedProfilePic && (
+                  <Button variant="success" size="sm" onClick={handleSaveProfilePic}>
+                    Guardar nueva foto
                   </Button>
-                  {selectedProfilePic && (
-                    <Button variant="success" size="sm" onClick={handleSaveProfilePic}>
-                      Guardar nueva foto
-                    </Button>
-                  )}
-                  {profilePicMessage && (
-                    <span className="text-xs text-muted-foreground mt-2 text-center max-w-[200px]">{profilePicMessage}</span>
-                  )}
+                )}
+                {profilePicMessage && (
+                  <span className="text-xs text-muted-foreground mt-2 text-center max-w-[200px]">{profilePicMessage}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Sección Nombre */}
+            <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pastel-blue to-pastel-green/60 flex items-center justify-center">
+                  <Tag className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Nombre de Usuario</h3>
+                  <p className="text-xs text-muted-foreground">Aparece en el menú lateral</p>
                 </div>
               </div>
 
-              {/* Sección Nombre */}
-              <div className="bg-white dark:bg-card rounded-2xl p-6 shadow-soft border border-border/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pastel-blue to-pastel-green/60 flex items-center justify-center">
-                    <Tag className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Nombre de Usuario</h3>
-                    <p className="text-xs text-muted-foreground">Aparece en el menú lateral</p>
-                  </div>
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-full">
+                  <Label className="text-sm text-muted-foreground mb-2 block">Tu nombre</Label>
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={e => setNameInput(e.target.value)}
+                    className="w-full border border-border rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 focus:ring-primary/40 font-semibold text-lg bg-muted/30 dark:bg-muted/10 transition-all"
+                    maxLength={20}
+                    placeholder="Tu nombre..."
+                  />
                 </div>
-
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-full">
-                    <Label className="text-sm text-muted-foreground mb-2 block">Tu nombre</Label>
-                    <input
-                      type="text"
-                      value={nameInput}
-                      onChange={e => setNameInput(e.target.value)}
-                      className="w-full border border-border rounded-xl px-4 py-3 text-center focus:outline-none focus:ring-2 focus:ring-primary/40 font-semibold text-lg bg-muted/30 dark:bg-muted/10 transition-all"
-                      maxLength={20}
-                      placeholder="Tu nombre..."
-                    />
-                  </div>
-                  <Button
-                    variant="success"
-                    className="w-full"
-                    onClick={handleUpdateSidebarName}
-                    disabled={nameInput.trim() === sidebarName.trim() || nameInput.trim() === ''}
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Actualizar nombre
-                  </Button>
-                </div>
+                <Button
+                  variant="success"
+                  className="w-full"
+                  onClick={handleUpdateSidebarName}
+                  disabled={nameInput.trim() === sidebarName.trim() || nameInput.trim() === ''}
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Actualizar nombre
+                </Button>
               </div>
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* 3. Dialog para editar ingreso */}
-      <Dialog open={isEditIncomeDialogOpen} onOpenChange={setIsEditIncomeDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-green/30">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5 text-pastel-green" />
-              Editar Ingreso
-            </DialogTitle>
-            <DialogDescription>Modifica los detalles de este ingreso.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-source">Fuente</Label>
-              <Input id="edit-source" value={editingIncome.source} onChange={e => setEditingIncome({ ...editingIncome, source: e.target.value })} className="border-pastel-green/30" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-amount">Monto</Label>
-              <Input id="edit-amount" type="number" value={editingIncome.amount} onChange={e => setEditingIncome({ ...editingIncome, amount: e.target.value })} className="border-pastel-green/30" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-date">Fecha</Label>
-              <CustomDatePicker date={editingIncome.date} setDate={date => setEditingIncome({ ...editingIncome, date: date || new Date() })} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditIncomeDialogOpen(false)} className="border-pastel-green/30">Cancelar</Button>
-            <Button onClick={handleEditIncome} className="bg-pastel-green hover:bg-pastel-green/80 text-foreground">Guardar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </Card>
+      </TabsContent>
+    </Tabs >
+
+  {/* 3. Dialog para editar ingreso */ }
+  < Dialog open={isEditIncomeDialogOpen} onOpenChange={setIsEditIncomeDialogOpen} >
+    <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-green/30">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Edit className="w-5 h-5 text-pastel-green" />
+          Editar Ingreso
+        </DialogTitle>
+        <DialogDescription>Modifica los detalles de este ingreso.</DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="edit-source">Fuente</Label>
+          <Input id="edit-source" value={editingIncome.source} onChange={e => setEditingIncome({ ...editingIncome, source: e.target.value })} className="border-pastel-green/30" />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="edit-amount">Monto</Label>
+          <Input id="edit-amount" type="number" value={editingIncome.amount} onChange={e => setEditingIncome({ ...editingIncome, amount: e.target.value })} className="border-pastel-green/30" />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="edit-date">Fecha</Label>
+          <CustomDatePicker date={editingIncome.date} setDate={date => setEditingIncome({ ...editingIncome, date: date || new Date() })} />
+        </div>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => setIsEditIncomeDialogOpen(false)} className="border-pastel-green/30">Cancelar</Button>
+        <Button onClick={handleEditIncome} className="bg-pastel-green hover:bg-pastel-green/80 text-foreground">Guardar</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog >
+    </div >
   );
 };
 

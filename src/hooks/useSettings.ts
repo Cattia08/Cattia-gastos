@@ -94,11 +94,14 @@ export function useSettings() {
     const sendReportNow = async () => {
         if (!userId) throw new Error('No user');
 
-        const { data, error } = await supabase.functions.invoke('send-report', {
-            body: { user_id: userId },
+        const { data, error } = await supabase.functions.invoke('scheduled-reports', {
+            body: { force_user_id: userId },
         });
 
+        console.log('[DEBUG sendReportNow] Response:', JSON.stringify(data, null, 2));
+
         if (error) {
+            console.error('[DEBUG sendReportNow] Error:', error);
             throw new Error(error.message || 'Error al enviar el reporte');
         }
 
@@ -109,7 +112,7 @@ export function useSettings() {
         if (!userId) throw new Error('No user');
 
         const { data, error } = await supabase.functions.invoke('check-budgets', {
-            body: {},
+            body: { force_user_id: userId },
         });
 
         if (error) {
@@ -123,7 +126,7 @@ export function useSettings() {
         if (!userId) throw new Error('No user');
 
         const { data, error } = await supabase.functions.invoke('daily-digest', {
-            body: {},
+            body: { force_user_id: userId },
         });
 
         if (error) {
