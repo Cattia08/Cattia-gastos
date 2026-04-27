@@ -1,7 +1,40 @@
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Send, X } from 'lucide-react';
-import { useChatbot } from '@/hooks/useChatbot';
+import { useState, useRef, useEffect, KeyboardEvent, useMemo } from 'react';
+import { Send, X, Eraser, Pencil, Check } from 'lucide-react';
+import { useChatbot, PendingExpense } from '@/hooks/useChatbot';
 
+// ─────────────────────────────────────────────────────────────────────────
+// Tokens (kept inline since widget owns its visual identity)
+// ─────────────────────────────────────────────────────────────────────────
+const COLOR = {
+  pinkDeep: 'hsl(338,55%,52%)',
+  pinkText: 'hsl(338,40%,38%)',
+  pinkSoftBg: 'hsl(338,45%,95%)',
+  pinkBorder: 'hsl(338,35%,90%)',
+  pinkChipBg: 'hsl(310,30%,96%)',
+  pinkChipText: 'hsl(338,30%,42%)',
+  greenGrad: 'linear-gradient(135deg, hsl(152,45%,48%), hsl(152,45%,42%))',
+  ink: 'hsl(0,0%,18%)',
+  inkSoft: 'hsl(0,0%,42%)',
+  ghostBg: 'hsl(0,0%,96%)',
+};
+
+const QUICK_REPLIES_INITIAL = [
+  { label: 'Almuerzo S/15', send: 'gasté 15 en almuerzo', emoji: '🍔' },
+  { label: 'Café S/8',      send: 'café 8 soles',         emoji: '☕' },
+  { label: 'Taxi',          send: 'pagué taxi 12',        emoji: '🚕' },
+  { label: 'Súper',         send: 'súper 60 soles',       emoji: '🛒' },
+];
+
+const PLACEHOLDERS = [
+  'gasté 30 en almuerzo...',
+  '20 soles uber',
+  'café 8 con yape',
+  'almorcé chifa 25',
+];
+
+// ─────────────────────────────────────────────────────────────────────────
+// Visual atoms
+// ─────────────────────────────────────────────────────────────────────────
 function CatFace({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size + 4} viewBox="0 0 40 44" fill="none" aria-hidden>
@@ -44,23 +77,176 @@ function TypingDots() {
   );
 }
 
+function Chip({
+  emoji,
+  label,
+  onClick,
+  disabled,
+}: {
+  emoji?: string;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all duration-150 active:scale-[0.97] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400"
+      style={{
+        background: 'white',
+        color: COLOR.pinkText,
+        border: `1.5px solid ${COLOR.pinkBorder}`,
+        boxShadow: '0 1px 3px rgba(180,80,130,0.06)',
+        fontFamily: 'Outfit, sans-serif',
+      }}
+    >
+      {emoji && <span aria-hidden>{emoji}</span>}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+// Pending expense card — replaces the old "¿Registro este gasto? 📋..." text bubble.
+// Lives outside the message stream so it has clear visual priority.
+function PendingCard({
+  expense,
+  onConfirm,
+  onEdit,
+  onReject,
+  loading,
+}: {
+  expense: PendingExpense;
+  onConfirm: () => void;
+  onEdit: () => void;
+  onReject: () => void;
+  loading: boolean;
+}) {
+  const meta = [
+    expense.category_name,
+    expense.payment_method_name,
+    expense.date,
+  ].filter(Boolean) as string[];
+
+  return (
+    <div
+      className="shrink-0 mx-3 mb-2 rounded-2xl overflow-hidden animate-fade-in-up"
+      style={{
+        background: 'white',
+        border: `1px solid ${COLOR.pinkBorder}`,
+        boxShadow: '0 6px 22px -8px rgba(232,121,168,0.30), 0 1px 3px rgba(180,80,130,0.08)',
+      }}
+    >
+      <div className="px-4 pt-3 pb-2.5">
+        <div
+          className="text-[10px] font-bold uppercase tracking-[0.08em]"
+          style={{ color: COLOR.pinkDeep, fontFamily: 'Nunito, sans-serif' }}
+        >
+          Por registrar
+        </div>
+        <div className="mt-1 flex items-baseline justify-between gap-3">
+          <div
+            className="font-bold text-[15px] capitalize truncate leading-tight"
+            style={{ color: COLOR.ink, fontFamily: 'Nunito, sans-serif' }}
+            title={expense.name}
+          >
+            {expense.name}
+          </div>
+          <div
+            className="font-extrabold text-[20px] shrink-0 leading-none"
+            style={{ color: COLOR.pinkDeep, fontFamily: 'Nunito, sans-serif' }}
+          >
+            S/{expense.amount}
+          </div>
+        </div>
+        {meta.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {meta.map(m => (
+              <span
+                key={m}
+                className="px-2 py-0.5 rounded-full text-[10.5px] font-medium"
+                style={{ background: COLOR.pinkChipBg, color: COLOR.pinkChipText }}
+              >
+                {m}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 px-2.5 pb-2.5">
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={loading}
+          className="min-h-[42px] inline-flex items-center justify-center gap-1 text-[13px] font-bold rounded-xl text-white transition-opacity active:opacity-80 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+          style={{ background: COLOR.greenGrad, boxShadow: '0 2px 8px rgba(60,160,110,0.25)' }}
+        >
+          <Check className="w-3.5 h-3.5" strokeWidth={3} /> Sí
+        </button>
+        <button
+          type="button"
+          onClick={onEdit}
+          disabled={loading}
+          className="min-h-[42px] inline-flex items-center justify-center gap-1 text-[13px] font-semibold rounded-xl transition-colors active:opacity-80 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400"
+          style={{ background: COLOR.pinkSoftBg, color: COLOR.pinkText }}
+        >
+          <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} /> Editar
+        </button>
+        <button
+          type="button"
+          onClick={onReject}
+          disabled={loading}
+          className="min-h-[42px] inline-flex items-center justify-center text-[13px] font-semibold rounded-xl transition-colors active:opacity-80 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
+          style={{ background: COLOR.ghostBg, color: COLOR.inkSoft }}
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Main widget
+// ─────────────────────────────────────────────────────────────────────────
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
-  const { messages, pending, loading, sendMessage, confirmExpense, rejectExpense } = useChatbot();
+  const [phIdx, setPhIdx] = useState(0);
+  const {
+    messages,
+    pending,
+    loading,
+    sendMessage,
+    confirmExpense,
+    rejectExpense,
+    editPending,
+    clearChat,
+  } = useChatbot();
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevLoading = useRef(false);
 
+  // Scroll to bottom on new content.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+  }, [messages, loading, pending]);
 
+  // Focus input + scroll to bottom + rotate placeholder example on open.
+  // The panel is unmounted while closed, so the scroll effect on [messages]
+  // doesn't fire when reopening — we have to scroll explicitly here.
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 180);
+    if (open) {
+      setPhIdx(i => (i + 1) % PLACEHOLDERS.length);
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+      });
+      setTimeout(() => inputRef.current?.focus(), 180);
+    }
   }, [open]);
 
-  // Refocus input whenever a response arrives (loading true → false)
+  // Refocus input whenever a response arrives.
   useEffect(() => {
     if (prevLoading.current && !loading && !pending) {
       inputRef.current?.focus();
@@ -68,25 +254,45 @@ export function ChatWidget() {
     prevLoading.current = loading;
   }, [loading, pending]);
 
-  const handleSend = () => {
-    const text = input.trim();
-    if (!text || loading) return;
+  const handleSend = (text?: string) => {
+    const value = (text ?? input).trim();
+    if (!value || loading) return;
     setInput('');
-    sendMessage(text);
+    sendMessage(value);
   };
 
   const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
+
+  const handleEdit = () => {
+    const draft = editPending();
+    if (!draft) return;
+    setInput(draft);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(draft.length, draft.length);
+    }, 30);
+  };
+
+  const handleQuickReply = (send: string) => {
+    if (loading || pending) return;
+    handleSend(send);
+  };
+
+  // Derive UI hints from the message stream so we don't keep extra state in sync.
+  const lastMsg = messages[messages.length - 1];
+  const isInitial = messages.length === 1 && messages[0].role === 'assistant';
+  const justRegistered = !pending && !loading && lastMsg?.role === 'assistant' && lastMsg.content.startsWith('✅');
+
+  // Random subtle position for chips entry — reduces feeling of static row.
+  const placeholder = useMemo(() => PLACEHOLDERS[phIdx], [phIdx]);
 
   return (
     <>
-      {/*
-        Mobile:  bottom-20 right-4  (above bottom nav, clear of panel)
-        Desktop: lg:bottom-28 lg:right-8  (above the existing + FAB at bottom-8)
-        Panel bottom on mobile  = 5rem toggle + 3.5rem height + 0.5rem gap = 9rem   → bottom-[9rem]
-        Panel bottom on desktop = 7rem toggle + 3.5rem height + 0.5rem gap = 11rem  → lg:bottom-[11rem]
-      */}
       <button
         onClick={() => setOpen(o => !o)}
         aria-label={open ? 'Cerrar asistente' : 'Abrir asistente Cattia'}
@@ -104,13 +310,13 @@ export function ChatWidget() {
         <div
           className="fixed right-4 lg:right-8 bottom-[9rem] lg:bottom-[11rem] z-[70] flex flex-col rounded-2xl overflow-hidden"
           style={{
-            width: 'min(320px, calc(100vw - 2rem))',
-            height: 'min(400px, calc(100dvh - 14rem))',
+            width: 'min(340px, calc(100vw - 2rem))',
+            height: 'min(440px, calc(100dvh - 14rem))',
             animation: 'cattia-slide-up 0.22s cubic-bezier(0.16,1,0.3,1)',
             boxShadow: '0 8px 40px rgba(180,80,130,0.18), 0 2px 12px rgba(0,0,0,0.10)',
           }}
         >
-          {/* ── Header with X ── */}
+          {/* Header */}
           <div
             className="shrink-0 flex items-center gap-3 px-4 py-3"
             style={{ background: 'linear-gradient(135deg, hsl(338,62%,64%) 0%, hsl(275,50%,66%) 100%)' }}
@@ -127,8 +333,17 @@ export function ChatWidget() {
               </p>
               <p className="text-white/65 text-[11px] leading-tight">asistente de gastos</p>
             </div>
-            <div className="flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-green-300" aria-label="Online" />
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-300 mr-1" aria-label="Online" />
+              <button
+                onClick={clearChat}
+                disabled={messages.length <= 1 && !pending}
+                aria-label="Limpiar chat"
+                title="Limpiar chat"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/20 active:bg-white/30 disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60"
+              >
+                <Eraser className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+              </button>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar chat"
@@ -139,7 +354,7 @@ export function ChatWidget() {
             </div>
           </div>
 
-          {/* ── Messages ── */}
+          {/* Messages */}
           <div
             className="flex-1 overflow-y-auto px-3 py-3 space-y-3"
             style={{ background: 'hsl(310,25%,98%)' }}
@@ -171,39 +386,47 @@ export function ChatWidget() {
               </div>
             ))}
 
+            {/* Initial-state quick replies */}
+            {isInitial && !loading && !pending && (
+              <div className="flex flex-wrap gap-1.5 pl-6 animate-fade-in">
+                {QUICK_REPLIES_INITIAL.map(qr => (
+                  <Chip
+                    key={qr.label}
+                    emoji={qr.emoji}
+                    label={qr.label}
+                    onClick={() => handleQuickReply(qr.send)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Post-register chips */}
+            {justRegistered && (
+              <div className="flex flex-wrap gap-1.5 pl-6 animate-fade-in">
+                <Chip emoji="➕" label="Otro gasto" onClick={() => inputRef.current?.focus()} />
+                <Chip emoji="🧹" label="Limpiar chat" onClick={clearChat} />
+              </div>
+            )}
+
             {loading && <TypingDots />}
             <div ref={bottomRef} />
           </div>
 
-          {/* ── Confirmation ── */}
+          {/* Pending expense card */}
           {pending && (
-            <div
-              className="shrink-0 flex gap-2 px-3 py-2"
-              style={{ background: 'white', borderTop: '1px solid hsl(338,40%,92%)' }}
-            >
-              <button
-                onClick={confirmExpense}
-                disabled={loading}
-                className="flex-1 min-h-[44px] text-sm font-semibold rounded-xl text-white transition-opacity disabled:opacity-50 active:opacity-80"
-                style={{ background: 'linear-gradient(135deg, hsl(152,45%,48%), hsl(152,45%,42%))' }}
-              >
-                ✓ Sí, registrar
-              </button>
-              <button
-                onClick={() => { rejectExpense(); setTimeout(() => inputRef.current?.focus(), 50); }}
-                disabled={loading}
-                className="flex-1 min-h-[44px] text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 active:opacity-70"
-                style={{ background: 'hsl(338,45%,95%)', color: 'hsl(338,40%,48%)' }}
-              >
-                ✗ Cancelar
-              </button>
-            </div>
+            <PendingCard
+              expense={pending}
+              onConfirm={confirmExpense}
+              onEdit={handleEdit}
+              onReject={rejectExpense}
+              loading={loading}
+            />
           )}
 
-          {/* ── Input ── */}
+          {/* Input */}
           <div
             className="shrink-0 flex items-center gap-2 px-3 py-2.5"
-            style={{ background: 'white', borderTop: '1px solid hsl(338,25%,92%)' }}
+            style={{ background: 'white', borderTop: `1px solid ${COLOR.pinkBorder}` }}
           >
             <input
               ref={inputRef}
@@ -211,7 +434,7 @@ export function ChatWidget() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               disabled={loading}
-              placeholder="gasté 30 en almuerzo..."
+              placeholder={placeholder}
               className="flex-1 text-sm px-4 py-2.5 rounded-full outline-none disabled:opacity-50 transition-[border-color] duration-150"
               style={{
                 background: 'hsl(310,20%,97%)',
@@ -223,7 +446,7 @@ export function ChatWidget() {
               onBlur={e => (e.currentTarget.style.borderColor = 'hsl(338,30%,87%)')}
             />
             <button
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={loading || !input.trim()}
               aria-label="Enviar"
               className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-150 disabled:opacity-35 hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pink-400"

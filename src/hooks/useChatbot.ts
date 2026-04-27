@@ -69,16 +69,8 @@ export function useChatbot() {
       if (data.type === 'error') {
         addAssistantMessage(`⚠️ Error: ${data.content}`);
       } else if (data.type === 'confirm') {
-        const exp: PendingExpense = data.expense;
-        setPending(exp);
-        const lines = [
-          `📋 **${exp.name}**`,
-          `💰 S/${exp.amount}`,
-          exp.category_name ? `🏷️ ${exp.category_name}` : null,
-          exp.payment_method_name ? `💳 ${exp.payment_method_name}` : null,
-          `📅 ${exp.date}`,
-        ].filter(Boolean).join('\n');
-        addAssistantMessage(`¿Registro este gasto?\n\n${lines}`);
+        // The widget renders a pending card from this state — no inline bubble needed.
+        setPending(data.expense as PendingExpense);
       } else if (data.type === 'message') {
         addAssistantMessage(data.content);
       } else {
@@ -117,11 +109,24 @@ export function useChatbot() {
     addAssistantMessage('Ok, cancelado. ¿Algo más?');
   }, []);
 
+  /**
+   * Clear pending silently and return a natural-language draft so the widget
+   * can pre-fill the input for the user to tweak.
+   */
+  const editPending = useCallback((): string => {
+    if (!pending) return '';
+    const parts: string[] = [pending.name, `${pending.amount} soles`];
+    if (pending.payment_method_name) parts.push(`con ${pending.payment_method_name}`);
+    if (pending.category_name) parts.push(pending.category_name);
+    setPending(null);
+    return parts.join(' ');
+  }, [pending]);
+
   const clearChat = useCallback(() => {
     setMessages(INITIAL_MESSAGES);
     messagesRef.current = INITIAL_MESSAGES;
     setPending(null);
   }, []);
 
-  return { messages, pending, loading, sendMessage, confirmExpense, rejectExpense, clearChat };
+  return { messages, pending, loading, sendMessage, confirmExpense, rejectExpense, editPending, clearChat };
 }

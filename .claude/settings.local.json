@@ -5,7 +5,13 @@
       "Bash(npx tsc *)",
       "Bash(npx supabase *)",
       "Bash(node .claude/skills/impeccable/scripts/load-context.mjs)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+      "Skill(impeccable)",
+      "Bash(npx eslint *)",
+      "Bash(npx vite *)",
+      "Bash(grep -n '`' C:/Jandir2026/DesarrolloJandir/Cattia-gastos/supabase/functions/_shared/conversation.ts)"
     ]
   }
 }
