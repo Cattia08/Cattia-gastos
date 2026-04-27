@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useForm } from "react-hook-form";
@@ -18,10 +18,18 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+const DEFAULT_BANNER = "/BgLogin.png";
+
+function readBanner(): string {
+    if (typeof window === "undefined") return DEFAULT_BANNER;
+    return localStorage.getItem("loginBanner") || DEFAULT_BANNER;
+}
+
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const [bannerSrc, setBannerSrc] = useState<string>(readBanner);
 
     const { signIn, user } = useAuth();
     const navigate = useNavigate();
@@ -29,6 +37,16 @@ export default function Login() {
     const { toast } = useToast();
 
     const from = location.state?.from?.pathname || "/";
+
+    useEffect(() => {
+        const sync = () => setBannerSrc(readBanner());
+        window.addEventListener("storage", sync);
+        window.addEventListener("loginbanner:change", sync);
+        return () => {
+            window.removeEventListener("storage", sync);
+            window.removeEventListener("loginbanner:change", sync);
+        };
+    }, []);
 
     if (user) {
         navigate(from, { replace: true });
@@ -66,25 +84,45 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Soft rose wash — same hue family as app, no glass, no cyber */}
-            <div
-                aria-hidden="true"
-                className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/15 blur-3xl"
-            />
-            <div
-                aria-hidden="true"
-                className="absolute -bottom-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-secondary/40 blur-3xl"
-            />
+        <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-background lg:grid lg:grid-cols-[13fr_7fr]">
+            {/* Banner — top on mobile, left 65% on desktop */}
+            <div className="relative h-56 sm:h-72 lg:h-auto overflow-hidden">
+                <img
+                    src={bannerSrc}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_BANNER; }}
+                />
+                {/* Bottom-fade on mobile (softer) */}
+                <div
+                    aria-hidden="true"
+                    className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-background/70 lg:hidden"
+                />
+                {/* Right-fade on desktop — atmospheric blend, no formal wipe */}
+                <div
+                    aria-hidden="true"
+                    className="hidden lg:block absolute inset-y-0 right-0 w-24 bg-gradient-to-r from-transparent via-background/8 to-background/50"
+                />
+            </div>
 
-            <div className="relative w-full max-w-md">
-                <div className="bg-card rounded-3xl border border-border shadow-soft-lg p-8 md:p-10 space-y-8">
-                    {/* Header — personal, not template */}
-                    <div className="space-y-3">
+            {/* Form column */}
+            <div className="relative overflow-hidden flex items-center justify-center p-6 lg:p-10">
+                {/* Subtle ambient washes only on form side */}
+                <div
+                    aria-hidden="true"
+                    className="absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full bg-primary/15 blur-3xl pointer-events-none"
+                />
+                <div
+                    aria-hidden="true"
+                    className="absolute -bottom-40 -left-32 w-[28rem] h-[28rem] rounded-full bg-secondary/40 blur-3xl pointer-events-none"
+                />
+
+                <div className="relative w-full max-w-md">
+                    <div className="space-y-3 mb-8">
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 ring-1 ring-primary/20">
                             <Heart className="w-6 h-6 text-primary" fill="currentColor" />
                         </div>
-                        <h1 className="font-heading text-3xl font-bold tracking-tight text-text-emphasis">
+                        <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-text-emphasis">
                             Cattia Gastos
                         </h1>
                         <p className="text-sm text-text-secondary">
@@ -180,8 +218,6 @@ export default function Login() {
                             )}
                         </Button>
                     </form>
-
-
                 </div>
             </div>
         </div>

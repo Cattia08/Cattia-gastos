@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useThemedToast } from "@/hooks/useThemedToast";
-import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield, Clock, Zap, CheckCircle2, XCircle } from "lucide-react";
+import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield, Clock, Zap, CheckCircle2, XCircle, Image as ImageIcon, Upload, RotateCcw } from "lucide-react";
 import { TelegramSetupGuide } from "@/components/admin/TelegramSetupGuide";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -120,6 +120,73 @@ const Admin = () => {
   const fileInputRef = useRef(null);
   const [selectedProfilePic, setSelectedProfilePic] = useState(null);
   const [profilePicMessage, setProfilePicMessage] = useState("");
+
+  // Login banner state — stored as base64 dataURL in localStorage; fallback to /BgLogin.png
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const [loginBanner, setLoginBanner] = useState<string>(() => localStorage.getItem("loginBanner") || "/BgLogin.png");
+  const [bannerSavingMsg, setBannerSavingMsg] = useState<string>("");
+  const isCustomBanner = loginBanner !== "/BgLogin.png";
+
+  // Compress image client-side: max 1200px wide, JPEG q=0.82. Keeps localStorage under quota.
+  const compressImage = (file: File, maxWidth = 1200, quality = 0.82): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxWidth / img.width);
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("Canvas no disponible"));
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = () => reject(new Error("No se pudo leer la imagen"));
+        img.src = reader.result as string;
+      };
+      reader.onerror = () => reject(new Error("Lectura fallida"));
+      reader.readAsDataURL(file);
+    });
+
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error({ title: "Archivo inválido", description: "Selecciona una imagen" });
+      return;
+    }
+    setBannerSavingMsg("Procesando...");
+    try {
+      const dataUrl = await compressImage(file);
+      // localStorage typically caps at ~5MB; bail if over 4.5MB
+      if (dataUrl.length > 4_500_000) {
+        toast.error({ title: "Imagen muy grande", description: "Usa una imagen más pequeña o menos detallada" });
+        setBannerSavingMsg("");
+        return;
+      }
+      localStorage.setItem("loginBanner", dataUrl);
+      setLoginBanner(dataUrl);
+      window.dispatchEvent(new CustomEvent("loginbanner:change"));
+      setBannerSavingMsg("");
+      toast.success({ title: "Banner actualizado", description: "Visible en la pantalla de login" });
+    } catch (err: any) {
+      setBannerSavingMsg("");
+      toast.error({ title: "Error", description: err?.message || "No se pudo procesar la imagen" });
+    } finally {
+      if (bannerInputRef.current) bannerInputRef.current.value = "";
+    }
+  };
+
+  const handleBannerReset = () => {
+    localStorage.removeItem("loginBanner");
+    setLoginBanner("/BgLogin.png");
+    window.dispatchEvent(new CustomEvent("loginbanner:change"));
+    toast.info({ title: "Banner restaurado", description: "Volvió al banner por defecto" });
+  };
 
   // Estado para el nombre de usuario
   const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
@@ -1196,6 +1263,72 @@ const Admin = () => {
             <Settings className="w-5 h-5 mr-2 text-primary" />
             Configuración
           </h2>
+
+          {/* Banner de Login — full width, hero-feel */}
+          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border mb-8">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                <ImageIcon className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-text-emphasis">Banner de Login</h3>
+                <p className="text-xs text-text-muted">La imagen que se muestra en la pantalla de inicio de sesión</p>
+              </div>
+              {isCustomBanner && (
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-primary/10 text-primary">
+                  Personalizado
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-6 items-start">
+              {/* Preview */}
+              <div className="relative rounded-2xl overflow-hidden border border-border aspect-[3/2] bg-muted">
+                <img
+                  src={loginBanner}
+                  alt="Banner login preview"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/BgLogin.png"; }}
+                />
+              </div>
+
+              {/* Controls */}
+              <div className="flex flex-col gap-3">
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBannerChange}
+                />
+                <Button
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Subir nueva imagen
+                </Button>
+                {isCustomBanner && (
+                  <Button
+                    variant="outline"
+                    onClick={handleBannerReset}
+                    className="rounded-xl border-border"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Volver al banner por defecto
+                  </Button>
+                )}
+                {bannerSavingMsg && (
+                  <p className="text-xs text-text-muted">{bannerSavingMsg}</p>
+                )}
+                <ul className="text-xs text-text-muted space-y-1 mt-1">
+                  <li>· Se redimensiona automáticamente a 1200px de ancho.</li>
+                  <li>· Recomendado: imagen horizontal, contenido principal centrado.</li>
+                  <li>· Se guarda en este dispositivo.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Sección Perfil */}
