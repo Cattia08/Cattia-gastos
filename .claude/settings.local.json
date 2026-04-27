@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Bash(npx tsc *)",
+      "Bash(npx supabase *)",
+      "Bash(node .claude/skills/impeccable/scripts/load-context.mjs)",
+      "Bash(node *)"
+    ]
+  }
+}

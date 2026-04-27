@@ -9,6 +9,7 @@ import { useSupabaseData } from "@/hooks/useSupabaseData";
 import AddTransactionDialog from "@/components/transactions/AddTransactionDialog";
 import { Remi, useOneko } from "@/addons/oneko";
 import { cn } from "@/lib/utils";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 // Desktop FAB configuration by route
 const FAB_CONFIG: Record<string, { icon: React.ReactNode; label: string; action: "add" | "navigate"; to?: string }> = {
@@ -90,6 +91,9 @@ const AppLayout = () => {
 
       {/* Bottom navigation (mobile/tablet only) */}
       <BottomNav onAddClick={handleAddClick} />
+
+      {/* Floating chat assistant */}
+      <ChatWidget />
     </div>
   );
 };

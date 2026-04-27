@@ -27,3 +27,4 @@ dist-ssr
 backup-*/
 *.cjs
 *.sql
+.env

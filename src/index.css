@@ -934,6 +934,16 @@ html.dark {
   border-color: hsl(217 33% 16%);
 }
 
+@keyframes cattia-slide-up {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+@keyframes cattia-cat-idle {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
 .dark .table-theme tbody tr:hover {
   background: hsl(217 33% 16%);
 }
