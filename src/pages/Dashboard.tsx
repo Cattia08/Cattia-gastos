@@ -612,7 +612,7 @@ const Dashboard = () => {
       </div>
 
       {/* Filters - placed before cards for better hierarchy */}
-      <div className="flex items-center gap-3 flex-wrap bg-white/50 dark:bg-card/50 rounded-xl p-3">
+      <div className="flex items-center gap-3 flex-wrap rounded-2xl bg-card/80 backdrop-blur-sm border border-border shadow-soft p-3">
         <DatePeriodSelector
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
@@ -744,18 +744,19 @@ const Dashboard = () => {
           <CardContent className="pt-0">
             <div className="h-64 cursor-pointer">
               {trendData.every(d => d.amount === 0) ? (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                  <span className="text-4xl mb-2">📊</span>
-                  <p className="text-sm">No hay gastos en este período</p>
-                  <p className="text-xs mt-1">¡Agrega tu primer gasto para ver las tendencias!</p>
+                <div className="h-full flex flex-col items-center justify-center gap-2 text-text-muted">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                  </div>
+                  <p className="text-sm text-text-primary font-medium">Sin gastos este período</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={trendData}>
                     <defs>
                       <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#FFC6C2" />
-                        <stop offset="100%" stopColor="#FFB7B2" />
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.95" />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.55" />
                       </linearGradient>
                     </defs>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={isDark ? "#372f45" : "#e5e7eb"} />
@@ -775,10 +776,11 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="pt-0">
             {rankingData.length === 0 || rankingData.every(e => e.value === 0) ? (
-              <div className="h-48 flex flex-col items-center justify-center text-muted-foreground">
-                <span className="text-4xl mb-2">🏆</span>
-                <p className="text-sm">Sin categorías aún</p>
-                <p className="text-xs mt-1">Tus gastos aparecerán aquí</p>
+              <div className="h-48 flex flex-col items-center justify-center gap-2 text-text-muted">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                  <PieIcon className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-sm text-text-primary font-medium">Sin categorías</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -811,18 +813,19 @@ const Dashboard = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-medium">Estrella de Gastos</CardTitle>
-              <Button variant="outline" size="icon" className="rounded-full border-pink-200 hover:bg-pink-50 hover:border-pink-300" onClick={() => setIsRadarOpen(true)}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-pink-500"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
+              <Button variant="outline" size="icon" aria-label="Expandir radar" className="rounded-full border-border hover:bg-primary/5 hover:border-primary/40" onClick={() => setIsRadarOpen(true)}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-primary"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
               </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="h-64">
               {categoryDataForChart.length === 0 || categoryDataForChart.every(d => d.value === 0) ? (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                  <span className="text-4xl mb-2">⭐</span>
-                  <p className="text-sm">Sin datos para mostrar</p>
-                  <p className="text-xs mt-1">Tu estrella de gastos aparecerá aquí</p>
+                <div className="h-full flex flex-col items-center justify-center gap-2 text-text-muted">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
+                  <p className="text-sm text-text-primary font-medium">Sin datos</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -831,7 +834,7 @@ const Dashboard = () => {
                     <PolarAngleAxis dataKey="category" tick={{ fontSize: 12 }} />
                     <PolarRadiusAxis angle={45} tick={false} />
                     <Tooltip content={renderRadarTooltip} />
-                    <Radar dataKey="value" stroke="#FF7597" fill="#FF7597" fillOpacity={0.4} />
+                    <Radar dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.35} />
                   </RadarChart>
                 </ResponsiveContainer>
               )}
@@ -856,7 +859,7 @@ const Dashboard = () => {
                   <PolarRadiusAxis angle={45} tick={{ fill: isDark ? "#E9E1EF" : "#4A404E" }} />
                   <Tooltip content={renderRadarTooltip} />
                   <Legend />
-                  <Radar dataKey="value" stroke="#5DBE8A" fill="#5DBE8A" fillOpacity={0.4} />
+                  <Radar dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.35} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>

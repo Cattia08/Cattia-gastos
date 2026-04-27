@@ -73,8 +73,13 @@ const Categories = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Form state
-  const [formData, setFormData] = useState({
-    id: null as number | null,
+  const [formData, setFormData] = useState<{
+    id: number | null;
+    name: string;
+    color: string;
+    icon: string;
+  }>({
+    id: null,
     name: "",
     color: CATEGORY_COLORS[0].hex,
     icon: "shopping-bag"
@@ -294,9 +299,7 @@ const Categories = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className={cn(
           "sm:max-w-[420px]",
-          \"bg-white dark:bg-gray-900\",
-          "border-pink-100/50 dark:border-pink-900/30",
-          "rounded-2xl shadow-2xl"
+          "bg-card border-border rounded-2xl shadow-soft-lg"
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

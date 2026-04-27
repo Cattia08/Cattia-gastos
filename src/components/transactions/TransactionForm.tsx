@@ -39,9 +39,9 @@ const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave,
   }, [initialData.id]);
 
   const inputClass = cn(
-    "rounded-xl border-gray-200",
-    "focus:ring-2 focus:ring-theme-green/30 focus:border-theme-green",
-    "transition-all duration-200"
+    "rounded-xl border-border",
+    "focus:ring-2 focus:ring-primary/25 focus:border-primary",
+    "transition-shadow duration-200"
   );
 
   return (
@@ -114,7 +114,7 @@ const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave,
             </SelectContent>
           </Select>
           {paymentMethods.length === 0 && (
-            <p className="text-xs text-red-500">⚠️ Debug: paymentMethods array is empty</p>
+            <p className="text-xs text-text-muted">Crea métodos de pago en Administración</p>
           )}
         </div>
       </div>
@@ -126,22 +126,22 @@ const TransactionForm = ({ initialData, categories, paymentMethods = [], onSave,
         />
       </div>
       <div className="flex justify-end gap-2 mt-2">
-        <Button 
-          variant="outline" 
-          onClick={onCancel} 
-          className="rounded-xl border-gray-200"
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          className="rounded-xl border-border"
           disabled={isLoading}
         >
           Cancelar
         </Button>
-        <Button 
+        <Button
           onClick={() => onSave(form)}
           disabled={isLoading}
           className={cn(
             "rounded-xl",
-            "bg-theme-green hover:bg-theme-sage text-white",
-            "shadow-soft hover:shadow-glow-green",
-            "transition-all duration-200"
+            "bg-primary hover:bg-primary/90 text-primary-foreground",
+            "shadow-[0_8px_22px_-8px_hsl(var(--primary)/0.5)]",
+            "transition-shadow duration-200"
           )}
         >
           {isLoading ? "Guardando..." : "Guardar"}

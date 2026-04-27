@@ -45,17 +45,17 @@ export function PullToRefreshIndicator({
           'flex items-center justify-center',
           'border-2',
           thresholdReached || isRefreshing
-            ? 'border-theme-green'
+            ? 'border-primary'
             : 'border-muted'
         )}
       >
         {isRefreshing ? (
-          <Loader2 className="w-5 h-5 text-theme-green animate-spin" />
+          <Loader2 className="w-5 h-5 text-primary animate-spin" />
         ) : (
           <svg
             className={cn(
               'w-5 h-5 transition-all duration-150',
-              thresholdReached ? 'text-theme-green' : 'text-muted-foreground'
+              thresholdReached ? 'text-primary' : 'text-muted-foreground'
             )}
             viewBox="0 0 24 24"
             fill="none"

@@ -5,19 +5,18 @@ import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useDeviceType } from "@/hooks/useDeviceType";
 import { supabase } from "@/lib/supabase";
 import {
-  FaPlus,
-  FaStar,
-  FaHeart,
-  FaExclamationCircle,
-  FaSyncAlt,
-  FaCalendarAlt,
-  FaEdit,
-  FaTrash,
-  FaChevronLeft,
-  FaChevronRight,
-  FaCreditCard
-} from "react-icons/fa";
-import { Loader2 } from "lucide-react";
+  Plus,
+  Heart,
+  AlertCircle,
+  Calendar as CalendarIcon,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  Loader2,
+  Inbox,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -376,14 +375,14 @@ const Transactions = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-pastel-green border-t-theme-green" />
+        <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary/15 border-t-primary" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-500 py-8">
+      <div className="text-center text-destructive py-8">
         Error al cargar los datos: {error.message}
       </div>
     );
@@ -394,14 +393,12 @@ const Transactions = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-theme-green to-theme-sage bg-clip-text text-transparent">
-              Transacciones
-            </span>
-            <FaHeart className="inline ml-2 w-6 h-6 text-theme-green" />
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-text-emphasis dark:text-foreground">
+            Transacciones
+            <Heart aria-hidden="true" fill="currentColor" className="inline ml-3 w-5 h-5 md:w-6 md:h-6 text-primary align-baseline" />
           </h1>
-          <p className="mt-1 text-muted-foreground text-sm">
-            {periodSubtitle} • {transactionCount} transacciones • S/ {periodTotal.toFixed(2)}
+          <p className="mt-2 text-text-secondary text-sm">
+            <span className="capitalize">{periodSubtitle}</span> · {transactionCount} mov · <span className="font-semibold text-text-primary tabular-nums">S/ {periodTotal.toFixed(2)}</span>
           </p>
         </div>
 
@@ -410,30 +407,27 @@ const Transactions = () => {
           <ExportButton transactions={supabaseTransactions} categories={supabaseCategories} />
 
           {/* Add Transaction button - desktop only (mobile uses bottom nav) */}
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-            console.log('🚪 Add Dialog opening:', open, 'paymentMethods at this moment:', paymentMethods, 'length:', paymentMethods?.length);
-            setIsAddDialogOpen(open);
-          }}>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className={cn(
                 "rounded-xl px-5 hidden lg:flex",
-                "bg-gradient-to-r from-theme-green to-theme-sage",
-                "hover:shadow-glow-green",
-                "shadow-soft",
-                "transition-colors duration-150"
+                "bg-primary text-primary-foreground",
+                "hover:bg-primary/90",
+                "shadow-[0_8px_22px_-8px_hsl(var(--primary)/0.5)]",
+                "transition-shadow duration-200"
               )}>
-                <FaPlus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 mr-2" />
                 Agregar
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] bg-white border-pastel-green/30 rounded-3xl">
+            <DialogContent className="sm:max-w-[500px] bg-card border-border rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <FaPlus className="w-5 h-5 text-theme-green" />
-                  Nueva Transacción
+                  <Plus className="w-5 h-5 text-primary" />
+                  Nueva transacción
                 </DialogTitle>
-                <DialogDescription>
-                  Completa los detalles de tu nueva transacción.
+                <DialogDescription className="sr-only">
+                  Formulario para registrar una transacción
                 </DialogDescription>
               </DialogHeader>
               <TransactionForm
@@ -442,7 +436,7 @@ const Transactions = () => {
                 paymentMethods={paymentMethods}
                 onSave={async (form) => {
                   if (!form.name || !form.amount) {
-                    toast.error({ title: "Error", description: "Por favor completa los campos requeridos" });
+                    toast.error({ title: "Faltan datos", description: "Completa los campos requeridos" });
                     return;
                   }
                   try {
@@ -458,7 +452,7 @@ const Transactions = () => {
                     setIsAddDialogOpen(false);
                     await refreshData();
                   } catch {
-                    toast.error({ title: "Error", description: "Hubo un error al procesar la transacción" });
+                    toast.error({ title: "No se pudo guardar", description: "Inténtalo de nuevo" });
                   }
                 }}
                 onCancel={() => setIsAddDialogOpen(false)}
@@ -511,30 +505,24 @@ const Transactions = () => {
         {/* Mobile View: Card-based Layout */}
         {(isMobile || isTablet) ? (
           <Card className={cn(
-            "overflow-hidden",
-            "bg-white dark:bg-card",
-            "border-pink-100/30 dark:border-pink-900/20",
-            "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
-            "rounded-2xl transition-all duration-300"
+            "overflow-hidden bg-card border-border rounded-2xl shadow-soft-md"
           )}>
             <CardHeader className={cn(
-              "p-4 border-b",
-              "border-pink-100/30 dark:border-pink-900/20",
-              "bg-gradient-to-r from-pink-50/50 to-purple-50/30 dark:from-pink-950/20 dark:to-purple-950/10"
+              "p-4 border-b border-border bg-primary/[0.04] dark:bg-primary/[0.06]"
             )}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FaCalendarAlt className="w-4 h-4 text-pink-500" />
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {paginatedTransactions.length} de {totalRows} transacciones
+                  <CalendarIcon className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-text-secondary">
+                    {paginatedTransactions.length} de {totalRows}
                   </span>
                 </div>
                 {isRefreshing && (
-                  <Loader2 className="w-4 h-4 animate-spin text-theme-green" />
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Desliza ← para eliminar, → para editar
+              <p className="text-xs text-text-muted mt-1">
+                Desliza para editar o eliminar
               </p>
             </CardHeader>
             <CardContent className="p-0">
@@ -570,11 +558,11 @@ const Transactions = () => {
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center gap-3 py-16">
-                  <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                    <FaStar className="w-8 h-8 text-pink-400 animate-pulse" />
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                    <Inbox className="w-7 h-7 text-primary" />
                   </div>
-                  <p className="text-text-secondary font-medium">No hay transacciones</p>
-                  <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva</p>
+                  <p className="text-text-primary font-medium">Sin movimientos</p>
+                  <p className="text-xs text-text-muted">Cambia el período o registra uno nuevo</p>
                 </div>
               )}
             </CardContent>
@@ -582,22 +570,16 @@ const Transactions = () => {
         ) : (
           /* Desktop View: Table Layout */
           <Card className={cn(
-            "overflow-hidden",
-            "bg-white dark:bg-card",
-            "border-pink-100/30 dark:border-pink-900/20",
-            "shadow-xl shadow-pink-100/10 dark:shadow-black/20",
-            "rounded-2xl transition-all duration-300"
+            "overflow-hidden bg-card border-border rounded-2xl shadow-soft-md"
           )}>
             <CardHeader className={cn(
-              "p-4 border-b",
-              "border-pink-100/30 dark:border-pink-900/20",
-              "bg-gradient-to-r from-pink-50/50 to-purple-50/30 dark:from-pink-950/20 dark:to-purple-950/10"
+              "p-4 border-b border-border bg-primary/[0.04] dark:bg-primary/[0.06]"
             )}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FaCalendarAlt className="w-4 h-4 text-pink-500" />
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Mostrando {paginatedTransactions.length} de {totalRows} transacciones
+                  <CalendarIcon className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-text-secondary">
+                    {paginatedTransactions.length} de {totalRows}
                   </span>
                 </div>
               </div>
@@ -607,13 +589,13 @@ const Transactions = () => {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-pink-50/80 to-purple-50/50 dark:from-pink-950/30 dark:to-purple-950/20 hover:bg-pink-50/90">
-                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Comercio</TableHead>
-                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Categoría</TableHead>
-                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Método</TableHead>
-                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold">Fecha</TableHead>
-                      <TableHead className="text-right text-pink-600 dark:text-pink-400 font-semibold">Monto</TableHead>
-                      <TableHead className="text-pink-600 dark:text-pink-400 font-semibold w-24">Acciones</TableHead>
+                    <TableRow className="bg-primary/[0.05] hover:bg-primary/[0.07] border-b border-primary/15">
+                      <TableHead className="text-primary font-semibold uppercase tracking-wide text-[11px]">Comercio</TableHead>
+                      <TableHead className="text-primary font-semibold uppercase tracking-wide text-[11px]">Categoría</TableHead>
+                      <TableHead className="text-primary font-semibold uppercase tracking-wide text-[11px]">Método</TableHead>
+                      <TableHead className="text-primary font-semibold uppercase tracking-wide text-[11px]">Fecha</TableHead>
+                      <TableHead className="text-right text-primary font-semibold uppercase tracking-wide text-[11px]">Monto</TableHead>
+                      <TableHead className="text-primary font-semibold uppercase tracking-wide text-[11px] w-24">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -663,7 +645,7 @@ const Transactions = () => {
                                     <div className="text-xs text-text-secondary mt-1">
                                       {transaction.categories?.name || (
                                         <span className="badge-uncategorized">
-                                          <FaExclamationCircle className="w-3 h-3" />
+                                          <AlertCircle className="w-3 h-3" />
                                           Sin categoría
                                         </span>
                                       )}
@@ -682,7 +664,7 @@ const Transactions = () => {
                                       "border-amber-200 dark:border-amber-800"
                                     )}>
                                       <div className="flex items-center gap-1">
-                                        <FaExclamationCircle className="w-3.5 h-3.5 text-amber-500" />
+                                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
                                         <span className="text-xs">Seleccionar</span>
                                       </div>
                                     </SelectTrigger>
@@ -699,7 +681,7 @@ const Transactions = () => {
                               <TableCell className="py-3.5">
                                 {transaction.payment_methods ? (
                                   <div className="flex items-center gap-1.5 text-sm text-text-secondary">
-                                    <FaCreditCard className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
                                     {transaction.payment_methods.name}
                                   </div>
                                 ) : (
@@ -724,7 +706,7 @@ const Transactions = () => {
                                     onClick={() => handleEdit(transaction)}
                                     className="transaction-action-btn edit"
                                   >
-                                    <FaEdit className="h-4 w-4 text-muted-foreground group-hover:text-pink-500 transition-colors" />
+                                    <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -732,7 +714,7 @@ const Transactions = () => {
                                     onClick={() => handleConfirmDelete({ id: transaction.id, name: transaction.name })}
                                     className="transaction-action-btn delete"
                                   >
-                                    <FaTrash className="h-4 w-4 text-red-400 group-hover:text-red-500 transition-colors" />
+                                    <Trash2 className="h-4 w-4 text-text-muted group-hover:text-destructive transition-colors" />
                                   </Button>
                                 </div>
                               </TableCell>
@@ -742,13 +724,13 @@ const Transactions = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-48">
+                        <TableCell colSpan={6} className="h-56">
                           <div className="flex flex-col items-center justify-center gap-3">
-                            <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                              <FaStar className="w-8 h-8 text-pink-400 animate-pulse" />
+                            <div className="w-14 h-14 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                              <Inbox className="w-7 h-7 text-primary" />
                             </div>
-                            <p className="text-text-secondary font-medium">No hay transacciones que mostrar</p>
-                            <p className="text-xs text-muted-foreground">Ajusta los filtros o añade una nueva transacción</p>
+                            <p className="text-text-primary font-medium">Sin movimientos</p>
+                            <p className="text-xs text-text-muted">Cambia el período o registra uno nuevo</p>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -761,13 +743,12 @@ const Transactions = () => {
             {/* Pagination Footer */}
             <div className={cn(
               "flex flex-col sm:flex-row items-center justify-between gap-4 p-4",
-              "border-t border-pink-100/30 dark:border-pink-900/20",
-              "bg-gradient-to-r from-pink-50/30 to-purple-50/20 dark:from-pink-950/10 dark:to-purple-950/5"
+              "border-t border-border bg-primary/[0.02] dark:bg-primary/[0.04]"
             )}>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Filas:</span>
+                <span className="text-sm text-text-muted">Filas:</span>
                 <Select value={rowsPerPage.toString()} onValueChange={val => setRowsPerPage(Number(val))}>
-                  <SelectTrigger className="w-16 h-8 rounded-lg border-pink-200/50 dark:border-pink-800/30">
+                  <SelectTrigger className="w-16 h-8 rounded-lg border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -783,23 +764,25 @@ const Transactions = () => {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Página anterior"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
+                  className="h-9 w-9 rounded-lg border-border"
                 >
-                  <FaChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm px-3 py-1 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-pink-100/30 dark:border-pink-900/20">
-                  {currentPage} / {totalPages}
+                <span className="text-sm px-3 py-1.5 rounded-lg bg-card border border-border tabular-nums">
+                  {currentPage} <span className="text-text-muted">/ {totalPages}</span>
                 </span>
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Página siguiente"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className="h-8 w-8 rounded-lg border-pink-200/50 dark:border-pink-800/30"
+                  className="h-9 w-9 rounded-lg border-border"
                 >
-                  <FaChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -812,33 +795,30 @@ const Transactions = () => {
         <Button
           onClick={handleOpenNoCategoryDialog}
           className={cn(
-            "w-full sm:w-auto rounded-full px-6 py-3",
-            "bg-gradient-to-r from-amber-400 to-orange-400",
-            "hover:from-amber-500 hover:to-orange-500",
-            "text-white font-medium shadow-lg shadow-amber-500/25",
-            "transition-all duration-200"
+            "w-full sm:w-auto rounded-xl px-5 py-2.5",
+            "bg-amber-100 hover:bg-amber-200 text-amber-900",
+            "dark:bg-amber-900/40 dark:hover:bg-amber-900/60 dark:text-amber-100",
+            "border border-amber-300/60 dark:border-amber-700/40",
+            "shadow-soft transition-colors"
           )}
         >
-          <FaExclamationCircle className="w-4 h-4 mr-2" />
-          {noCategoryTransactions.length} gasto{noCategoryTransactions.length > 1 ? 's' : ''} sin categoría
+          <AlertCircle className="w-4 h-4 mr-2" />
+          {noCategoryTransactions.length} sin categoría · asignar
         </Button>
       )}
 
       {/* Edit Transaction Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className={cn(
-          "sm:max-w-[425px]",
-          "bg-white dark:bg-gray-900",
-          "border-pink-100/50 dark:border-pink-900/30",
-          "rounded-2xl shadow-2xl"
+          "sm:max-w-[425px] bg-card border-border rounded-2xl shadow-soft-lg"
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FaEdit className="w-5 h-5 text-pink-500" />
-              Editar Transacción
+              <Pencil className="w-5 h-5 text-primary" />
+              Editar transacción
             </DialogTitle>
-            <DialogDescription>
-              Modifica los detalles de esta transacción.
+            <DialogDescription className="sr-only">
+              Modificar campos de la transacción
             </DialogDescription>
           </DialogHeader>
           <TransactionForm
@@ -877,31 +857,27 @@ const Transactions = () => {
       {/* No Category Assignment Dialog */}
       <Dialog open={showNoCategoryDialog} onOpenChange={setShowNoCategoryDialog}>
         <DialogContent className={cn(
-          "max-w-lg",
-          "bg-white dark:bg-gray-900",
-          "border-amber-200/50 dark:border-amber-900/30",
-          "rounded-2xl shadow-2xl"
+          "max-w-lg bg-card border-border rounded-2xl shadow-soft-lg"
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FaExclamationCircle className="w-5 h-5 text-amber-500" />
+              <AlertCircle className="w-5 h-5 text-amber-500" />
               Asignar categorías
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Asignar categoría a transacciones sin clasificar
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
             {noCategoryEdits.map(t => (
               <div
                 key={t.id}
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl",
-                  "bg-gray-50/80 dark:bg-gray-800/60",
-                  "border border-gray-100 dark:border-gray-700/50"
-                )}
+                className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border"
               >
                 <span className="flex-1 text-sm font-medium truncate">{t.name}</span>
                 <Select value={t.newCategory} onValueChange={val => handleNoCategoryChange(t.id, val)}>
                   <SelectTrigger className="w-36 h-8 rounded-lg">
-                    <SelectValue placeholder="Seleccionar" />
+                    <SelectValue placeholder="Categoría" />
                   </SelectTrigger>
                   <SelectContent>
                     {supabaseCategories.map(cat => (
@@ -916,13 +892,9 @@ const Transactions = () => {
             <Button
               onClick={handleSaveNoCategory}
               disabled={savingNoCategory}
-              className={cn(
-                "rounded-full px-6",
-                "bg-gradient-to-r from-green-500 to-emerald-500",
-                "hover:from-green-600 hover:to-emerald-600"
-              )}
+              className="rounded-xl px-5 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              Guardar cambios
+              Guardar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -930,17 +902,14 @@ const Transactions = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white dark:bg-card border-red-200 dark:border-red-900/30 rounded-2xl">
+        <DialogContent className="sm:max-w-[400px] bg-card border-border rounded-2xl shadow-soft-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
-              <FaTrash className="w-5 h-5" />
-              Confirmar eliminación
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Eliminar transacción
             </DialogTitle>
-            <DialogDescription className="pt-2">
-              ¿Estás seguro de que deseas eliminar la transacción{' '}
-              <span className="font-semibold text-foreground">"{transactionToDelete?.name}"</span>?
-              <br />
-              <span className="text-red-500 text-sm mt-2 block">Esta acción no se puede deshacer.</span>
+            <DialogDescription className="pt-2 text-text-secondary">
+              <span className="font-semibold text-foreground">{transactionToDelete?.name}</span> se borrará permanentemente.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -954,9 +923,9 @@ const Transactions = () => {
             <Button
               variant="destructive"
               onClick={() => transactionToDelete && handleDeleteTransaction(transactionToDelete.id)}
-              className="rounded-xl bg-red-500 hover:bg-red-600"
+              className="rounded-xl"
             >
-              <FaTrash className="w-4 h-4 mr-2" />
+              <Trash2 className="w-4 h-4 mr-2" />
               Eliminar
             </Button>
           </DialogFooter>

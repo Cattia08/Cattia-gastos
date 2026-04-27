@@ -405,7 +405,7 @@ const Admin = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl md:text-3xl font-bold">
           <span className="text-primary">Administración</span>
-          <Flower className="inline ml-2 w-5 h-5 text-pastel-green" />
+          <Flower className="inline ml-2 w-5 h-5 text-primary" />
         </h1>
       </div>
 
@@ -458,7 +458,7 @@ const Admin = () => {
 
         {/* Categories Tab */}
         <TabsContent value="categories">
-          <Card className="p-6 border-pastel-pink/30">
+          <Card className="p-6 border-border">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold flex items-center">
                 <Tag className="w-5 h-5 mr-2 text-primary" />
@@ -470,7 +470,7 @@ const Admin = () => {
                     <Plus className="w-4 h-4 mr-2" /> Añadir Categoría
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-pink/30">
+                <DialogContent className="sm:max-w-[425px] bg-card rounded-2xl border-border">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Star className="w-5 h-5 text-pastel-yellow" />
@@ -485,7 +485,7 @@ const Admin = () => {
                         id="name"
                         value={newCategory.name}
                         onChange={e => setNewCategory({ ...newCategory, name: e.target.value })}
-                        className="border-pastel-pink/30"
+                        className="border-border"
                         placeholder="Ej. Alimentación"
                       />
                     </div>
@@ -505,7 +505,7 @@ const Admin = () => {
                     <Button
                       variant="outline"
                       onClick={() => setIsAddCategoryDialogOpen(false)}
-                      className="border-pastel-pink/30"
+                      className="border-border"
                     >
                       Cancelar
                     </Button>
@@ -521,7 +521,7 @@ const Admin = () => {
               {categories.map(category => (
                 <div
                   key={category.id}
-                  className="flex justify-between items-center p-4 bg-white dark:bg-card rounded-xl border border-pastel-pink/20 dark:border-border shadow-sm transition-all hover:bg-pastel-pink/10 dark:hover:bg-muted/50 hover:border-pastel-pink/40 dark:hover:border-primary/30 duration-150 hover:scale-[0.99]"
+                  className="flex justify-between items-center p-4 bg-white dark:bg-card rounded-xl border border-border shadow-sm transition-all hover:bg-pastel-pink/10 dark:hover:bg-muted/50 hover:border-pastel-pink/40 dark:hover:border-primary/30 duration-150 hover:scale-[0.99]"
                 >
                   <div className="flex items-center">
                     <div
@@ -689,10 +689,10 @@ const Admin = () => {
 
         {/* Incomes Tab */}
         <TabsContent value="incomes">
-          <Card className="p-6 border-pastel-green/30">
+          <Card className="p-6 border-border">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold flex items-center">
-                <CircleDollarSign className="w-5 h-5 mr-2 text-pastel-green" />
+                <CircleDollarSign className="w-5 h-5 mr-2 text-accent" />
                 Administrar Ingresos
               </h2>
               <Dialog open={isAddIncomeDialogOpen} onOpenChange={setIsAddIncomeDialogOpen}>
@@ -701,10 +701,10 @@ const Admin = () => {
                     <Plus className="w-4 h-4 mr-2" /> Añadir Ingreso
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-green/30">
+                <DialogContent className="sm:max-w-[425px] bg-card rounded-2xl border-border">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      <CircleDollarSign className="w-5 h-5 text-pastel-green" />
+                      <CircleDollarSign className="w-5 h-5 text-accent" />
                       Nuevo Ingreso
                     </DialogTitle>
                     <DialogDescription>Registra un nuevo ingreso en tu cuenta.</DialogDescription>
@@ -716,7 +716,7 @@ const Admin = () => {
                         id="source"
                         value={newIncome.source}
                         onChange={e => setNewIncome({ ...newIncome, source: e.target.value })}
-                        className="border-pastel-green/30"
+                        className="border-border"
                         placeholder="Ej. Salario mensual"
                       />
                     </div>
@@ -727,7 +727,7 @@ const Admin = () => {
                         type="number"
                         value={newIncome.amount}
                         onChange={e => setNewIncome({ ...newIncome, amount: e.target.value })}
-                        className="border-pastel-green/30"
+                        className="border-border"
                         placeholder="0.00"
                       />
                     </div>
@@ -752,7 +752,7 @@ const Admin = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white dark:bg-card rounded-xl border border-pastel-green/20 dark:border-border shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-6">
                 <h3 className="text-lg font-medium mb-4">Historial de Ingresos</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -1138,8 +1138,8 @@ const Admin = () => {
                       className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:border-amber-500/30 transition-all duration-200 hover:bg-amber-50/30 dark:hover:bg-amber-500/5"
                     >
                       <div
-                        className="w-4 h-4 rounded-full shrink-0 ring-2 ring-offset-1 ring-offset-white dark:ring-offset-card"
-                        style={{ backgroundColor: category.color || '#9ca3af', ringColor: (category.color || '#9ca3af') + '40' }}
+                        className="w-4 h-4 rounded-full shrink-0 ring-2 ring-offset-1 ring-offset-card"
+                        style={{ backgroundColor: category.color || '#9ca3af', ['--tw-ring-color' as any]: (category.color || '#9ca3af') + '40' }}
                       />
                       <span className="text-sm font-medium flex-1 truncate">{category.name}</span>
                       <div className="flex items-center gap-2">
@@ -1292,10 +1292,10 @@ const Admin = () => {
 
   {/* 3. Dialog para editar ingreso */ }
   < Dialog open={isEditIncomeDialogOpen} onOpenChange={setIsEditIncomeDialogOpen} >
-    <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-pastel-green/30">
+    <DialogContent className="sm:max-w-[425px] bg-card rounded-2xl border-border">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-          <Edit className="w-5 h-5 text-pastel-green" />
+          <Edit className="w-5 h-5 text-accent" />
           Editar Ingreso
         </DialogTitle>
         <DialogDescription>Modifica los detalles de este ingreso.</DialogDescription>
@@ -1303,11 +1303,11 @@ const Admin = () => {
       <div className="grid gap-4 py-4">
         <div className="grid gap-2">
           <Label htmlFor="edit-source">Fuente</Label>
-          <Input id="edit-source" value={editingIncome.source} onChange={e => setEditingIncome({ ...editingIncome, source: e.target.value })} className="border-pastel-green/30" />
+          <Input id="edit-source" value={editingIncome.source} onChange={e => setEditingIncome({ ...editingIncome, source: e.target.value })} className="border-border" />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="edit-amount">Monto</Label>
-          <Input id="edit-amount" type="number" value={editingIncome.amount} onChange={e => setEditingIncome({ ...editingIncome, amount: e.target.value })} className="border-pastel-green/30" />
+          <Input id="edit-amount" type="number" value={editingIncome.amount} onChange={e => setEditingIncome({ ...editingIncome, amount: e.target.value })} className="border-border" />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="edit-date">Fecha</Label>
@@ -1315,7 +1315,7 @@ const Admin = () => {
         </div>
       </div>
       <DialogFooter>
-        <Button variant="outline" onClick={() => setIsEditIncomeDialogOpen(false)} className="border-pastel-green/30">Cancelar</Button>
+        <Button variant="outline" onClick={() => setIsEditIncomeDialogOpen(false)} className="border-border">Cancelar</Button>
         <Button onClick={handleEditIncome} className="bg-pastel-green hover:bg-pastel-green/80 text-foreground">Guardar</Button>
       </DialogFooter>
     </DialogContent>

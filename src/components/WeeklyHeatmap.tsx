@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import FilteredTransactionsDialog from "@/components/FilteredTransactionsDialog";
 import { cn } from "@/lib/utils";
@@ -25,16 +25,6 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  // Dark mode detection
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
   const grid = useMemo(() => {
     return weekStarts.map(weekStart => {
       return Array.from({ length: 7 }, (_, d) => {
@@ -59,17 +49,17 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
     return Math.max(0, ...vals);
   }, [grid]);
 
-  // Improved color palette with gradients
+  // Monochromatic primary scale — depth via lightness, on-brand
   const getColor = (value: number) => {
-    if (value <= 0) return isDark ? "bg-slate-800/50" : "bg-gray-100";
-    if (maxValue <= 0) return isDark ? "bg-emerald-900/50" : "bg-emerald-100";
+    if (value <= 0) return "bg-muted/60";
+    if (maxValue <= 0) return "bg-primary/10";
 
     const intensity = Math.min(1, value / maxValue);
 
-    if (intensity <= 0.25) return isDark ? "bg-emerald-900/60" : "bg-emerald-200";
-    if (intensity <= 0.5) return isDark ? "bg-amber-900/60" : "bg-amber-200";
-    if (intensity <= 0.75) return isDark ? "bg-orange-800/70" : "bg-orange-300";
-    return isDark ? "bg-rose-800/80" : "bg-rose-400";
+    if (intensity <= 0.25) return "bg-primary/15";
+    if (intensity <= 0.5) return "bg-primary/35";
+    if (intensity <= 0.75) return "bg-primary/60";
+    return "bg-primary";
   };
 
   // Calculate period totals for quick summary
@@ -77,22 +67,23 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
   const daysWithExpenses = useMemo(() => grid.flat().filter(c => c.total > 0).length, [grid]);
 
   return (
-    <Card className={cn("rounded-2xl shadow-card p-5 bg-white dark:bg-card", className)}>
-      {/* Header with icon */}
+    <Card className={cn("rounded-2xl shadow-soft p-5 bg-card border-border", className)}>
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
-            <Calendar className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+            <Calendar className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <div className="text-sm font-semibold text-foreground">Actividad del mes</div>
-            <div className="text-[11px] text-muted-foreground">Últimas 4 semanas</div>
+            <div className="text-sm font-semibold text-text-emphasis">Actividad del mes</div>
+            <div className="text-[11px] text-text-muted">Últimas 4 semanas</div>
           </div>
         </div>
-        {/* Mini summary */}
         <div className="text-right">
-          <div className="text-lg font-bold text-foreground">S/ {periodTotal.toFixed(0)}</div>
-          <div className="text-[10px] text-muted-foreground">{daysWithExpenses} días activos</div>
+          <div className="text-lg font-bold text-text-emphasis tabular-nums">
+            <span className="text-sm font-medium text-text-secondary mr-0.5">S/</span>{periodTotal.toFixed(0)}
+          </div>
+          <div className="text-[10px] text-text-muted">{daysWithExpenses} días activos</div>
         </div>
       </div>
 
@@ -128,10 +119,10 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
                       <button
                         className={cn(
                           "aspect-square w-full max-w-[28px] mx-auto rounded-md transition-all duration-200",
-                          isFuture ? "bg-transparent border border-dashed border-border/30" : getColor(cell.total),
-                          !isFuture && "hover:scale-110 hover:shadow-md cursor-pointer",
+                          isFuture ? "bg-transparent border border-dashed border-border/40" : getColor(cell.total),
+                          !isFuture && "hover:scale-110 cursor-pointer",
                           isSelected && "ring-2 ring-primary ring-offset-1",
-                          isToday && "ring-2 ring-violet-500/50"
+                          isToday && "ring-2 ring-primary/60 ring-offset-1"
                         )}
                         onClick={() => {
                           if (!isFuture) {
@@ -171,15 +162,15 @@ const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ transactions, className }
         </div>
       </UiTooltipProvider>
 
-      {/* Gradient legend - more visual */}
-      <div className="mt-4 flex items-center justify-center gap-1">
-        <span className="text-[10px] text-muted-foreground mr-2">Menos</span>
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-slate-800/50" : "bg-gray-100")} />
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-emerald-900/60" : "bg-emerald-200")} />
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-amber-900/60" : "bg-amber-200")} />
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-orange-800/70" : "bg-orange-300")} />
-        <div className={cn("w-4 h-4 rounded", isDark ? "bg-rose-800/80" : "bg-rose-400")} />
-        <span className="text-[10px] text-muted-foreground ml-2">Más</span>
+      {/* Legend — monochrome scale */}
+      <div className="mt-4 flex items-center justify-center gap-1.5">
+        <span className="text-[10px] text-text-muted mr-2">Menos</span>
+        <div className="w-4 h-4 rounded bg-muted/60" />
+        <div className="w-4 h-4 rounded bg-primary/15" />
+        <div className="w-4 h-4 rounded bg-primary/35" />
+        <div className="w-4 h-4 rounded bg-primary/60" />
+        <div className="w-4 h-4 rounded bg-primary" />
+        <span className="text-[10px] text-text-muted ml-2">Más</span>
       </div>
 
       <FilteredTransactionsDialog

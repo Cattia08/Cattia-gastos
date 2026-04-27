@@ -37,11 +37,11 @@ const DatePeriodSelector: React.FC<DatePeriodSelectorProps> = ({
   compact = false,
 }) => {
   const selectBaseClass = cn(
-    "appearance-none cursor-pointer transition-all duration-200",
-    "rounded-xl border border-gray-200 dark:border-border",
-    "bg-white dark:bg-input hover:bg-pastel-mint/30 dark:hover:bg-muted",
-    "hover:border-theme-green/40",
-    "focus:outline-none focus:ring-2 focus:ring-theme-green/30 focus:border-theme-green",
+    "appearance-none cursor-pointer transition-colors duration-200",
+    "rounded-xl border border-border",
+    "bg-card hover:bg-primary/5 dark:hover:bg-primary/10",
+    "hover:border-primary/40",
+    "focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary",
     "text-foreground",
     compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"
   );
@@ -49,7 +49,7 @@ const DatePeriodSelector: React.FC<DatePeriodSelectorProps> = ({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Calendar className={cn(
-        "text-theme-green",
+        "text-primary",
         compact ? "w-3.5 h-3.5" : "w-4 h-4"
       )} />
 

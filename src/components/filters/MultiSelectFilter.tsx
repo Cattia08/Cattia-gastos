@@ -68,9 +68,10 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
         <Button
           variant="outline"
           className={cn(
-            "rounded-xl border-gray-200 dark:border-border",
-            "bg-white dark:bg-input hover:bg-gray-50 dark:hover:bg-muted",
-            "transition-all duration-200",
+            "rounded-xl border-border",
+            "bg-card hover:bg-primary/5 dark:hover:bg-primary/10",
+            "hover:border-primary/40",
+            "transition-colors duration-200",
             compact ? "px-3 py-1 text-xs h-7" : "px-4 py-1.5 text-sm",
             className
           )}
@@ -86,38 +87,36 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className={cn(
-          "w-56 max-h-72 overflow-y-auto",
-          "bg-white dark:bg-popover border-gray-200 dark:border-border",
-          "shadow-soft-md rounded-xl"
+          "w-56 max-h-72 overflow-y-auto bg-popover border-border shadow-soft-md rounded-xl"
         )}
         align={align}
       >
-        <DropdownMenuLabel className="text-xs text-muted-foreground">
-          Filtrar por {label.toLowerCase()}
+        <DropdownMenuLabel className="text-xs text-text-muted">
+          {label.toLowerCase()}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-gray-100 dark:bg-border" />
+        <DropdownMenuSeparator className="bg-border" />
 
         {/* Toggle All */}
         <button
           onClick={toggleAll}
           className={cn(
             "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg",
-            "hover:bg-gray-100 dark:hover:bg-muted transition-colors",
+            "hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors",
             "text-left cursor-pointer"
           )}
         >
           <div className={cn(
-            "w-4 h-4 rounded border flex items-center justify-center transition-all",
+            "w-4 h-4 rounded border flex items-center justify-center transition-colors",
             effectiveAllSelected
-              ? "bg-theme-green border-theme-green"
-              : "border-gray-300"
+              ? "bg-primary border-primary"
+              : "border-border"
           )}>
-            {effectiveAllSelected && <Check className="w-3 h-3 text-white" />}
+            {effectiveAllSelected && <Check className="w-3 h-3 text-primary-foreground" />}
           </div>
           <span className="font-medium">Todos</span>
         </button>
 
-        <DropdownMenuSeparator className="bg-gray-100 dark:bg-border" />
+        <DropdownMenuSeparator className="bg-border" />
 
         {/* Items */}
         {items.map((item) => {
@@ -128,18 +127,18 @@ const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
               onClick={() => toggleItem(item.id)}
               className={cn(
                 "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg",
-                "hover:bg-gray-50 dark:hover:bg-muted transition-colors",
+                "hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors",
                 "text-left cursor-pointer"
               )}
             >
               <div className={cn(
-                "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                "w-4 h-4 rounded border flex items-center justify-center transition-colors",
                 isSelected
                   ? "border-transparent"
-                  : "border-gray-300"
+                  : "border-border"
               )}
                 style={{
-                  backgroundColor: isSelected ? (item.color || 'var(--color-theme-green)') : 'transparent',
+                  backgroundColor: isSelected ? (item.color || 'hsl(var(--primary))') : 'transparent',
                   borderColor: isSelected ? 'transparent' : undefined
                 }}
               >

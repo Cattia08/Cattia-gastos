@@ -1,14 +1,21 @@
-import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 import { Toaster as Sonner, toast } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const [theme, setTheme] = useState<"dark" | "light">(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light"
+  )
+  useEffect(() => {
+    const sync = () => setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light")
+    window.addEventListener("themechange", sync)
+    return () => window.removeEventListener("themechange", sync)
+  }, [])
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme}
       className="toaster group"
       toastOptions={{
         classNames: {

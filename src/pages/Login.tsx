@@ -181,9 +181,7 @@ export default function Login() {
                         </Button>
                     </form>
 
-                    <p className="text-center text-xs text-text-muted">
-                        Hecho para ti, con calma.
-                    </p>
+
                 </div>
             </div>
         </div>

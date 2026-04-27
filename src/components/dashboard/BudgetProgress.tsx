@@ -58,14 +58,14 @@ const BudgetProgress: React.FC<BudgetProgressProps> = ({ budgets, className }) =
     );
 
     return (
-        <Card className={cn("p-5 border-primary/10", className)}>
-            <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <span className="text-white text-sm">🎯</span>
+        <Card className={cn("p-5 border-border", className)}>
+            <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                    <h3 className="font-semibold text-sm text-foreground">Presupuestos del Mes</h3>
-                    <p className="text-xs text-muted-foreground">
+                    <h3 className="font-semibold text-sm text-text-emphasis">Presupuestos del mes</h3>
+                    <p className="text-xs text-text-muted">
                         {sorted.filter(b => b.status === "safe" || b.status === "warning").length}/{sorted.length} en buen estado
                     </p>
                 </div>

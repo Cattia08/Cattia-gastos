@@ -100,11 +100,7 @@ const ThemedDialogContent: React.FC<ThemedDialogContentProps> = ({
   return (
     <DialogContent
       className={cn(
-        // Base styling from theme
-        "bg-white dark:bg-card rounded-2xl",
-        "border border-gray-200 dark:border-gray-700",
-        "shadow-soft-lg",
-        // Size
+        "bg-card rounded-2xl border border-border shadow-soft-lg",
         sizeClasses[size],
         className
       )}
@@ -145,7 +141,7 @@ const ThemedDialogTitle: React.FC<{
   className?: string;
 }> = ({ children, icon, className }) => (
   <DialogTitle className={cn("flex items-center gap-2 text-lg font-semibold", className)}>
-    {icon && <span className="text-theme-green">{icon}</span>}
+    {icon && <span className="text-primary">{icon}</span>}
     {children}
   </DialogTitle>
 );

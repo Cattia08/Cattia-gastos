@@ -4,11 +4,10 @@ import {
   ThemedDialogContent,
   ThemedDialogHeader,
   ThemedDialogTitle,
-  ThemedDialogDescription,
 } from "@/components/ui/ThemedDialog";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import { useTransactionMutations } from "@/hooks/useTransactionMutations";
-import { Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Category } from "@/types/index";
 
@@ -45,20 +44,17 @@ const AddTransactionDialog = ({ open, onOpenChange, categories, paymentMethods, 
   };
 
   return (
-    <ThemedDialog 
-      open={open} 
+    <ThemedDialog
+      open={open}
       onOpenChange={onOpenChange}
-      title="Nueva Transacción"
-      description="Completa los detalles de tu nueva transacción."
+      title="Nueva transacción"
+      description="Registra un gasto"
     >
       <ThemedDialogContent>
         <ThemedDialogHeader>
-          <ThemedDialogTitle icon={<Sparkles className="w-5 h-5" />}>
-            Nueva Transacción
+          <ThemedDialogTitle icon={<Plus className="w-5 h-5" />}>
+            Nueva transacción
           </ThemedDialogTitle>
-          <ThemedDialogDescription>
-            Completa los detalles de tu nueva transacción.
-          </ThemedDialogDescription>
         </ThemedDialogHeader>
         <TransactionForm
           initialData={{ id: 0, name: "", amount: "", category_id: "", payment_method_id: undefined, date: new Date() }}

@@ -12,15 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { 
-  FaFileDownload, 
-  FaFilePdf, 
-  FaFileExcel, 
-  FaSpinner, 
-  FaCheckCircle, 
-  FaExclamationTriangle,
-  FaCalendarAlt,
-} from "react-icons/fa";
+import {
+  Download,
+  FileText,
+  FileSpreadsheet,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useThemedToast } from "@/hooks/useThemedToast";
 import { MultiSelectFilter } from "@/components/filters";
@@ -209,11 +209,11 @@ const ExportModal: React.FC<ExportModalProps> = ({
     <ThemedDialog open={open} onOpenChange={onOpenChange}>
       <ThemedDialogContent size="lg" className="max-w-xl">
         <ThemedDialogHeader>
-          <ThemedDialogTitle icon={<FaFileDownload className="w-5 h-5" />}>
+          <ThemedDialogTitle icon={<Download className="w-5 h-5" />}>
             Exportar transacciones
           </ThemedDialogTitle>
           <ThemedDialogDescription>
-            Descarga tus transacciones en el formato que prefieras
+            Descarga en Excel o PDF
           </ThemedDialogDescription>
         </ThemedDialogHeader>
         
@@ -223,47 +223,47 @@ const ExportModal: React.FC<ExportModalProps> = ({
             <button
               onClick={() => setFormatType('excel')}
               className={cn(
-                "flex flex-col items-center justify-center p-4 rounded-2xl transition-all",
+                "flex flex-col items-center justify-center p-4 rounded-2xl transition-colors",
                 "border-2",
                 formatType === 'excel'
-                  ? "border-theme-green bg-pastel-mint/30"
-                  : "border-border bg-card hover:border-muted-foreground/30"
+                  ? "border-primary bg-primary/[0.06]"
+                  : "border-border bg-card hover:border-primary/30"
               )}
             >
-              <FaFileExcel className={cn(
+              <FileSpreadsheet className={cn(
                 "w-8 h-8 mb-2",
-                formatType === 'excel' ? "text-theme-green" : "text-muted-foreground"
+                formatType === 'excel' ? "text-primary" : "text-text-muted"
               )} />
               <span className={cn(
                 "font-semibold",
-                formatType === 'excel' ? "text-theme-green" : "text-foreground"
+                formatType === 'excel' ? "text-primary" : "text-foreground"
               )}>
                 Excel
               </span>
-              <span className="text-xs text-muted-foreground mt-0.5">Con estilos y graficos</span>
+              <span className="text-xs text-text-muted mt-0.5">Datos + estilos</span>
             </button>
-            
+
             <button
               onClick={() => setFormatType('pdf')}
               className={cn(
-                "flex flex-col items-center justify-center p-4 rounded-2xl transition-all",
+                "flex flex-col items-center justify-center p-4 rounded-2xl transition-colors",
                 "border-2",
                 formatType === 'pdf'
-                  ? "border-theme-rose bg-pastel-pink/30"
-                  : "border-border bg-card hover:border-muted-foreground/30"
+                  ? "border-primary bg-primary/[0.06]"
+                  : "border-border bg-card hover:border-primary/30"
               )}
             >
-              <FaFilePdf className={cn(
+              <FileText className={cn(
                 "w-8 h-8 mb-2",
-                formatType === 'pdf' ? "text-theme-rose" : "text-muted-foreground"
+                formatType === 'pdf' ? "text-primary" : "text-text-muted"
               )} />
               <span className={cn(
                 "font-semibold",
-                formatType === 'pdf' ? "text-theme-rose" : "text-foreground"
+                formatType === 'pdf' ? "text-primary" : "text-foreground"
               )}>
                 PDF
               </span>
-              <span className="text-xs text-muted-foreground mt-0.5">Reporte visual</span>
+              <span className="text-xs text-text-muted mt-0.5">Reporte visual</span>
             </button>
           </div>
 
@@ -276,11 +276,10 @@ const ExportModal: React.FC<ExportModalProps> = ({
                   key={value}
                   onClick={() => setQuickPeriod(value)}
                   className={cn(
-                    "px-3 py-1.5 rounded-xl text-sm font-medium transition-all",
-                    "border",
+                    "px-3 py-1.5 rounded-xl text-sm font-medium transition-colors border",
                     quickPeriod === value
-                      ? "border-theme-lavender bg-pastel-lavender/40 text-theme-lavender"
-                      : "border-border bg-card text-foreground hover:border-muted-foreground/50"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-foreground hover:border-primary/30"
                   )}
                 >
                   {label}
@@ -291,7 +290,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
             {/* Custom date range */}
             {quickPeriod === 'custom' && (
               <div className="flex items-center gap-3 mt-3 p-3 rounded-xl bg-muted/30 border border-border">
-                <FaCalendarAlt className="w-4 h-4 text-muted-foreground" />
+                <CalendarIcon className="w-4 h-4 text-text-muted" />
                 <Input
                   type="date"
                   value={customStartDate}
@@ -316,8 +315,8 @@ const ExportModal: React.FC<ExportModalProps> = ({
             <Label className="text-sm font-medium mb-2 block">Categorias</Label>
             <MultiSelectFilter
               label="Categorias"
-              icon={FaCalendarAlt}
-              iconColorClass="text-theme-lavender"
+              icon={CalendarIcon}
+              iconColorClass="text-primary"
               items={categories}
               selectedIds={selectedCats}
               onSelectionChange={setSelectedCats}
@@ -329,24 +328,23 @@ const ExportModal: React.FC<ExportModalProps> = ({
           {/* Preview Stats */}
           <div className={cn(
             "flex items-center justify-between p-4 rounded-2xl",
-            "bg-gradient-to-r from-pastel-mint/50 to-pastel-lavender/30",
-            "border border-border"
+            "bg-primary/[0.06] border border-primary/15"
           )}>
             <div className="flex items-center gap-3">
               {previewStats.count > 0 ? (
-                <div className="w-10 h-10 rounded-full bg-theme-green/20 flex items-center justify-center">
-                  <FaCheckCircle className="w-5 h-5 text-theme-green" />
+                <div className="w-10 h-10 rounded-2xl bg-accent/15 ring-1 ring-accent/30 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-accent" />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                  <FaExclamationTriangle className="w-5 h-5 text-amber-500" />
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/40 ring-1 ring-amber-300/60 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
               )}
               <div>
                 <p className="font-semibold text-foreground">
                   {previewStats.count} transacciones
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-text-muted">
                   {quickPeriod !== 'all' && dateRange.start && dateRange.end
                     ? `${format(dateRange.start, 'd MMM', { locale: es })} - ${format(dateRange.end, 'd MMM yyyy', { locale: es })}`
                     : quickPeriod === 'all' ? 'Todo el historial' : 'Selecciona fechas'
@@ -355,16 +353,16 @@ const ExportModal: React.FC<ExportModalProps> = ({
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-theme-green">
-                S/ {previewStats.total.toFixed(2)}
+              <p className="text-2xl font-bold text-primary tabular-nums">
+                <span className="text-base font-medium text-text-secondary mr-1">S/</span>{previewStats.total.toFixed(2)}
               </p>
-              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xs text-text-muted">Total</p>
             </div>
           </div>
         </div>
 
         <ThemedDialogFooter className="mt-6">
-          <Button 
+          <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="rounded-xl"
@@ -372,26 +370,25 @@ const ExportModal: React.FC<ExportModalProps> = ({
           >
             Cancelar
           </Button>
-          <Button 
-            onClick={handleConfirm} 
+          <Button
+            onClick={handleConfirm}
             disabled={isExporting || previewStats.count === 0}
             className={cn(
               "rounded-xl px-6 min-w-[140px]",
-              formatType === 'excel'
-                ? "bg-theme-green hover:bg-theme-sage text-white"
-                : "bg-theme-rose hover:bg-theme-rose/80 text-white",
-              "transition-all duration-200",
-              "disabled:opacity-50"
+              "bg-primary hover:bg-primary/90 text-primary-foreground",
+              "shadow-[0_8px_22px_-8px_hsl(var(--primary)/0.5)]",
+              "transition-shadow duration-200",
+              "disabled:opacity-50 disabled:shadow-none"
             )}
           >
             {isExporting ? (
               <>
-                <FaSpinner className="w-4 h-4 mr-2 animate-spin" />
-                Exportando...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Exportando
               </>
             ) : (
               <>
-                {formatType === 'excel' ? <FaFileExcel className="w-4 h-4 mr-2" /> : <FaFilePdf className="w-4 h-4 mr-2" />}
+                {formatType === 'excel' ? <FileSpreadsheet className="w-4 h-4 mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
                 Descargar
               </>
             )}

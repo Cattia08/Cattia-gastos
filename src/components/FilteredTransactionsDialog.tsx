@@ -53,12 +53,12 @@ const FilteredTransactionsDialog = ({ open, onOpenChange, transactions, periodSt
                   <th className="text-right py-2 px-3 font-medium text-muted-foreground">Monto (S/)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {transactions.length > 0 ? (
                   [...transactions]
                     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                     .map((t) => (
-                      <tr key={t.id} className="hover:bg-pastel-mint/30 transition-colors">
+                      <tr key={t.id} className="hover:bg-primary/[0.04] transition-colors">
                         <td className="py-2 px-3">{new Date(t.date).toLocaleDateString()}</td>
                         <td className="py-2 px-3">{t.name || "-"}</td>
                         <td className="py-2 px-3">{t.categories?.name || "Sin categoría"}</td>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FaFileExport } from "react-icons/fa";
+import { Download } from "lucide-react";
 import ExportModal from "@/components/export/ExportModal";
 import { cn } from "@/lib/utils";
 import type { ExportTransaction } from "@/lib/export";
@@ -25,18 +25,18 @@ const ExportButton: React.FC<ExportButtonProps> = ({
   
   return (
     <>
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         className={cn(
           "rounded-xl px-4 text-sm",
-          "border-gray-200 hover:border-theme-green/40",
-          "hover:bg-pastel-mint/30",
-          "transition-all duration-200",
+          "border-border hover:border-primary/40",
+          "hover:bg-primary/5",
+          "transition-colors duration-200",
           className
-        )} 
+        )}
         onClick={() => setOpen(true)}
       >
-        <FaFileExport className="w-4 h-4 mr-2 text-theme-green" />
+        <Download className="w-4 h-4 mr-2 text-primary" />
         Exportar
       </Button>
       <ExportModal 

@@ -4,7 +4,7 @@ import { InputWithIcon } from "@/components/ui/InputWithIcon";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import InteractiveCalendar from "@/components/ui/InteractiveCalendar";
 import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
-import { FaSearch, FaCalendarAlt, FaTimes, FaCreditCard, FaTag } from "react-icons/fa";
+import { Search, Calendar as CalendarIcon, X, CreditCard, Tag as TagIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Category, PaymentMethod } from "@/types";
@@ -65,27 +65,27 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <div className={cn(
-      "card-glass p-4",
-      "flex flex-col md:flex-row md:items-center gap-4",
+      "rounded-2xl bg-card/80 backdrop-blur-sm border border-border shadow-soft p-3 md:p-4",
+      "flex flex-col md:flex-row md:items-center gap-3 md:gap-4",
       className
     )}>
       {/* Search Input */}
-      <div className="flex-1 min-w-[160px] max-w-[260px]">
+      <div className="flex-1 min-w-[160px] max-w-[280px]">
         <InputWithIcon
           placeholder="Buscar..."
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           className={cn(
-            "w-full rounded-xl border-gray-200",
-            "focus:ring-2 focus:ring-theme-green/30 focus:border-theme-green",
-            "transition-all duration-200"
+            "w-full rounded-xl border-border",
+            "focus:ring-2 focus:ring-primary/25 focus:border-primary",
+            "transition-shadow duration-200"
           )}
-          icon={<FaSearch className="w-4 h-4 text-theme-green" />}
+          icon={<Search className="w-4 h-4 text-text-muted" />}
         />
       </div>
 
       {/* Filters Row */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         {/* Period Selector */}
         {showPeriodSelector && onYearChange && onMonthChange && availableYears.length > 0 && (
           <DatePeriodSelector
@@ -101,8 +101,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {/* Category Filter */}
         <MultiSelectFilter
           label="Categorías"
-          icon={FaTag}
-          iconColorClass="text-theme-lavender"
+          icon={TagIcon}
+          iconColorClass="text-primary"
           items={categories}
           selectedIds={selectedCategories}
           onSelectionChange={onSelectedCategoriesChange}
@@ -114,8 +114,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {paymentMethods.length > 0 && onSelectedPaymentMethodsChange && (
           <MultiSelectFilter
             label="Métodos"
-            icon={FaCreditCard}
-            iconColorClass="text-theme-blue"
+            icon={CreditCard}
+            iconColorClass="text-secondary-foreground"
             items={paymentMethods}
             selectedIds={selectedPaymentMethods}
             onSelectionChange={onSelectedPaymentMethodsChange}
@@ -130,24 +130,24 @@ const FilterBar: React.FC<FilterBarProps> = ({
             <Button
               variant="outline"
               className={cn(
-                "rounded-xl border-gray-200",
-                "bg-white dark:bg-input hover:bg-pastel-rose/30 dark:hover:bg-muted",
-                "hover:border-theme-rose/40",
-                "transition-all duration-200",
+                "rounded-xl border-border",
+                "bg-card hover:bg-primary/5 dark:hover:bg-primary/10",
+                "hover:border-primary/40",
+                "transition-colors duration-200",
                 compact ? "px-3 py-1 text-xs h-7" : "px-4 py-1.5 text-sm",
-                selectedDate && "ring-2 ring-theme-rose/30 border-theme-rose"
+                selectedDate && "ring-2 ring-primary/30 border-primary"
               )}
             >
-              <FaCalendarAlt className={cn("mr-2 text-theme-rose", compact ? "w-3.5 h-3.5" : "w-4 h-4")} />
+              <CalendarIcon className={cn("mr-2 text-primary", compact ? "w-3.5 h-3.5" : "w-4 h-4")} />
               {selectedDate && endDate
                 ? `${format(selectedDate, "dd MMM")} - ${format(endDate, "dd MMM")}`
                 : selectedDate
                   ? format(selectedDate, "dd MMM yyyy")
-                  : "Rango de fechas"}
+                  : "Fechas"}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="p-2 bg-white dark:bg-popover border-gray-200 dark:border-border shadow-soft-md rounded-xl"
+            className="p-2 bg-popover border-border shadow-soft-md rounded-xl"
             align="start"
           >
             <InteractiveCalendar
@@ -172,14 +172,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
           onClick={onReset}
           variant="ghost"
           className={cn(
-            "rounded-xl text-muted-foreground",
-            "hover:bg-pastel-cream hover:text-foreground",
-            "transition-all duration-200",
+            "rounded-xl text-text-muted",
+            "hover:bg-muted hover:text-foreground",
+            "transition-colors duration-200",
             compact ? "px-3 py-1 text-xs h-7" : "px-4 py-1.5 text-sm",
             !hasActiveFilters && "opacity-40 pointer-events-none"
           )}
         >
-          <FaTimes className={cn("mr-1", compact ? "w-3 h-3" : "w-3.5 h-3.5")} />
+          <X className={cn("mr-1", compact ? "w-3 h-3" : "w-3.5 h-3.5")} />
           Limpiar
         </Button>
       </div>

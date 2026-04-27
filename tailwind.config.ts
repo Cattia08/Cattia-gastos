@@ -149,13 +149,14 @@ export default {
 				'3xl': '2rem'
 			},
 			boxShadow: {
-				'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
-				'soft-md': '0 4px 25px -5px rgba(0, 0, 0, 0.06), 0 10px 10px -5px rgba(0, 0, 0, 0.02)',
-				'soft-lg': '0 10px 40px -10px rgba(0, 0, 0, 0.08)',
-				'glow-rose': '0 4px 20px -5px rgba(232, 121, 168, 0.25)',
-				'glow-green': '0 4px 20px -5px rgba(93, 190, 138, 0.25)',
-				'glow-lavender': '0 4px 20px -5px rgba(184, 169, 232, 0.25)',
-				'card': '0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)',
+				/* Rose-tinted shadows — depth without flatness */
+				'soft': '0 2px 12px -3px rgba(212, 99, 145, 0.10), 0 1px 3px -1px rgba(212, 99, 145, 0.06)',
+				'soft-md': '0 8px 28px -8px rgba(212, 99, 145, 0.16), 0 4px 10px -4px rgba(212, 99, 145, 0.08)',
+				'soft-lg': '0 16px 48px -12px rgba(212, 99, 145, 0.22), 0 8px 16px -6px rgba(212, 99, 145, 0.10)',
+				'glow-rose': '0 6px 24px -6px rgba(232, 121, 168, 0.35)',
+				'glow-green': '0 6px 24px -6px rgba(93, 190, 138, 0.30)',
+				'glow-lavender': '0 6px 24px -6px rgba(184, 169, 232, 0.30)',
+				'card': '0 1px 3px rgba(212, 99, 145, 0.06), 0 1px 2px rgba(212, 99, 145, 0.04)',
 			},
 			backgroundImage: {
 				'gradient-rose': 'linear-gradient(135deg, #F8D7E3 0%, #FFFFFF 100%)',

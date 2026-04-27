@@ -190,7 +190,7 @@ const InsightsModal = ({ open, onOpenChange, transactions, periodStart, periodEn
       <ThemedDialogContent size="lg" className="max-w-lg max-h-[90vh] overflow-y-auto">
         <ThemedDialogHeader>
           <ThemedDialogTitle icon={<Sparkles className="w-5 h-5" />}>
-            Tus Insights
+            Tus insights
           </ThemedDialogTitle>
           <ThemedDialogDescription>
             {format(computedStart, "d 'de' MMMM", { locale: es })} — {format(computedEnd, "d 'de' MMMM", { locale: es })}
@@ -199,12 +199,15 @@ const InsightsModal = ({ open, onOpenChange, transactions, periodStart, periodEn
 
         <div className="space-y-4 mt-2">
 
-          {/* Personality - The main insight */}
-          <div className="bg-gradient-to-br from-violet-500/15 via-purple-500/10 to-fuchsia-500/15 rounded-2xl p-6 border border-purple-500/20 text-center">
-            <div className="text-5xl mb-3">{personality.emoji}</div>
-            <div className="text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Tu personalidad de gasto</div>
-            <div className="text-2xl font-bold text-foreground mb-1">{personality.name}</div>
-            <div className="text-sm text-muted-foreground">{personality.desc}</div>
+          {/* Personality - hero insight */}
+          <div className="relative overflow-hidden rounded-2xl p-6 bg-primary/[0.06] border border-primary/20 text-center">
+            <div aria-hidden="true" className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+            <div className="relative">
+              <div className="text-5xl mb-3">{personality.emoji}</div>
+              <div className="text-xs uppercase tracking-wider text-primary mb-1 font-semibold">Tu personalidad de gasto</div>
+              <div className="text-2xl font-bold text-text-emphasis mb-1">{personality.name}</div>
+              <div className="text-sm text-text-secondary">{personality.desc}</div>
+            </div>
           </div>
 
           {/* Grid of curious insights */}
