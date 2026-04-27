@@ -16,11 +16,17 @@ Tienes dos herramientas:
 2. query_expenses  → cuando el usuario pregunta cuánto gastó, totales, desgloses, top categorías, etc.
 
 REGISTRAR GASTO (propose_expense):
-- Objetivo: nombre + monto + categoría → llama propose_expense en el menor número de turnos.
+- Objetivo: nombre + monto → llama propose_expense en UN solo turno. La UI tiene botones/píldoras para corregir categoría y método de pago, así que NUNCA preguntes con lista numerada de opciones.
 - NOMBRE: sustantivo limpio, minúsculas, sin artículos ni adjetivos.
-- CATEGORÍA: infiere agresivamente. Si alguna encaja razonablemente, úsala. Solo pregunta cuando sea genuinamente imposible categorizar.
+- CATEGORÍA: infiere agresivamente.
+  • Si alguna categoría disponible encaja razonablemente → úsala.
+  • Si NINGUNA encaja → usa "Otros" si existe en la lista, sino la primera categoría disponible.
+  • NUNCA preguntes "¿qué categoría?" ni listes opciones numeradas. Siempre propone — el usuario corrige con botones.
 - MONTO: siempre soles. Acepta lo que diga el usuario. Solo cuestiona si parece un typo absurdo. Compras grandes (motos, electrónicos, renta) → acepta directo. Si menciona dólares u otra moneda → responde que solo registramos soles y pide monto en S/.
-- MÉTODO DE PAGO: solo si el contexto incluye una lista de métodos. Si no hay lista, no menciones método de pago.
+- MÉTODO DE PAGO:
+  • Si el usuario lo mencionó y la lista de métodos viene en el contexto → matchea (ej: "yape" → "Yape", "BCP crédito" → exacto).
+  • Si lo menciona ambiguo (ej: "tarjeta" con varias) → elige la primera que matchee parcialmente y propone. UI tiene botones para cambiar.
+  • Si el usuario NO mencionó método → no lo pongas, deja en null.
 - FECHA: hoy por defecto. "ayer", "anteayer", "lunes pasado" → conviértelos a YYYY-MM-DD relativo a la fecha de hoy del contexto.
 
 CONSULTAR GASTOS (query_expenses):
@@ -177,7 +183,7 @@ type NamedRow = { id: number; name: string };
 let categoriesCache: { at: number; data: NamedRow[] } | null = null;
 let paymentMethodsCache: { at: number; data: NamedRow[] } | null = null;
 
-async function fetchCategoriesCached(supabase): Promise<NamedRow[]> {
+export async function fetchCategoriesCached(supabase): Promise<NamedRow[]> {
   const now = Date.now();
   if (categoriesCache && now - categoriesCache.at < CATEGORIES_TTL_MS) return categoriesCache.data;
   const { data } = await supabase.from('categories').select('id, name');
@@ -186,7 +192,7 @@ async function fetchCategoriesCached(supabase): Promise<NamedRow[]> {
   return fresh;
 }
 
-async function fetchPaymentMethodsCached(supabase): Promise<NamedRow[]> {
+export async function fetchPaymentMethodsCached(supabase): Promise<NamedRow[]> {
   const now = Date.now();
   if (paymentMethodsCache && now - paymentMethodsCache.at < CATEGORIES_TTL_MS) return paymentMethodsCache.data;
   const { data } = await supabase.from('payment_methods').select('id, name');

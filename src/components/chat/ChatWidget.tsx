@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, KeyboardEvent, useMemo } from 'react';
 import { Send, X, Eraser, Pencil, Check } from 'lucide-react';
 import { useChatbot, PendingExpense } from '@/hooks/useChatbot';
+import { useCategories } from '@/hooks/useCategories';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Tokens (kept inline since widget owns its visual identity)
@@ -108,27 +110,81 @@ function Chip({
   );
 }
 
+// Horizontal-scroll row of selectable pills. Used to swap category / payment method
+// inside the pending card without going through the model.
+function SwapRow({
+  label,
+  options,
+  selectedId,
+  onSelect,
+}: {
+  label: string;
+  options: { id: number; name: string }[];
+  selectedId: number | null;
+  onSelect: (opt: { id: number; name: string }) => void;
+}) {
+  if (options.length === 0) return null;
+  return (
+    <div className="px-3 pb-2">
+      <div
+        className="text-[9.5px] font-bold uppercase tracking-[0.08em] mb-1"
+        style={{ color: COLOR.pinkText, opacity: 0.75 }}
+      >
+        {label}
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {options.map(opt => {
+          const active = opt.id === selectedId;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onSelect(opt)}
+              className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all duration-150 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-pink-400"
+              style={
+                active
+                  ? {
+                      background: COLOR.pinkDeep,
+                      color: 'white',
+                      boxShadow: '0 1px 4px rgba(200,80,130,0.35)',
+                    }
+                  : {
+                      background: 'white',
+                      color: COLOR.pinkText,
+                      border: `1px solid ${COLOR.pinkBorder}`,
+                    }
+              }
+            >
+              {opt.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // Pending expense card — replaces the old "¿Registro este gasto? 📋..." text bubble.
 // Lives outside the message stream so it has clear visual priority.
 function PendingCard({
   expense,
+  categories,
+  paymentMethods,
   onConfirm,
   onEdit,
   onReject,
+  onUpdate,
   loading,
 }: {
   expense: PendingExpense;
+  categories: { id: number; name: string }[];
+  paymentMethods: { id: number; name: string }[];
   onConfirm: () => void;
   onEdit: () => void;
   onReject: () => void;
+  onUpdate: (patch: Partial<PendingExpense>) => void;
   loading: boolean;
 }) {
-  const meta = [
-    expense.category_name,
-    expense.payment_method_name,
-    expense.date,
-  ].filter(Boolean) as string[];
-
   return (
     <div
       className="shrink-0 mx-3 mb-2 rounded-2xl overflow-hidden animate-fade-in-up"
@@ -138,7 +194,7 @@ function PendingCard({
         boxShadow: '0 6px 22px -8px rgba(232,121,168,0.30), 0 1px 3px rgba(180,80,130,0.08)',
       }}
     >
-      <div className="px-4 pt-3 pb-2.5">
+      <div className="px-4 pt-3 pb-2">
         <div
           className="text-[10px] font-bold uppercase tracking-[0.08em]"
           style={{ color: COLOR.pinkDeep, fontFamily: 'Nunito, sans-serif' }}
@@ -160,21 +216,27 @@ function PendingCard({
             S/{expense.amount}
           </div>
         </div>
-        {meta.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {meta.map(m => (
-              <span
-                key={m}
-                className="px-2 py-0.5 rounded-full text-[10.5px] font-medium"
-                style={{ background: COLOR.pinkChipBg, color: COLOR.pinkChipText }}
-              >
-                {m}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="mt-1.5 text-[10.5px]" style={{ color: COLOR.pinkChipText }}>
+          📅 {expense.date}
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-1.5 px-2.5 pb-2.5">
+
+      {/* Quick-swap rows */}
+      <SwapRow
+        label="Categoría"
+        options={categories}
+        selectedId={expense.category_id}
+        onSelect={opt => onUpdate({ category_id: opt.id, category_name: opt.name })}
+      />
+      <SwapRow
+        label="Método de pago"
+        options={paymentMethods}
+        selectedId={expense.payment_method_id}
+        onSelect={opt => onUpdate({ payment_method_id: opt.id, payment_method_name: opt.name })}
+      />
+
+      {/* Actions */}
+      <div className="grid grid-cols-3 gap-1.5 px-2.5 pb-2.5 pt-1">
         <button
           type="button"
           onClick={onConfirm}
@@ -222,8 +284,11 @@ export function ChatWidget() {
     confirmExpense,
     rejectExpense,
     editPending,
+    updatePending,
     clearChat,
   } = useChatbot();
+  const { categories } = useCategories();
+  const { paymentMethods } = usePaymentMethods();
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevLoading = useRef(false);
@@ -416,9 +481,12 @@ export function ChatWidget() {
           {pending && (
             <PendingCard
               expense={pending}
+              categories={categories}
+              paymentMethods={paymentMethods}
               onConfirm={confirmExpense}
               onEdit={handleEdit}
               onReject={rejectExpense}
+              onUpdate={updatePending}
               loading={loading}
             />
           )}

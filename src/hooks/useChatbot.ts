@@ -110,6 +110,14 @@ export function useChatbot() {
   }, []);
 
   /**
+   * Apply a partial patch to the pending expense without going through OpenAI.
+   * Used by the UI quick-swap chips (category / payment method).
+   */
+  const updatePending = useCallback((patch: Partial<PendingExpense>) => {
+    setPending(prev => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
+  /**
    * Clear pending silently and return a natural-language draft so the widget
    * can pre-fill the input for the user to tweak.
    */
@@ -128,5 +136,5 @@ export function useChatbot() {
     setPending(null);
   }, []);
 
-  return { messages, pending, loading, sendMessage, confirmExpense, rejectExpense, editPending, clearChat };
+  return { messages, pending, loading, sendMessage, confirmExpense, rejectExpense, editPending, updatePending, clearChat };
 }

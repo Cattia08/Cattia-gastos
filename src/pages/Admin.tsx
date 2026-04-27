@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useThemedToast } from "@/hooks/useThemedToast";
 import { Star, Flower, Settings, Plus, Tag, Download, CircleDollarSign, Trash, Edit, Check, CreditCard, Mail, Send, Bell, Shield, Clock, Zap, CheckCircle2, XCircle } from "lucide-react";
+import { TelegramSetupGuide } from "@/components/admin/TelegramSetupGuide";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -437,6 +438,13 @@ const Admin = () => {
           >
             <Mail className="w-4 h-4 lg:mr-2" />
             <span className="hidden lg:inline">Correos</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="telegram"
+            className="flex-1 min-w-fit data-[state=active]:bg-sky-500/15 dark:data-[state=active]:bg-sky-500/20 data-[state=inactive]:text-muted-foreground rounded-lg px-3 py-2.5 lg:px-4"
+          >
+            <Send className="w-4 h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Telegram</span>
           </TabsTrigger>
           <TabsTrigger
             value="settings"
@@ -1172,6 +1180,13 @@ const Admin = () => {
             </div>
           </Card>
         </TabsContent>
+
+      {/* Telegram Tab */}
+      <TabsContent value="telegram">
+        <Card className="p-6 border-sky-500/20">
+          <TelegramSetupGuide />
+        </Card>
+      </TabsContent>
 
       {/* Settings Tab */}
       <TabsContent value="settings">
