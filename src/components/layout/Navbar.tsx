@@ -18,21 +18,16 @@ const Navbar = () => {
   const { isEnabled: isCatEnabled, toggle: toggleCat } = useOneko();
   const { user, signOut } = useAuth();
 
-  // Leer el nombre del sidebar desde localStorage y actualizar en tiempo real
+  // Sidebar name — event-driven, no polling
   const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
   useEffect(() => {
-    const onStorage = () => setSidebarName(localStorage.getItem('sidebarName') || 'Catt');
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
-  // Permitir actualización inmediata tras cambiar el nombre en la misma pestaña
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const name = localStorage.getItem('sidebarName') || 'Catt';
-      setSidebarName(name);
-    }, 500);
-    return () => clearInterval(interval);
+    const sync = () => setSidebarName(localStorage.getItem('sidebarName') || 'Catt');
+    window.addEventListener('storage', sync);
+    window.addEventListener('sidebarname:change', sync);
+    return () => {
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('sidebarname:change', sync);
+    };
   }, []);
 
   const [isDark, setIsDark] = useState<boolean>(() => document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark');
@@ -66,7 +61,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white dark:bg-card border-b border-pastel-pink/20 dark:border-border shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo - always visible */}
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -126,8 +121,16 @@ const Navbar = () => {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                onClick={() => navigate("/administracion")}
+                className="lg:hidden cursor-pointer"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Administración
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="lg:hidden" />
+              <DropdownMenuItem
                 onClick={handleSignOut}
-                className="text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30 cursor-pointer"
+                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Cerrar sesión

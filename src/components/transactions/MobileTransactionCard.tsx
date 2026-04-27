@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { FaCreditCard, FaExclamationCircle } from 'react-icons/fa';
+import { CreditCard, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CategoryBadge from '@/components/ui/CategoryBadge';
 import { SwipeableListItem } from '@/components/ui/SwipeableListItem';
@@ -95,7 +95,7 @@ export function MobileTransactionCard({
             />
           ) : (
             <span className="badge-uncategorized inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full">
-              <FaExclamationCircle className="w-3 h-3" />
+              <AlertCircle className="w-3 h-3" />
               Sin categoría
             </span>
           )}
@@ -103,7 +103,7 @@ export function MobileTransactionCard({
 
         {transaction.payment_methods && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <FaCreditCard className="w-3 h-3" />
+            <CreditCard className="w-3 h-3" />
             <span className="truncate max-w-[100px]">
               {transaction.payment_methods.name}
             </span>

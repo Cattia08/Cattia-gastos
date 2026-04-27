@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { PieChart, List, Settings, Plus } from 'lucide-react';
+import { PieChart, List, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 
@@ -21,11 +21,6 @@ const NAV_ITEMS: NavItem[] = [
     name: 'Transacciones',
     path: '/transacciones',
     icon: List,
-  },
-  {
-    name: 'Admin',
-    path: '/administracion',
-    icon: Settings,
   },
 ];
 
@@ -72,42 +67,31 @@ export function BottomNav({ onAddClick }: BottomNavProps) {
       role="navigation"
       aria-label="Navegación principal"
     >
-      <div className="grid grid-cols-5 items-end h-16 max-w-md mx-auto">
-        {/* Left nav items */}
-        {NAV_ITEMS.slice(0, 2).map((item) => (
-          <NavLink key={item.path} item={item} isActive={location.pathname === item.path} />
-        ))}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-end h-16 max-w-md mx-auto">
+        {/* Left nav */}
+        <NavLink item={NAV_ITEMS[0]} isActive={location.pathname === NAV_ITEMS[0].path} />
 
-        {/* Center FAB Button */}
-        <div className="flex items-center justify-center -mt-4">
+        {/* Center FAB */}
+        <div className="flex items-center justify-center px-6 -mt-4">
           <button
             onClick={onAddClick}
             className={cn(
-              // Size and shape
               'w-14 h-14 rounded-full',
-              // Gradient background
-              'bg-gradient-to-br from-theme-green to-theme-sage',
-              // Shadow and glow
-              'shadow-lg shadow-green-300/40 dark:shadow-green-900/30',
-              // Flex centering
+              'bg-primary text-primary-foreground',
+              'shadow-[0_10px_28px_-8px_hsl(var(--primary)/0.55)]',
               'flex items-center justify-center',
-              // Focus and interaction states
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-green focus-visible:ring-offset-2',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
               'active:scale-95 transition-transform duration-150',
-              // Subtle border
-              'border-2 border-white/30 dark:border-white/10'
+              'ring-1 ring-primary/30'
             )}
             aria-label="Agregar transacción"
           >
-            <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+            <Plus className="w-7 h-7" strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Right nav item */}
-        <NavLink item={NAV_ITEMS[2]} isActive={location.pathname === NAV_ITEMS[2].path} />
-        
-        {/* Empty spacer for balance */}
-        <div />
+        {/* Right nav */}
+        <NavLink item={NAV_ITEMS[1]} isActive={location.pathname === NAV_ITEMS[1].path} />
       </div>
     </nav>
   );
@@ -132,20 +116,18 @@ function NavLink({ item, isActive }: NavLinkProps) {
         'touch-manipulation',
         // Transition
         'transition-all duration-200',
-        // Active/inactive styles
         isActive
-          ? 'text-theme-green'
+          ? 'text-primary'
           : 'text-muted-foreground hover:text-foreground'
       )}
       aria-current={isActive ? 'page' : undefined}
     >
-      {/* Icon container with subtle background on active */}
       <div
         className={cn(
           'relative flex items-center justify-center',
           'w-10 h-7 rounded-full',
-          'transition-all duration-200',
-          isActive && 'bg-theme-green/10'
+          'transition-colors duration-200',
+          isActive && 'bg-primary/10'
         )}
       >
         <Icon
@@ -154,22 +136,19 @@ function NavLink({ item, isActive }: NavLinkProps) {
             isActive && 'scale-110'
           )}
         />
-        {/* Active indicator dot */}
         {isActive && (
           <span
             className={cn(
               'absolute -bottom-1 left-1/2 -translate-x-1/2',
-              'w-1 h-1 rounded-full',
-              'bg-theme-green',
+              'w-1 h-1 rounded-full bg-primary',
               'animate-in fade-in zoom-in duration-200'
             )}
           />
         )}
       </div>
-      {/* Label */}
       <span
         className={cn(
-          'text-[10px] font-medium mt-0.5',
+          'text-[11px] font-medium mt-0.5',
           'transition-all duration-200',
           isActive && 'font-semibold'
         )}

@@ -257,6 +257,7 @@ const Admin = () => {
   const handleUpdateSidebarName = () => {
     setSidebarName(nameInput);
     localStorage.setItem('sidebarName', nameInput);
+    window.dispatchEvent(new CustomEvent('sidebarname:change'));
     toast.success({ title: 'Nombre actualizado', description: 'El nombre del sidebar/navbar ha sido actualizado.' });
   };
 

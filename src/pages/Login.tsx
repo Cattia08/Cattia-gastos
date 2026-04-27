@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, LogIn, Loader2, Sparkles } from "lucide-react";
+import { Eye, EyeOff, LogIn, Loader2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +30,6 @@ export default function Login() {
 
     const from = location.state?.from?.pathname || "/";
 
-    // Redirect if already logged in
     if (user) {
         navigate(from, { replace: true });
         return null;
@@ -59,111 +58,102 @@ export default function Login() {
             setIsLoading(false);
         } else {
             toast({
-                title: "¡Bienvenido! 🎉",
-                description: "Has iniciado sesión correctamente",
+                title: "¡Hola de nuevo!",
+                description: "Sesión iniciada correctamente",
             });
             navigate(from, { replace: true });
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Animated gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900" />
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Soft rose wash — same hue family as app, no glass, no cyber */}
+            <div
+                aria-hidden="true"
+                className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/15 blur-3xl"
+            />
+            <div
+                aria-hidden="true"
+                className="absolute -bottom-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-secondary/40 blur-3xl"
+            />
 
-            {/* Floating orbs */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-            <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl animate-pulse delay-500" />
-
-            {/* Glass card */}
             <div className="relative w-full max-w-md">
-                <div className="backdrop-blur-xl bg-white/10 rounded-3xl border border-white/20 shadow-2xl p-8 space-y-8">
-                    {/* Header */}
-                    <div className="text-center space-y-3">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-violet-600 shadow-lg shadow-pink-500/30 mb-2">
-                            <Sparkles className="w-8 h-8 text-white" />
+                <div className="bg-card rounded-3xl border border-border shadow-soft-lg p-8 md:p-10 space-y-8">
+                    {/* Header — personal, not template */}
+                    <div className="space-y-3">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+                            <Heart className="w-6 h-6 text-primary" fill="currentColor" />
                         </div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">
+                        <h1 className="font-heading text-3xl font-bold tracking-tight text-text-emphasis">
                             Cattia Gastos
                         </h1>
-                        <p className="text-white/60 text-sm">
-                            Inicia sesión para continuar
+                        <p className="text-sm text-text-secondary">
+                            Tus finanzas, tu ritmo. Bienvenida de vuelta.
                         </p>
                     </div>
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        {/* Email field */}
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-white/80 text-sm font-medium">
+                            <Label htmlFor="email" className="text-sm font-medium text-text-primary">
                                 Email
                             </Label>
-                            <div className="relative">
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="tu@email.com"
-                                    autoComplete="email"
-                                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl focus:border-pink-400 focus:ring-pink-400/30 transition-all"
-                                    {...register("email")}
-                                />
-                            </div>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="tu@email.com"
+                                autoComplete="email"
+                                className="h-12 rounded-xl"
+                                {...register("email")}
+                            />
                             {errors.email && (
-                                <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
+                                <p className="text-destructive text-xs">{errors.email.message}</p>
                             )}
                         </div>
 
-                        {/* Password field */}
                         <div className="space-y-2">
-                            <Label htmlFor="password" className="text-white/80 text-sm font-medium">
+                            <Label htmlFor="password" className="text-sm font-medium text-text-primary">
                                 Contraseña
                             </Label>
                             <div className="relative">
                                 <Input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••"
+                                    placeholder="Tu contraseña"
                                     autoComplete="current-password"
-                                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl pr-12 focus:border-pink-400 focus:ring-pink-400/30 transition-all"
+                                    className="h-12 rounded-xl pr-12"
                                     {...register("password")}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-11 w-11 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5" />
-                                    ) : (
-                                        <Eye className="h-5 w-5" />
-                                    )}
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
                             {errors.password && (
-                                <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>
+                                <p className="text-destructive text-xs">{errors.password.message}</p>
                             )}
                         </div>
 
-                        {/* Remember me & Forgot password */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Checkbox
                                     id="remember"
                                     checked={rememberMe}
                                     onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                                    className="border-white/30 data-[state=checked]:bg-pink-500 data-[state=checked]:border-pink-500"
                                 />
                                 <label
                                     htmlFor="remember"
-                                    className="text-sm text-white/60 cursor-pointer select-none"
+                                    className="text-sm text-text-secondary cursor-pointer select-none"
                                 >
                                     Recordarme
                                 </label>
                             </div>
                             <button
                                 type="button"
-                                className="text-sm text-pink-400 hover:text-pink-300 transition-colors"
+                                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                                 onClick={() => {
                                     toast({
                                         title: "Próximamente",
@@ -175,33 +165,26 @@ export default function Login() {
                             </button>
                         </div>
 
-                        {/* Submit button */}
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-violet-600 hover:from-pink-600 hover:to-violet-700 text-white font-semibold shadow-lg shadow-pink-500/30 hover:shadow-pink-500/40 transition-all duration-300 disabled:opacity-70"
+                            className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.5)] transition-shadow"
                         >
                             {isLoading ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
                                 <>
                                     <LogIn className="h-5 w-5 mr-2" />
-                                    Iniciar Sesión
+                                    Iniciar sesión
                                 </>
                             )}
                         </Button>
                     </form>
 
-                    {/* Footer */}
-                    <div className="text-center">
-                        <p className="text-white/40 text-xs">
-                            Hecho con 💚 para ti
-                        </p>
-                    </div>
+                    <p className="text-center text-xs text-text-muted">
+                        Hecho para ti, con calma.
+                    </p>
                 </div>
-
-                {/* Decorative glow */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 via-violet-500/20 to-emerald-500/20 rounded-3xl blur-xl -z-10" />
             </div>
         </div>
     );

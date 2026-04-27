@@ -11,51 +11,49 @@
 
 @layer base {
   :root {
+    /* Strategy: committed rose. Rose primary, lavender secondary, sage restrained accent. */
+    /* Neutrals tinted toward rose hue (340) so whites/grays read warm, never sterile. */
+
     /* Background & Foreground */
-    --background: 0 0% 98.5%;
-    --foreground: 0 0% 24%;
+    --background: 340 25% 98.5%;
+    --foreground: 340 15% 18%;
 
     /* Semantic Text Colors - WCAG AA Compliant */
-    --text-primary: 0 0% 18%;
-    /* High contrast: ~10:1 ratio */
-    --text-secondary: 0 0% 35%;
-    /* WCAG AA: ~6:1 ratio */
-    --text-muted: 0 0% 45%;
-    /* Standard muted */
-    --text-emphasis: 0 0% 12%;
-    /* Extra emphasis */
+    --text-primary: 340 15% 18%;
+    --text-secondary: 340 10% 35%;
+    --text-muted: 340 8% 48%;
+    --text-emphasis: 340 18% 12%;
 
     /* Cards & Popovers */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 24%;
+    --card-foreground: 340 15% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 24%;
+    --popover-foreground: 340 15% 18%;
 
-    /* Primary - Rose equilibrado */
-    --primary: 338 60% 65%;
+    /* Primary - Rose (lead, ~30-50% of surface in feature areas) */
+    --primary: 340 65% 62%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Lavender */
-    --secondary: 260 45% 78%;
-    --secondary-foreground: 0 0% 24%;
+    /* Secondary - Lavender (supporting roles, dropdowns, tints) */
+    --secondary: 280 35% 92%;
+    --secondary-foreground: 280 25% 25%;
 
-    /* Accent - Verde sage (favorito!) */
-    --accent: 152 42% 55%;
+    /* Accent - Sage green (restrained: success, secondary CTA only) */
+    --accent: 152 35% 55%;
     --accent-foreground: 0 0% 100%;
 
     /* Muted */
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 40%;
-    /* Increased contrast */
+    --muted: 340 15% 95%;
+    --muted-foreground: 340 10% 42%;
 
     /* Destructive */
-    --destructive: 0 65% 55%;
+    --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 152 42% 55%;
+    --border: 340 15% 90%;
+    --input: 340 15% 90%;
+    --ring: 340 65% 62%;
 
     /* Category Tint Backgrounds (5% opacity equivalent) */
     --category-rose-tint: 338 60% 97%;
@@ -83,46 +81,46 @@
     --sidebar-ring: 152 42% 55%;
   }
 
-  /* Dark Mode - Modern Neutral Dark Theme */
+  /* Dark Mode - same hue family (340 rose), shifted to dark surface */
   .dark {
-    /* Background - Surface Hierarchy (slate/gray tones) */
-    --background: 222 47% 6%;
-    --foreground: 210 40% 96%;
+    /* Background - rose-tinted dark, not slate */
+    --background: 340 18% 7%;
+    --foreground: 340 15% 96%;
 
-    /* Semantic Text Colors - WCAG AA Compliant */
-    --text-primary: 210 40% 98%;
-    --text-secondary: 215 20% 70%;
-    --text-muted: 215 15% 55%;
+    /* Semantic Text Colors */
+    --text-primary: 340 15% 96%;
+    --text-secondary: 340 12% 72%;
+    --text-muted: 340 8% 58%;
     --text-emphasis: 0 0% 100%;
 
-    /* Card surfaces (progressively lighter) */
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 96%;
-    --muted: 217 33% 14%;
-    --muted-foreground: 215 20% 65%;
+    /* Card surfaces (progressively lighter, same hue) */
+    --card: 340 22% 10%;
+    --card-foreground: 340 15% 96%;
+    --popover: 340 22% 12%;
+    --popover-foreground: 340 15% 96%;
+    --muted: 340 12% 16%;
+    --muted-foreground: 340 10% 62%;
 
-    /* Primary - Vibrant pink (keeps brand identity) */
-    --primary: 340 82% 62%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - Rose (slightly brighter for dark contrast) */
+    --primary: 340 75% 68%;
+    --primary-foreground: 340 30% 8%;
 
-    /* Secondary - Soft lavender */
-    --secondary: 260 45% 58%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary - Lavender deepened */
+    --secondary: 280 28% 22%;
+    --secondary-foreground: 280 25% 88%;
 
-    /* Accent - Fresh mint green */
-    --accent: 152 55% 48%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Sage (restrained) */
+    --accent: 152 45% 58%;
+    --accent-foreground: 152 45% 8%;
 
-    /* Status colors */
-    --destructive: 0 72% 55%;
+    /* Status */
+    --destructive: 0 72% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders & Inputs - Subtle gray borders */
-    --border: 217 33% 18%;
-    --input: 217 33% 12%;
-    --ring: 340 82% 62%;
+    /* Borders & Inputs */
+    --border: 340 15% 20%;
+    --input: 340 15% 14%;
+    --ring: 340 75% 68%;
 
     /* Category Tint Backgrounds - Dark Mode (subtle) */
     --category-rose-tint: 340 25% 14%;
@@ -172,8 +170,6 @@
     @apply bg-background text-foreground font-sans antialiased;
     overscroll-behavior-y: contain;
     -webkit-tap-highlight-color: transparent;
-    font-weight: 450;
-    /* Slightly heavier base weight for better readability */
     letter-spacing: -0.01em;
   }
 
@@ -213,9 +209,7 @@
     font-weight: 600;
   }
 
-  /* Improve paragraph readability */
   p {
-    font-weight: 450;
     line-height: 1.6;
   }
 
@@ -593,36 +587,16 @@
     @apply py-0 !important;
   }
 
-  /* Transaction item row - enhanced with better separation */
+  /* Transaction item row */
   .transaction-item {
     @apply flex items-center gap-4 py-4 px-4;
     @apply border-b border-border/40;
-    @apply transition-all duration-150 ease-out;
+    @apply transition-colors duration-150 ease-out;
     @apply bg-white dark:bg-card;
-    position: relative;
-  }
-
-  /* Subtle left accent on hover */
-  .transaction-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 0;
-    border-radius: 0 4px 4px 0;
-    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)));
-    transition: height 0.2s ease;
-  }
-
-  .transaction-item:hover::before {
-    height: 60%;
   }
 
   .transaction-item:hover {
-    @apply bg-muted/50 dark:bg-muted/30;
-    box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.3);
+    @apply bg-primary/[0.04] dark:bg-primary/[0.06];
   }
 
   .transaction-item:last-child {
@@ -669,43 +643,26 @@
   /* Period summary header */
   .period-summary {
     @apply flex flex-wrap items-center justify-between gap-4 px-5 py-4;
-    @apply bg-gradient-to-r from-pastel-green/40 to-pastel-mint/30;
-    @apply dark:from-green-950/30 dark:to-teal-950/20;
-    @apply border-b-2 border-green-200/50 dark:border-green-800/30;
+    @apply bg-primary/[0.06] dark:bg-primary/[0.08];
+    @apply border-b border-primary/20;
     @apply rounded-t-2xl;
   }
 
   .period-summary-total {
-    @apply text-2xl font-bold;
-    @apply bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent;
-    @apply dark:from-green-400 dark:to-emerald-400;
+    @apply text-2xl font-bold text-primary;
   }
 
   .period-summary-count {
     @apply text-sm text-text-secondary font-medium;
   }
 
-  /* Uncategorized badge - more visible */
+  /* Uncategorized badge */
   .badge-uncategorized {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1;
     @apply text-xs font-semibold rounded-full;
     @apply bg-amber-100 text-amber-800;
     @apply dark:bg-amber-900/40 dark:text-amber-300;
     @apply border border-amber-300/60 dark:border-amber-700/40;
-    @apply shadow-sm shadow-amber-200/50;
-    animation: gentle-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes gentle-pulse {
-
-    0%,
-    100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.85;
-    }
   }
 
   /* Enhanced text contrast classes */
@@ -717,30 +674,12 @@
     @apply text-text-secondary;
   }
 
-  /* Transaction row hover state enhancement */
   tr.transaction-row {
     @apply transition-colors duration-150;
-    position: relative;
-  }
-
-  tr.transaction-row::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 0;
-    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)));
-    transition: width 0.15s ease;
-    pointer-events: none;
   }
 
   tr.transaction-row:hover {
-    @apply bg-pink-50/60 dark:bg-pink-950/20;
-  }
-
-  tr.transaction-row:hover::after {
-    width: 3px;
+    @apply bg-primary/[0.04] dark:bg-primary/[0.06];
   }
 
   /* Action buttons hover enhancement */

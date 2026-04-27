@@ -29,6 +29,8 @@ interface DashboardStatCardProps {
     onClick?: () => void;
     /** Whether card is interactive */
     interactive?: boolean;
+    /** Visual emphasis — bigger value, primary ring */
+    emphasis?: boolean;
     /** Additional class name */
     className?: string;
 }
@@ -46,23 +48,22 @@ const DashboardStatCard = ({
     progressColor,
     onClick,
     interactive = false,
+    emphasis = false,
     className,
 }: DashboardStatCardProps) => {
     const isNumericValue = typeof value === "number";
     const numericValue = isNumericValue ? value : 0;
     const isEmojiIcon = typeof icon === "string";
 
-    // Tint styles based on accent color
     const tintStyles = {
         orange: "bg-category-tint-orange",
         blue: "bg-category-tint-blue",
         green: "bg-category-tint-green",
         lavender: "bg-category-tint-lavender",
         rose: "bg-category-tint-rose",
-        dynamic: "bg-white dark:bg-card",
+        dynamic: "bg-card",
     };
 
-    // Icon background styles
     const iconBgStyles = {
         orange: "bg-pastel-orange",
         blue: "bg-pastel-blue",
@@ -75,12 +76,14 @@ const DashboardStatCard = ({
     return (
         <div
             className={cn(
-                "rounded-2xl border border-pink-100 dark:border-border shadow-card",
-                "p-4 md:p-5 min-h-[120px]",
-                "card-hover-lift",
+                "relative rounded-2xl border shadow-soft",
+                "p-4 md:p-5",
+                emphasis ? "min-h-[140px] border-primary/30 ring-1 ring-primary/15" : "min-h-[120px] border-border",
+                "transition-shadow duration-200 ease-out",
+                interactive && "hover:shadow-soft-md",
                 tintStyles[accentColor],
                 interactive && "cursor-pointer",
-                interactive && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+                interactive && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                 className
             )}
             onClick={onClick}
@@ -108,10 +111,16 @@ const DashboardStatCard = ({
                 </div>
 
                 {/* Value */}
-                <p className="text-xl md:text-2xl font-extrabold tracking-tight text-text-emphasis dark:text-foreground">
+                <p
+                    className={cn(
+                        "font-bold tracking-tight text-text-emphasis dark:text-foreground tabular-nums",
+                        emphasis ? "text-2xl md:text-3xl" : "text-xl md:text-2xl"
+                    )}
+                >
                     {isNumericValue && isCurrency ? (
                         <>
-                            S/ <AnimatedCounter value={numericValue} duration={250} decimals={2} />
+                            <span className="text-base font-medium text-text-secondary mr-1 align-baseline">S/</span>
+                            <AnimatedCounter value={numericValue} duration={250} decimals={2} />
                         </>
                     ) : (
                         value
@@ -120,12 +129,12 @@ const DashboardStatCard = ({
 
                 {/* Progress bar (optional) */}
                 {progressPercent !== undefined && (
-                    <div className="mt-2 h-2 rounded-full bg-gray-100 dark:bg-muted overflow-hidden">
+                    <div className={cn("mt-2.5 rounded-full bg-muted overflow-hidden", emphasis ? "h-2.5" : "h-2")}>
                         <div
-                            className="h-full rounded-full transition-all duration-500"
+                            className="h-full rounded-full transition-[width] duration-700 ease-out"
                             style={{
                                 width: `${Math.min(100, Math.max(0, progressPercent))}%`,
-                                backgroundColor: progressColor || dynamicColor || "#5DBE8A",
+                                backgroundColor: progressColor || dynamicColor || "hsl(var(--primary))",
                             }}
                         />
                     </div>

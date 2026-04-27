@@ -2,16 +2,15 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
-  FaHeart,
-  FaChartPie,
-  FaCalendarAlt,
-  FaDollarSign,
-  FaSyncAlt,
-  FaTag,
-  FaChartLine,
-  FaFire,
-  FaChartBar
-} from "react-icons/fa";
+  Heart,
+  PieChart as PieIcon,
+  Calendar as CalendarIcon,
+  Tag as TagIcon,
+  Flame,
+  BarChart3,
+  Wallet,
+  Sparkles,
+} from "lucide-react";
 import { DatePeriodSelector, MultiSelectFilter } from "@/components/filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,14 +78,16 @@ const Dashboard = () => {
   const [isFilteredDialogOpen, setIsFilteredDialogOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
-  // Read user name from localStorage
+  // Read user name from localStorage — event-driven, no polling
   const [sidebarName, setSidebarName] = useState(() => localStorage.getItem('sidebarName') || 'Catt');
   useEffect(() => {
-    const interval = setInterval(() => {
-      const name = localStorage.getItem('sidebarName') || 'Catt';
-      setSidebarName(name);
-    }, 500);
-    return () => clearInterval(interval);
+    const sync = () => setSidebarName(localStorage.getItem('sidebarName') || 'Catt');
+    window.addEventListener('storage', sync);
+    window.addEventListener('sidebarname:change', sync);
+    return () => {
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('sidebarname:change', sync);
+    };
   }, []);
 
   // Calculate available years from transactions
@@ -586,13 +587,13 @@ const Dashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-text-emphasis dark:text-foreground">
-              Hola, {sidebarName}!
-              <FaHeart className="inline ml-3 w-8 h-8 text-theme-green animate-pulse" />
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-text-emphasis dark:text-foreground">
+              Hola, {sidebarName}
+              <Heart aria-hidden="true" fill="currentColor" className="inline ml-3 w-6 h-6 md:w-7 md:h-7 text-primary align-baseline" />
             </h1>
-            <div className="mt-3 flex items-center text-text-secondary">
-              <FaCalendarAlt className="w-5 h-5 mr-2 text-theme-green" />
-              <span className="text-base">{format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}</span>
+            <div className="mt-2 flex items-center text-text-secondary">
+              <CalendarIcon aria-hidden="true" className="w-4 h-4 mr-2 text-primary/70" />
+              <span className="text-sm">{format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}</span>
             </div>
 
           </div>
@@ -601,10 +602,11 @@ const Dashboard = () => {
           <ExportButton transactions={transactions} categories={categories} paymentMethods={paymentMethods} />
           <Button
             variant="outline"
-            className="rounded-xl px-4 text-sm border-border hover:bg-pastel-lavender/30 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-all"
+            className="rounded-xl px-4 text-sm border-border hover:bg-secondary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
             onClick={() => setIsInsightsOpen(true)}
           >
-            ✨ Insights
+            <Sparkles className="w-4 h-4 mr-2 text-primary" />
+            Insights
           </Button>
         </div>
       </div>
@@ -620,7 +622,7 @@ const Dashboard = () => {
         />
         <MultiSelectFilter
           label="Categorías"
-          icon={FaTag}
+          icon={TagIcon}
           iconColorClass="text-theme-lavender"
           items={categories}
           selectedIds={selectedCategories}
@@ -632,27 +634,34 @@ const Dashboard = () => {
       {/* Metric Cards - Hierarchical Layout */}
       <div className="space-y-6">
         {/* Primary Metric: Gasto del Mes/Año (HERO CARD) */}
-        <div className="flex justify-center">
+        <div>
           {filteredExpenses.length === 0 ? (
             // Empty state for hero card
-            <div className="rounded-2xl border border-pink-100 dark:border-border shadow-soft-md bg-category-tint-rose p-8 max-w-lg w-full text-center">
-              <div className="w-16 h-16 rounded-full bg-pastel-rose mx-auto mb-4 flex items-center justify-center">
-                <FaDollarSign className="w-10 h-10 text-theme-rose" />
+            <div className="relative rounded-3xl border border-border bg-card p-6 md:p-8 shadow-soft overflow-hidden">
+              <div aria-hidden="true" className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/[0.08] blur-3xl pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-medium text-text-secondary">Aún sin gastos en este período</h3>
+                </div>
+                <p className="text-5xl md:text-6xl font-bold text-text-emphasis dark:text-foreground tracking-tight tabular-nums">
+                  <span className="text-3xl md:text-4xl font-medium text-text-secondary mr-1.5 align-baseline">S/</span>
+                  0.00
+                </p>
+                <p className="text-xs text-text-muted mt-3">{daysElapsedText}</p>
               </div>
-              <h3 className="text-base font-semibold text-text-secondary mb-2">Sin gastos este mes</h3>
-              <p className="text-4xl font-extrabold text-text-emphasis dark:text-foreground">S/ 0.00</p>
-              <p className="text-sm text-text-muted mt-3">¡Comienza a registrar tus gastos! 🌟</p>
-              <p className="text-xs text-text-muted mt-1">{daysElapsedText}</p>
             </div>
           ) : (
             <DashboardCard
               title={selectedMonth !== null ? "Gasto del Mes" : "Gasto del Año"}
               value={periodTotal}
-              icon={<FaDollarSign className="w-10 h-10 text-theme-rose" />}
+              icon={<Wallet className="w-7 h-7 text-primary-foreground" />}
               iconColor="bg-pastel-rose"
               variant="primary"
-              tint="rose"
-              className="shadow-soft-md max-w-lg w-full"
+              tint="none"
+              className="w-full"
               subtext={`vs. anterior: S/ ${previousMonthTotal.toFixed(2)}`}
               secondarySubtext={daysElapsedText}
               sparklineData={sparklineMonthlyData}
@@ -664,36 +673,39 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Secondary Metrics Row - 3 NEW CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-          {/* Card 1: Día con Mayor Gasto */}
+        {/* Secondary Metrics Row — asymmetric: 5/4/3 hierarchy */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+          {/* Card 1: Día con Mayor Gasto — emphasis (the event) */}
           <DashboardStatCard
+            className="md:col-span-5"
             title="Día con Mayor Gasto"
-            icon={<FaFire className="w-5 h-5 text-orange-500" />}
+            icon={<Flame className="w-5 h-5 text-orange-500" />}
             value={highestSpendingDay.amount}
             isCurrency={true}
             subtitle={highestSpendingDay.formattedDate}
             secondarySubtitle={highestSpendingDay.transactionCount > 0 ? `${highestSpendingDay.transactionCount} transacciones ese día` : undefined}
             accentColor="orange"
+            emphasis
             interactive
             onClick={() => highestSpendingDay.date && navigate('/transacciones', {
               state: { quickFilter: { type: 'day', date: highestSpendingDay.date, categories: selectedCategories, year: selectedYear, month: selectedMonth } }
             })}
           />
 
-          {/* Card 2: Categoría más gastada */}
+          {/* Card 2: Categoría más gastada — progress focus */}
           <DashboardStatCard
-            title="Categoría más gastada"
+            className="md:col-span-4"
+            title="Categoría top"
             icon={
-              <FaChartPie
+              <PieIcon
                 className="w-5 h-5"
                 style={{ color: topCategoryDetails.color }}
               />
             }
             value={`${topCategoryDetails.name} ${topCategoryDetails.emoji}`}
             isCurrency={false}
-            subtitle={`S/ ${topCategoryDetails.amount.toFixed(2)}`}
-            secondarySubtitle={`${topCategoryDetails.percentage}% del total`}
+            subtitle={`S/ ${topCategoryDetails.amount.toFixed(2)} · ${topCategoryDetails.percentage}%`}
+            secondarySubtitle={undefined}
             accentColor="dynamic"
             dynamicColor={topCategoryDetails.color}
             progressPercent={topCategoryDetails.percentage}
@@ -702,11 +714,12 @@ const Dashboard = () => {
             onClick={() => topCategoryId && navigate('/transacciones', { state: { quickFilter: { type: 'category', id: topCategoryId, year: selectedYear, month: selectedMonth } } })}
           />
 
-          {/* Card 3: Actividad del Mes/Año */}
+          {/* Card 3: Actividad — compact tally */}
           <DashboardStatCard
-            title={selectedMonth !== null ? "Actividad del Mes" : "Actividad del Año"}
-            icon={<FaChartBar className="w-5 h-5 text-blue-500" />}
-            value={`${activityStats.transactionCount} transacciones`}
+            className="md:col-span-3"
+            title={selectedMonth !== null ? "Actividad" : "Actividad anual"}
+            icon={<BarChart3 className="w-5 h-5 text-blue-500" />}
+            value={activityStats.transactionCount}
             isCurrency={false}
             subtitle={activityStats.lastTransactionTime}
             secondarySubtitle={activityStats.daysText}

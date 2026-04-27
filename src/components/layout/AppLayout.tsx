@@ -66,11 +66,12 @@ const AppLayout = () => {
           aria-label={fabConfig.label}
           className={cn(
             "fixed bottom-8 right-8 z-[60] h-14 w-14 rounded-full",
-            "shadow-lg shadow-green-300/30",
-            "bg-gradient-to-br from-theme-green to-theme-sage",
-            "hover:shadow-xl hover:shadow-green-300/40",
-            "transition-all duration-200 hover:scale-110 active:scale-95",
-            "border border-green-200/50",
+            "bg-primary text-primary-foreground",
+            "shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.55)]",
+            "hover:shadow-[0_12px_28px_-8px_hsl(var(--primary)/0.6)]",
+            "hover:bg-primary/90",
+            "transition-shadow duration-200 active:scale-95",
+            "ring-1 ring-primary/30",
             // Hide on mobile/tablet (shown via BottomNav instead)
             "hidden lg:flex"
           )}
